@@ -1,5 +1,5 @@
 import { Box, Button, Chip, Container, Typography, useMediaQuery } from '@mui/material'
-import Grid from '@mui/material/Grid'
+import Grid from '@mui/material/Grid2'
 import { useTheme } from '@mui/material/styles'
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined'
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
@@ -225,7 +225,7 @@ export default function Landing({ onStart }) {
           </Typography>
           <Grid container spacing={4}>
             {features.map((f) => (
-              <Grid item xs={12} sm={6} md={3} key={f.title}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={f.title}>
                 <Box
                   sx={{
                     borderRadius: 24,

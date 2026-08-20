@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import Grid from '@mui/material/Grid'
+import Grid from '@mui/material/Grid2'
 import {
   Box,
   Button,
