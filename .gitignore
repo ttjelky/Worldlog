@@ -3,10 +3,20 @@ backend/.venv/
 __pycache__/
 *.pyc
 backend/db.sqlite3
+backend/media/
+backend/staticfiles/
 
 # Node
 frontend/node_modules/
 frontend/dist/
 
-# Misc
+# Environment
+.env
+.env.local
+
+# OS
 .DS_Store
+
+# Logs
+*.log
+frontend/vercel-deploy.log

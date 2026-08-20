@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: worldlog
+      POSTGRES_PASSWORD: worldlog
+      POSTGRES_DB: worldlog
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/pgdata
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U worldlog']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DJANGO_DEBUG: 'true'
+      DATABASE_URL: postgres://worldlog:worldlog@db:5432/worldlog
+      DJANGO_ALLOWED_HOSTS: '*'
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+
+volumes:
+  pgdata:
