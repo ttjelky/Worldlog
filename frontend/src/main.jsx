@@ -6,7 +6,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { AuthProvider } from './auth'
 import theme from './theme'
-import './index.css'
+import './shared/styles/global.css'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -24,5 +24,5 @@ createRoot(document.getElementById('root')).render(
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
-  </StrictMode>
+  </StrictMode>,
 )

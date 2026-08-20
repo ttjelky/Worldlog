@@ -36,10 +36,7 @@ api.interceptors.response.use(
     ) {
       original._retry = true
       try {
-        const res = await axios.post(
-          `${api.defaults.baseURL}/auth/token/refresh/`,
-          { refresh }
-        )
+        const res = await axios.post(`${api.defaults.baseURL}/auth/token/refresh/`, { refresh })
         localStorage.setItem(TOKEN_KEY, res.data.access)
         original.headers.Authorization = `Bearer ${res.data.access}`
         return api(original)
@@ -48,7 +45,7 @@ api.interceptors.response.use(
       }
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 function setAuth(access, refresh) {

@@ -1,0 +1,22 @@
+import { Button } from '@mui/material'
+import styles from './ComingSoon.module.css'
+
+export default function ComingSoon({ onStart }) {
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionInner}>
+        <div className={styles.content}>
+          <span className={styles.badge}>В розробці</span>
+          <h2 className={styles.title}>Скоро: спільні світи</h2>
+          <p className={styles.description}>
+            Запрошуй друзів у світ, давай ролі редактора чи глядача і документуйте історію разом. Ми
+            вже заклали архітектуру — залишилось трохи почекати.
+          </p>
+          <Button variant="contained" color="secondary" onClick={onStart}>
+            Взяти участь
+          </Button>
+        </div>
+      </div>
+    </section>
+  )
+}

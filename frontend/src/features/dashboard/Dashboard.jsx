@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Grid from '@mui/material/Grid2'
 import {
-  Box,
   Button,
   Card,
   CardActionArea,
@@ -15,23 +14,16 @@ import {
   DialogTitle,
   IconButton,
   LinearProgress,
-  Stack,
   TextField,
-  Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import MapIcon from '@mui/icons-material/Map'
-import api from '../api'
+import api from '../../api'
+import styles from './Dashboard.module.css'
 
-const emptyWorld = {
-  name: '',
-  description: '',
-  seed: '',
-  start_date: '',
-  cover_image: null,
-}
+const emptyWorld = { name: '', description: '', seed: '', start_date: '', cover_image: null }
 
 function useWorldForm(initial) {
   const [form, setForm] = useState(initial)
@@ -42,7 +34,6 @@ function useWorldForm(initial) {
 
 function WorldForm({ open, onClose, initial, onSubmit }) {
   const { form, set, setFile } = useWorldForm(initial)
-
   const submit = (e) => {
     e.preventDefault()
     const data = new FormData()
@@ -51,23 +42,44 @@ function WorldForm({ open, onClose, initial, onSubmit }) {
     })
     onSubmit(data)
   }
-
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <form onSubmit={submit}>
         <DialogTitle>{initial.name ? 'Редагувати світ' : 'Новий світ'}</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} pt={1}>
+          <div className={styles.formFields}>
             <TextField label="Назва світу" value={form.name} onChange={set('name')} required />
-            <TextField label="Опис" value={form.description} onChange={set('description')} multiline minRows={3} />
+            <TextField
+              label="Опис"
+              value={form.description}
+              onChange={set('description')}
+              multiline
+              minRows={3}
+            />
             <TextField label="Сід (seed)" value={form.seed} onChange={set('seed')} />
-            <TextField label="Дата початку" type="date" value={form.start_date} onChange={set('start_date')} InputLabelProps={{ shrink: true }} />
-            <TextField label="Обкладинка" type="file" onChange={setFile('cover_image')} InputLabelProps={{ shrink: true }} helperText="Зображення для картки світу" />
-          </Stack>
+            <TextField
+              label="Дата початку"
+              type="date"
+              value={form.start_date}
+              onChange={set('start_date')}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label="Обкладинка"
+              type="file"
+              onChange={setFile('cover_image')}
+              InputLabelProps={{ shrink: true }}
+              helperText="Зображення для картки світу"
+            />
+          </div>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={onClose} color="inherit">Скасувати</Button>
-          <Button type="submit" variant="contained" color="primary">Зберегти</Button>
+        <DialogActions className={styles.dialogActions}>
+          <Button onClick={onClose} color="inherit">
+            Скасувати
+          </Button>
+          <Button type="submit" variant="contained" color="primary">
+            Зберегти
+          </Button>
         </DialogActions>
       </form>
     </Dialog>
@@ -78,24 +90,20 @@ export default function Dashboard() {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
-
   const { data: worlds = [], isLoading } = useQuery({
     queryKey: ['worlds'],
     queryFn: () => api.get('/worlds/').then((r) => r.data),
   })
-
   const createWorld = useMutation({
     mutationFn: (data) =>
       api.post('/worlds/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
     onSuccess: () => qc.invalidateQueries(['worlds']),
   })
-
   const updateWorld = useMutation({
     mutationFn: ({ id, data }) =>
       api.patch(`/worlds/${id}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
     onSuccess: () => qc.invalidateQueries(['worlds']),
   })
-
   const deleteWorld = useMutation({
     mutationFn: (id) => api.delete(`/worlds/${id}/`),
     onSuccess: () => qc.invalidateQueries(['worlds']),
@@ -111,18 +119,16 @@ export default function Dashboard() {
   }
 
   return (
-    <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
-        <Box>
-          <Typography variant="h4">Мої світи</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {worlds.length} світ(ів) у твоєму літописі
-          </Typography>
-        </Box>
+    <div>
+      <div className={styles.header}>
+        <div>
+          <h4 className={styles.headerTitle}>Мої світи</h4>
+          <p className={styles.headerSub}>{worlds.length} світ(ів) у твоєму літописі</p>
+        </div>
         <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={openCreate}>
           Новий світ
         </Button>
-      </Stack>
+      </div>
 
       {isLoading && <LinearProgress />}
 
@@ -134,50 +140,48 @@ export default function Dashboard() {
                 {w.cover_image_url ? (
                   <CardMedia component="img" height="160" image={w.cover_image_url} alt={w.name} />
                 ) : (
-                  <Box
-                    sx={{
-                      height: 160,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: '#E9EAFC',
-                      color: 'primary.main',
-                    }}
-                  >
-                    <MapIcon sx={{ fontSize: 56 }} />
-                  </Box>
+                  <div className={styles.placeholder}>
+                    <MapIcon className={styles.placeholderIcon} />
+                  </div>
                 )}
                 <CardContent>
-                  <Typography variant="h6">{w.name}</Typography>
-                  <Typography variant="body2" color="text.secondary" noWrap>
-                    {w.description || 'Немає опису'}
-                  </Typography>
-                  <Stack direction="row" spacing={1} mt={1.5} flexWrap="wrap" useFlexGap>
+                  <h6 className={styles.cardTitle}>{w.name}</h6>
+                  <p className={styles.cardDesc}>{w.description || 'Немає опису'}</p>
+                  <div className={styles.chipRow}>
                     <Chip size="small" label={`👤 ${w.players_count}`} />
                     <Chip size="small" label={`📌 ${w.locations_count}`} />
                     <Chip size="small" label={`☑️ ${w.todos_done}/${w.todos_count}`} />
                     <Chip size="small" label={`🕑 ${w.history_count}`} />
-                  </Stack>
+                  </div>
                 </CardContent>
               </CardActionArea>
-              <Box px={2} pb={2} display="flex" justifyContent="flex-end">
+              <div className={styles.cardActions}>
                 <IconButton size="small" onClick={() => openEdit(w)} title="Редагувати">
                   <EditOutlinedIcon fontSize="small" />
                 </IconButton>
-                <IconButton size="small" color="error" onClick={() => { if (confirm('Видалити світ безповоротно?')) deleteWorld.mutate(w.id) }} title="Видалити">
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => {
+                    if (confirm('Видалити світ безповоротно?')) deleteWorld.mutate(w.id)
+                  }}
+                  title="Видалити"
+                >
                   <DeleteOutlinedIcon fontSize="small" />
                 </IconButton>
-              </Box>
+              </div>
             </Card>
           </Grid>
         ))}
         {worlds.length === 0 && !isLoading && (
           <Grid size={12}>
-            <Box textAlign="center" py={10} color="text.secondary">
-              <Typography variant="h5" mb={1}>Ще немає жодного світу</Typography>
-              <Typography variant="body2" mb={3}>Створи перший паспорт свого світу</Typography>
-              <Button variant="contained" color="primary" onClick={openCreate}>Новий світ</Button>
-            </Box>
+            <div className={styles.empty}>
+              <h5 className={styles.emptyTitle}>Ще немає жодного світу</h5>
+              <p className={styles.emptySub}>Створи перший паспорт свого світу</p>
+              <Button variant="contained" color="primary" onClick={openCreate}>
+                Новий світ
+              </Button>
+            </div>
           </Grid>
         )}
       </Grid>
@@ -191,6 +195,6 @@ export default function Dashboard() {
           else createWorld.mutateAsync(data).then(() => setOpen(false))
         }}
       />
-    </Box>
+    </div>
   )
 }

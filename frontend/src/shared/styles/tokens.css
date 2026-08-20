@@ -1,0 +1,146 @@
+/* ================================================
+   WorldLog Design Tokens
+   All visual values live here as CSS custom properties.
+   Components reference these via var(--token-name).
+   ================================================ */
+
+:root {
+  /* ---- Colors: Brand ---- */
+  --color-primary: #7c83f5;
+  --color-primary-dark: #5c63e0;
+  --color-primary-light: #e9eafc;
+
+  --color-secondary: #4caf7d;
+  --color-secondary-dark: #3a9063;
+  --color-secondary-light: #b7eac7;
+
+  /* ---- Colors: Neutrals ---- */
+  --color-black: #0d0d0f;
+  --color-white: #ffffff;
+  --color-bg: #ffffff;
+  --color-bg-alt: #f7f7ff;
+  --color-bg-app: #f9f9fc;
+  --color-text: #0d0d0f;
+  --color-text-secondary: rgba(13, 13, 15, 0.65);
+  --color-text-on-dark: rgba(255, 255, 255, 0.72);
+  --color-divider: rgba(13, 13, 15, 0.1);
+  --color-divider-light: rgba(13, 13, 15, 0.06);
+  --color-divider-border: rgba(13, 13, 15, 0.08);
+  --color-border: rgba(13, 13, 15, 0.18);
+
+  /* ---- Colors: Overlay ---- */
+  --color-overlay-dark: rgba(13, 13, 15, 0.5);
+  --color-overlay-dark-hover: rgba(13, 13, 15, 0.7);
+
+  /* ---- Colors: Priority badges ---- */
+  --color-priority-low-bg: #e9eafc;
+  --color-priority-low-fg: #5c63e0;
+  --color-priority-medium-bg: #fff4d6;
+  --color-priority-medium-fg: #b07d1f;
+  --color-priority-high-bg: #ffe7e7;
+  --color-priority-high-fg: #c23636;
+  --color-priority-urgent-bg: #ffdcdc;
+  --color-priority-urgent-fg: #8c1d1d;
+
+  /* ---- Colors: Timeline categories ---- */
+  --color-timeline-achievement: #7c83f5;
+  --color-timeline-milestone: #f2a65a;
+  --color-timeline-important: #7c83f5;
+  --color-timeline-completed: #4caf7d;
+  --color-timeline-expansion: #b7eac7;
+  --color-timeline-other: #8a8aa0;
+  --color-timeline-rail: rgba(124, 131, 245, 0.25);
+  --color-timeline-card-bg: #f7f7ff;
+  --color-timeline-card-border: rgba(124, 131, 245, 0.12);
+
+  /* ---- Colors: Todo ---- */
+  --color-todo-done-bg: rgba(183, 234, 199, 0.45);
+  --color-todo-item-border: var(--color-divider-border);
+  --color-todo-checked: #4caf7d;
+
+  /* ---- Colors: Location ---- */
+  --color-location-base-bg: rgba(183, 234, 199, 0.5);
+  --color-location-base-fg: #4caf7d;
+  --color-location-default-bg: rgba(233, 234, 252, 0.9);
+  --color-location-default-fg: #7c83f5;
+  --color-location-placeholder-bg: #f0f1fb;
+
+  /* ---- Colors: Mockup ---- */
+  --color-mockup-bg: linear-gradient(160deg, #e9eafc 0%, #dee4ff 55%, #f3f1ff 100%);
+  --color-mockup-border: rgba(124, 131, 245, 0.18);
+  --color-mockup-card-bg: #ffffff;
+  --color-mockup-dot-green: #4ade80;
+  --color-mockup-dot-red: #f87171;
+  --color-mockup-dot-yellow: #fbbf24;
+  --color-mockup-row-alt: rgba(13, 13, 15, 0.14);
+  --color-mockup-row-hover: #dde0ff;
+  --color-mockup-stripe: #e9eafc;
+
+  /* ---- Spacing ---- */
+  --space-0: 0;
+  --space-0-5: 4px;
+  --space-1: 8px;
+  --space-1-5: 12px;
+  --space-2: 16px;
+  --space-2-5: 20px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
+  --space-12: 96px;
+
+  /* ---- Border radius ---- */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 18px;
+  --radius-xl: 20px;
+  --radius-2xl: 22px;
+  --radius-3xl: 24px;
+  --radius-pill: 999px;
+
+  /* ---- Shadows ---- */
+  --shadow-card: 0 1px 2px rgba(13, 13, 15, 0.05), 0 8px 24px rgba(13, 13, 15, 0.08);
+  --shadow-card-hover: 0 18px 40px rgba(13, 13, 15, 0.1);
+  --shadow-dialog: 0 10px 40px rgba(13, 13, 15, 0.08);
+  --shadow-hero: 0 20px 60px rgba(13, 13, 15, 0.12);
+  --shadow-hero-card: 0 24px 60px rgba(13, 13, 15, 0.22);
+  --shadow-button: 0 4px 12px rgba(124, 131, 245, 0.35);
+
+  /* ---- Typography ---- */
+  --font-family: 'DM Sans', sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-md: 17px;
+  --font-size-lg: 20px;
+  --font-size-xl: 22px;
+  --font-size-2xl: 28px;
+  --font-size-3xl: 40px;
+  --font-size-4xl: 48px;
+  --font-size-5xl: 56px;
+  --font-size-6xl: 72px;
+  --font-size-hero: 76px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+  --line-height-tight: 1.05;
+  --line-height-snug: 1.08;
+  --line-height-normal: 1.6;
+  --line-height-relaxed: 1.65;
+  --letter-spacing-tight: -0.03em;
+  --letter-spacing-snug: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.02em;
+  --letter-spacing-wider: 0.12em;
+  --letter-spacing-widest: 0.18em;
+  --letter-spacing-overline: 0.22em;
+  --letter-spacing-overline-lg: 0.35em;
+
+  /* ---- Z-index ---- */
+  --z-header: 10;
+  --z-overlay: 1;
+  --z-rail: 1;
+}

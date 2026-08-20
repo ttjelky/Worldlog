@@ -1,0 +1,45 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  cursor: default;
+}
+
+.rootInteractive {
+  cursor: pointer;
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-white);
+  box-shadow: var(--shadow-button);
+  flex-shrink: 0;
+}
+
+.iconSvg {
+  font-size: 20px;
+}
+
+.textGroup {
+  line-height: 1.1;
+}
+
+.brandName {
+  font-weight: var(--font-weight-black);
+  font-size: var(--font-size-lg);
+  color: var(--color-black);
+}
+
+.subtext {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-widest);
+  text-transform: uppercase;
+  color: var(--color-primary-dark);
+}

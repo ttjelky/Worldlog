@@ -1,0 +1,135 @@
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.sectionTitle {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+}
+
+.emptyMsg {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.coords {
+  font-family: monospace;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.desc {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.locMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.locInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.locName {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+}
+
+.locActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1-5);
+}
+
+.locSpacer {
+  flex: 1;
+}
+
+.placeholder {
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-location-placeholder-bg);
+  color: var(--color-text-secondary);
+}
+
+.placeholderIcon {
+  font-size: 40px;
+}
+
+.formFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+}
+
+.dialogActions {
+  padding: var(--space-3);
+}
+
+.galleryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.galleryInfo {
+  min-width: 0;
+}
+
+.galleryTitle {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+}
+
+.galleryCoords {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.galleryActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.screenshotItem {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+}
+
+.screenshotImg {
+  width: 100%;
+  border-radius: var(--radius-md);
+  display: block;
+}
+
+.screenshotDelete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--color-overlay-dark);
+  color: var(--color-white);
+}
+
+.screenshotDelete:hover {
+  background: var(--color-overlay-dark-hover);
+}

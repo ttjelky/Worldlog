@@ -1,0 +1,50 @@
+.section {
+  padding: var(--space-12) 0;
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.sectionInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+}
+
+.content {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--color-secondary-light);
+  color: var(--color-black);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  font-weight: var(--font-weight-black);
+  font-size: var(--font-size-3xl);
+  letter-spacing: var(--letter-spacing-snug);
+  line-height: var(--line-height-snug);
+  color: var(--color-white);
+  margin-bottom: var(--space-3);
+}
+
+@media (min-width: 900px) {
+  .title {
+    font-size: var(--font-size-5xl);
+  }
+}
+
+.description {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-on-dark);
+  margin-bottom: var(--space-4);
+}

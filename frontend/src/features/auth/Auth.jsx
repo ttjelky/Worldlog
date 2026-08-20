@@ -1,23 +1,8 @@
 import { useState } from 'react'
-import { Box, Button, Paper, TextField, Typography, Link, Alert } from '@mui/material'
-import Logo from '../components/Logo'
-import { useAuth } from '../auth'
-
-function AuthShell({ title, subtitle, children, footer }) {
-  return (
-    <Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center" bgcolor="#F7F7FF" p={2}>
-      <Paper elevation={0} sx={{ p: { xs: 4, md: 6 }, width: '100%', maxWidth: 440, boxShadow: '0 10px 40px rgba(13,13,15,.08)' }}>
-        <Box mb={4}>
-          <Logo />
-        </Box>
-        <Typography variant="h4" mb={0.5}>{title}</Typography>
-        <Typography variant="body2" color="text.secondary" mb={3}>{subtitle}</Typography>
-        {children}
-        {footer && <Box mt={3} textAlign="center">{footer}</Box>}
-      </Paper>
-    </Box>
-  )
-}
+import { Button, TextField, Alert } from '@mui/material'
+import AuthShell from '../../shared/components/AuthShell/AuthShell'
+import { useAuth } from '../../auth'
+import styles from './Auth.module.css'
 
 export function Login({ onNavigate }) {
   const { login } = useAuth()
@@ -44,22 +29,34 @@ export function Login({ onNavigate }) {
       title="З поверненням"
       subtitle="Увійди, щоб керувати своїми світами"
       footer={
-        <Typography variant="body2" color="text.secondary">
+        <span>
           Немає акаунта?{' '}
-          <Link component="button" onClick={() => onNavigate('/register')} sx={{ fontWeight: 700 }}>
+          <button className={styles.footerLink} onClick={() => onNavigate('/register')}>
             Зареєструватись
-          </Link>
-        </Typography>
+          </button>
+        </span>
       }
     >
-      <Box component="form" onSubmit={submit} display="flex" flexDirection="column" gap={2}>
+      <form className={styles.form} onSubmit={submit}>
         {error && <Alert severity="error">{error}</Alert>}
-        <TextField label="Ім'я користувача" value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus />
-        <TextField label="Пароль" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <TextField
+          label="Ім'я користувача"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          autoFocus
+        />
+        <TextField
+          label="Пароль"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         <Button type="submit" variant="contained" color="primary" size="large" disabled={loading}>
           {loading ? 'Вхід...' : 'Увійти'}
         </Button>
-      </Box>
+      </form>
     </AuthShell>
   )
 }
@@ -82,10 +79,7 @@ export function Register({ onNavigate }) {
     } catch (err) {
       const detail = err.response?.data
       const msg =
-        detail?.username?.[0] ||
-        detail?.email?.[0] ||
-        detail?.detail ||
-        'Щось пішло не так'
+        detail?.username?.[0] || detail?.email?.[0] || detail?.detail || 'Щось пішло не так'
       setError(String(msg))
       setLoading(false)
     }
@@ -96,23 +90,41 @@ export function Register({ onNavigate }) {
       title="Створити акаунт"
       subtitle="Твій світ заслуговує на власний паспорт"
       footer={
-        <Typography variant="body2" color="text.secondary">
+        <span>
           Вже є акаунт?{' '}
-          <Link component="button" onClick={() => onNavigate('/login')} sx={{ fontWeight: 700 }}>
+          <button className={styles.footerLink} onClick={() => onNavigate('/login')}>
             Увійти
-          </Link>
-        </Typography>
+          </button>
+        </span>
       }
     >
-      <Box component="form" onSubmit={submit} display="flex" flexDirection="column" gap={2}>
+      <form className={styles.form} onSubmit={submit}>
         {error && <Alert severity="error">{error}</Alert>}
-        <TextField label="Ім'я користувача" value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus />
-        <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <TextField label="Пароль" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <TextField
+          label="Ім'я користувача"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          autoFocus
+        />
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <TextField
+          label="Пароль"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         <Button type="submit" variant="contained" color="primary" size="large" disabled={loading}>
           {loading ? 'Створення...' : 'Зареєструватись'}
         </Button>
-      </Box>
+      </form>
     </AuthShell>
   )
 }
