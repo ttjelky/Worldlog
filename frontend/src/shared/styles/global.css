@@ -83,9 +83,6 @@ ol {
 }
 
 /* MUI OutlinedInput: restore legend padding killed by universal reset */
-.MuiOutlinedInput-notchedOutline {
-  border-radius: inherit !important;
-}
 .MuiOutlinedInput-notchedOutline legend {
   padding: 0 4px;
   margin-left: -4px;
