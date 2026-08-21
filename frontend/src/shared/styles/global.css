@@ -71,6 +71,13 @@ ol {
   outline-offset: 2px;
 }
 
+/* Fix MUI OutlinedInput notch — legend too narrow hides border behind label */
+.MuiOutlinedInput-notchedOutline legend {
+  margin-left: -2px;
+  padding: 0 4px;
+  max-width: 100%;
+}
+
 /* ---- Utility: visually hidden (screen reader only) ---- */
 .sr-only {
   position: absolute;
