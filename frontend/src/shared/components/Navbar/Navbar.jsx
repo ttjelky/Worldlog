@@ -20,26 +20,28 @@ export default function Navbar({ activePage, onNavigate }) {
 
   return (
     <nav className={styles.navbar}>
-      <div className={styles.navLeft}>
-        <span className={styles.logoMark} aria-hidden="true" />
-        <span className={styles.logoText}>
-          <span>МОЇ</span>
-          <span>СВІТИ</span>
-        </span>
-      </div>
+      <div className={styles.navGroup}>
+        <div className={styles.navLeft}>
+          <span className={styles.logoMark} aria-hidden="true" />
+          <span className={styles.logoText}>
+            <span>МОЇ</span>
+            <span>СВІТИ</span>
+          </span>
+        </div>
 
-      <div className={styles.navLinks} role="tablist" aria-label="Розділи">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            role="tab"
-            aria-selected={activePage === item.id}
-            className={`${styles.navLink} ${activePage === item.id ? styles.navLinkActive : ''}`}
-            onClick={() => onNavigate(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
+        <div className={styles.navLinks} role="tablist" aria-label="Розділи">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              role="tab"
+              aria-selected={activePage === item.id}
+              className={`${styles.navLink} ${activePage === item.id ? styles.navLinkActive : ''}`}
+              onClick={() => onNavigate(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={styles.navRight}>
