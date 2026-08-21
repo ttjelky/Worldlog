@@ -299,66 +299,244 @@
   max-width: 480px;
 }
 
-.dialogBackdrop {
-  background: rgba(145, 102, 200, 0.35) !important;
-  backdrop-filter: blur(4px);
+/* ==================================================================
+   Material 3 tokens for the dialog — real M3 color roles + shape scale,
+   scoped as CSS custom properties on the dialog surface.
+   Shape scale (M3 spec): xs 4dp · sm 8dp · md 12dp · lg 16dp · xl 28dp · full 999dp
+   ================================================================== */
+.dialogPaper {
+  --md-primary: #6f42c6;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #e9ddfb;
+  --md-on-primary-container: #26113f;
+  --md-surface: #fbf8ff;
+  --md-surface-container: #f2eafb;
+  --md-surface-container-high: #ece1f8;
+  --md-on-surface: #1d1a22;
+  --md-on-surface-variant: #4b4358;
+  --md-outline: #7d7188;
+  --md-outline-variant: #cdc0dd;
+
+  background: var(--md-surface) !important;
+  border-radius: 32px !important;
+  box-shadow: 0 1px 3px rgba(29, 26, 34, 0.15), 0 4px 24px rgba(29, 26, 34, 0.1) !important;
+  overflow: hidden;
+  /* Fit the dialog to its content instead of scrolling it. */
+  max-height: none !important;
+  margin: 24px !important;
 }
 
-.dialogPaper {
-  background: #ece2fe !important;
-  border-radius: 28px !important;
-  box-shadow: 0 8px 40px rgba(145, 102, 200, 0.25) !important;
-  overflow: hidden;
+.dialogBackdrop {
+  background: rgba(29, 26, 34, 0.4) !important;
 }
 
 .dialogTitle {
-  font-size: 28px !important;
-  font-weight: 800 !important;
-  color: #3d2a6e !important;
-  padding: 32px 32px 0 !important;
-  letter-spacing: -0.02em !important;
+  font-size: 50px !important;
+  font-weight: 500 !important;
+  color: var(--md-on-surface) !important;
+  padding: 28px 32px 0 !important;
+  line-height: 1.2 !important;
 }
 
 .dialogContent {
-  padding: 16px 32px 8px !important;
+  padding: 9px 32px 4px !important;
+  overflow: visible !important;
 }
 
 .dialogDescription {
-  font-size: 15px;
-  font-weight: 500;
-  color: #9166c8;
-  margin-bottom: 4px;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
+  margin: 0 0 16px;
 }
 
 .formFields {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding-top: 8px;
+}
+
+/* Name + start date share a row */
+.formRow {
+  display: flex;
+  gap: 12px;
+}
+
+.fieldName {
+  flex: 1.6;
+  min-width: 0;
+}
+
+.fieldDate {
+  flex: 1;
+  min-width: 132px;
+}
+
+@media (max-width: 480px) {
+  .formRow {
+    flex-direction: column;
+  }
+  .fieldDate {
+    min-width: 0;
+  }
+}
+
+/* M3 outlined text field: shape.xs (4dp) corners, 1dp outline at rest,
+   2dp primary outline on focus, regular-weight body text and label. */
+.formFields :global(.MuiOutlinedInput-root) {
+  border-radius: 4px;
+  background: transparent;
+}
+
+.formFields :global(.MuiOutlinedInput-input) {
+  font-weight: 400;
+  color: var(--md-on-surface);
+}
+
+.formFields :global(.MuiOutlinedInput-notchedOutline) {
+  border-color: var(--md-outline);
+}
+
+.formFields :global(.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline) {
+  border-color: var(--md-on-surface);
+}
+
+.formFields :global(.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline) {
+  border-color: var(--md-primary);
+  border-width: 2px;
+}
+
+.formFields :global(.MuiInputLabel-root) {
+  color: var(--md-on-surface-variant);
+  font-weight: 400;
+}
+
+.formFields :global(.MuiInputLabel-root.Mui-focused) {
+  color: var(--md-primary);
+}
+
+/* "OR" divider between the manual form and the file upload */
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 2px;
+}
+
+.orDividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--md-outline-variant);
+}
+
+.orDividerLabel {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--md-on-surface-variant);
+}
+
+/* World-file upload — M3 filled tonal surface, shape.md, solid outline */
+.fileDropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 28px;
+  background: var(--md-surface-container);
+  cursor: pointer;
+  transition: background 150ms linear;
+}
+
+.fileDropzone:hover,
+.fileDropzone:focus-within {
+  background: var(--md-surface-container-high);
+}
+
+.fileInputHidden {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.fileDropzoneIcon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.fileDropzoneText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fileDropzoneTitle {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--md-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileDropzoneHint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
 }
 
 .dialogActions {
-  padding: 16px 32px 28px !important;
+  padding: 20px 24px 24px !important;
   justify-content: flex-end !important;
   gap: 8px !important;
 }
 
+/* M3 text button: no fill, state-layer on hover, shape.full */
 .dialogBtnCancel {
-  color: #9166c8 !important;
-  font-weight: 700 !important;
-  font-size: 15px !important;
+  color: #6f42c6 !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.01em !important;
+  border-radius: 999px !important;
+  padding: 10px 20px !important;
+  text-transform: none !important;
+  transition: background 150ms linear !important;
 }
 
+.dialogBtnCancel:hover {
+  background: rgba(111, 66, 198, 0.08) !important;
+}
+
+/* M3 filled button: elevation 0 at rest, shape.full, no drop shadow */
 .dialogBtnSubmit {
-  background: #9166c8 !important;
+  background: #6f42c6 !important;
   color: #ffffff !important;
-  font-weight: 700 !important;
-  font-size: 15px !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.01em !important;
   border-radius: 999px !important;
+  padding: 10px 24px !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+  transition: background 150ms linear !important;
 }
 
 .dialogBtnSubmit:hover {
-  background: #7a55b3 !important;
+  background: #5c34a8 !important;
+  box-shadow: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

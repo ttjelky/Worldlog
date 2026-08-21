@@ -13,6 +13,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
 import styles from './Dashboard.module.css'
@@ -65,29 +66,62 @@ function WorldForm({ open, onClose, initial, onSubmit }) {
               : 'Створіть новий світ та почніть досліджувати.'}
           </p>
           <div className={styles.formFields}>
-            <TextField label="Назва світу" value={form.name} onChange={set('name')} required />
+            <div className={styles.formRow}>
+              <TextField
+                label="Назва світу"
+                value={form.name}
+                onChange={set('name')}
+                required
+                className={styles.fieldName}
+              />
+              <TextField
+                label="Дата початку"
+                type="date"
+                value={form.start_date}
+                onChange={set('start_date')}
+                InputLabelProps={{ shrink: true }}
+                className={styles.fieldDate}
+              />
+            </div>
+
             <TextField
               label="Опис"
               value={form.description}
               onChange={set('description')}
               multiline
-              minRows={3}
+              minRows={2}
+              maxRows={3}
             />
+
             <TextField label="Сід (seed)" value={form.seed} onChange={set('seed')} />
-            <TextField
-              label="Дата початку"
-              type="date"
-              value={form.start_date}
-              onChange={set('start_date')}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Обкладинка"
-              type="file"
-              onChange={setFile('cover_image')}
-              InputLabelProps={{ shrink: true }}
-              helperText="Зображення для картки світу"
-            />
+
+            <div className={styles.orDivider} role="separator">
+              <span className={styles.orDividerLine} />
+              <span className={styles.orDividerLabel}>АБО</span>
+              <span className={styles.orDividerLine} />
+            </div>
+
+            <label className={styles.fileDropzone} htmlFor="world-file-upload">
+              <input
+                id="world-file-upload"
+                type="file"
+                onChange={setFile('cover_image')}
+                className={styles.fileInputHidden}
+              />
+              <span className={styles.fileDropzoneIcon}>
+                <UploadFileOutlinedIcon fontSize="inherit" />
+              </span>
+              <span className={styles.fileDropzoneText}>
+                <span className={styles.fileDropzoneTitle}>
+                  {form.cover_image ? form.cover_image.name : 'Завантажити файл світу'}
+                </span>
+                <span className={styles.fileDropzoneHint}>
+                  {form.cover_image
+                    ? 'Натисніть, щоб обрати інший файл'
+                    : 'Перетягніть файл сюди або натисніть для вибору'}
+                </span>
+              </span>
+            </label>
           </div>
         </DialogContent>
         <DialogActions className={styles.dialogActions}>
