@@ -12,6 +12,13 @@
   gap: 32px;
 }
 
+.logoImg {
+  height: 40px;
+  width: auto;
+  display: block;
+  cursor: pointer;
+}
+
 .navLinks {
   display: flex;
   align-items: center;
