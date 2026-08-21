@@ -19,17 +19,6 @@
   padding: 0;
 }
 
-/* MUI OutlinedInput: universal reset kills the notch legend padding.
-   Restore it so the border renders correctly when field is unfocused. */
-.MuiOutlinedInput-notchedOutline {
-  border-radius: inherit !important;
-}
-.MuiOutlinedInput-notchedOutline legend {
-  padding: 0 4px;
-  margin-left: -4px;
-  max-width: 100%;
-}
-
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -82,11 +71,11 @@ ol {
   outline-offset: 2px;
 }
 
-/* MUI OutlinedInput: restore legend padding killed by universal reset */
+/* MUI OutlinedInput: universal reset kills the notch legend.
+   Restore so border renders behind label when field is unfocused. */
 .MuiOutlinedInput-notchedOutline legend {
-  padding: 0 4px;
-  margin-left: -4px;
-  max-width: 100%;
+  padding: 0 5px !important;
+  margin-left: -3px !important;
 }
 
 /* ---- Utility: visually hidden (screen reader only) ---- */
