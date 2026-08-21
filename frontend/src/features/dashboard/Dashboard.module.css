@@ -397,17 +397,39 @@
   color: var(--md-on-surface);
 }
 
+/* Disable MUI's own fieldset-based outline entirely — it's proven
+   unreliable (notch desync, stray gaps, browser fieldset quirks affecting
+   height). Draw a plain border on the input's own div instead: no
+   fieldset, no legend, no special browser layout rules to fight. */
 .formFields :global(.MuiOutlinedInput-notchedOutline) {
-  border-color: var(--md-outline);
+  display: none !important;
 }
 
-.formFields :global(.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline) {
+.formFields :global(.MuiOutlinedInput-root) {
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid var(--md-outline);
+  transition: border-color 150ms linear;
+}
+
+.formFields :global(.MuiOutlinedInput-root:hover) {
   border-color: var(--md-on-surface);
 }
 
-.formFields :global(.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline) {
+.formFields :global(.MuiOutlinedInput-root.Mui-focused) {
   border-color: var(--md-primary);
   border-width: 2px;
+  margin: -1px;
+}
+
+/* Simpler than fighting the outline's notch/legend sync: give the floating
+   label its own background matching the dialog surface, so it visually
+   covers the border line sitting behind it instead of relying on the
+   outline to cut a gap for it. */
+.formFields :global(.MuiInputLabel-root) {
+  background: var(--md-surface);
+  padding: 0 4px;
+  margin-left: -4px;
 }
 
 .formFields :global(.MuiInputLabel-root) {

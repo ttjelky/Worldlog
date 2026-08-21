@@ -4,6 +4,42 @@
   gap: 16px;
 }
 
+/* Disable MUI's own fieldset-based outline entirely — it's proven
+   unreliable (notch desync, stray gaps, browser fieldset quirks affecting
+   height). Draw a plain border on the input's own div instead: no
+   fieldset, no legend, no special browser layout rules to fight. */
+.form :global(.MuiOutlinedInput-notchedOutline) {
+  display: none !important;
+}
+
+.form :global(.MuiOutlinedInput-root) {
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.23);
+  transition: border-color 150ms linear;
+}
+
+.form :global(.MuiOutlinedInput-root:hover) {
+  border-color: rgba(0, 0, 0, 0.87);
+}
+
+.form :global(.MuiOutlinedInput-root.Mui-focused) {
+  border-color: #7c83f5;
+  border-width: 2px;
+  margin: -1px;
+}
+
+/* Simpler than fighting the outline's notch/legend sync: give the floating
+   label its own background matching the card surface it sits on, so it
+   visually covers the border line behind it instead of relying on the
+   outline to cut a gap for it. Adjust --auth-surface if AuthShell's card
+   background isn't white. */
+.form :global(.MuiInputLabel-root) {
+  background: var(--auth-surface, #ffffff);
+  padding: 0 4px;
+  margin-left: -4px;
+}
+
 .footerLink {
   font-weight: 700 !important;
   color: #7c83f5 !important;
