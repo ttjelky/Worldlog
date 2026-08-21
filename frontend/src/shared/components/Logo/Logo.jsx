@@ -1,4 +1,3 @@
-import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined'
 import styles from './Logo.module.css'
 
 export default function Logo({ onClick }) {
@@ -11,13 +10,7 @@ export default function Logo({ onClick }) {
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <div className={styles.icon}>
-        <ExploreOutlinedIcon className={styles.iconSvg} />
-      </div>
-      <div className={styles.textGroup}>
-        <div className={styles.brandName}>WorldLog</div>
-        <div className={styles.subtext}>by DiJital</div>
-      </div>
+      <img src="/worldlog-logo.png" alt="WorldLog" className={styles.logoImg} />
     </div>
   )
 }
