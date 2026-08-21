@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
+import sharedStyles from '../shared/section.module.css'
 import styles from './HistorySection.module.css'
 
 const categories = [
@@ -70,8 +71,8 @@ export default function HistorySection({ worldId }) {
 
   return (
     <div>
-      <div className={styles.sectionHeader}>
-        <h6 className={styles.sectionTitle}>Історія світу ({events.length})</h6>
+      <div className={sharedStyles.sectionHeader}>
+        <h6 className={sharedStyles.sectionTitle}>Історія світу ({events.length})</h6>
         <Button
           variant="contained"
           color="primary"
@@ -123,14 +124,14 @@ export default function HistorySection({ worldId }) {
           )
         })}
         {events.length === 0 && (
-          <p className={styles.emptyMsg}>Літопис порожній. Зафіксуй першу подію світу.</p>
+          <p className={sharedStyles.emptyMsg}>Літопис порожній. Зафіксуй першу подію світу.</p>
         )}
       </div>
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати подію' : 'Нова подія'}</DialogTitle>
           <DialogContent>
-            <div className={styles.formFields}>
+            <div className={sharedStyles.formFields}>
               <TextField
                 label="Заголовок"
                 value={form.title}
@@ -167,7 +168,7 @@ export default function HistorySection({ worldId }) {
               </TextField>
             </div>
           </DialogContent>
-          <DialogActions className={styles.dialogActions}>
+          <DialogActions className={sharedStyles.dialogActions}>
             <Button onClick={() => setOpen(false)} color="inherit">
               Скасувати
             </Button>

@@ -9,6 +9,7 @@ import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutli
 import TimelineOutlinedIcon from '@mui/icons-material/TimelineOutlined'
 import { useParams } from 'react-router-dom'
 import api from '../../api'
+import backBtnStyles from '../../shared/styles/backButton.module.css'
 import PlayersSection from './components/PlayersSection/PlayersSection'
 import LocationsSection from './components/LocationsSection/LocationsSection'
 import TodosSection from './components/TodosSection/TodosSection'
@@ -43,7 +44,7 @@ export default function WorldDetail({ onBack }) {
 
   return (
     <div>
-      <button className={styles.backBtn} onClick={onBack}>
+      <button className={backBtnStyles.backBtn} onClick={onBack}>
         <ArrowBackIcon fontSize="small" />
         До всіх світів
       </button>

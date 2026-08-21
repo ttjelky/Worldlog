@@ -1,0 +1,19 @@
+/* Спільний стиль кнопки "назад" */
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: rgba(13, 13, 15, 0.65);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.backBtn:hover {
+  color: #7c83f5;
+}

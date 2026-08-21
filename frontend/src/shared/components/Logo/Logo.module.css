@@ -1,7 +1,7 @@
 .root {
   display: flex;
   align-items: center;
-  gap: var(--space-1-5);
+  gap: 12px;
   cursor: default;
 }
 
@@ -13,12 +13,12 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, #7c83f5 0%, #5c63e0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-white);
-  box-shadow: var(--shadow-button);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(124, 131, 245, 0.35);
   flex-shrink: 0;
 }
 
@@ -31,15 +31,15 @@
 }
 
 .brandName {
-  font-weight: var(--font-weight-black);
-  font-size: var(--font-size-lg);
-  color: var(--color-black);
+  font-weight: 900;
+  font-size: 20px;
+  color: #0d0d0f;
 }
 
 .subtext {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-widest);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--color-primary-dark);
+  color: #5c63e0;
 }

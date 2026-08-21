@@ -7,13 +7,13 @@ import LandingFooter from './components/LandingFooter/LandingFooter'
 
 export default function Landing({ onStart }) {
   return (
-    <div>
+    <>
       <LandingHeader onStart={onStart} />
       <Hero onStart={onStart} />
       <StatsBar />
       <FeatureCards />
       <ComingSoon onStart={onStart} />
       <LandingFooter />
-    </div>
+    </>
   )
 }

@@ -20,6 +20,7 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
+import sharedStyles from '../shared/section.module.css'
 import styles from './TodosSection.module.css'
 
 const priorities = {
@@ -77,8 +78,8 @@ export default function TodosSection({ worldId }) {
 
   return (
     <div>
-      <div className={styles.sectionHeader}>
-        <h6 className={styles.sectionTitle}>
+      <div className={sharedStyles.sectionHeader}>
+        <h6 className={sharedStyles.sectionTitle}>
           Todo-лист ({done}/{todos.length})
         </h6>
         <Button
@@ -126,14 +127,14 @@ export default function TodosSection({ worldId }) {
           )
         })}
         {todos.length === 0 && (
-          <p className={styles.emptyMsg}>Плани ще не складені. Додай перше завдання.</p>
+          <p className={sharedStyles.emptyMsg}>Плани ще не складені. Додай перше завдання.</p>
         )}
       </List>
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати завдання' : 'Нове завдання'}</DialogTitle>
           <DialogContent>
-            <div className={styles.formFields}>
+            <div className={sharedStyles.formFields}>
               <TextField
                 label="Назва"
                 value={form.title}
@@ -169,7 +170,7 @@ export default function TodosSection({ worldId }) {
               />
             </div>
           </DialogContent>
-          <DialogActions className={styles.dialogActions}>
+          <DialogActions className={sharedStyles.dialogActions}>
             <Button onClick={() => setOpen(false)} color="inherit">
               Скасувати
             </Button>

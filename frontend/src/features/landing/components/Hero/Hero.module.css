@@ -1,173 +1,345 @@
+/* ── Hero section ── */
 .heroSection {
-  padding-top: var(--space-10);
-  padding-bottom: 0;
+  padding: 10px 0;
 }
 
 .heroInner {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 24px;
 }
 
+/* ── Two-column grid ── */
 .heroGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-6);
-  align-items: stretch;
+  gap: 32px;
+  align-items: start;
 }
 
 @media (min-width: 900px) {
   .heroGrid {
-    grid-template-columns: 7fr 5fr;
+    grid-template-columns: 780px 1fr;
+    gap: 10px;
   }
 }
 
-/* Left panel — mockup */
-.mockupPanel {
-  border-radius: var(--radius-3xl);
-  background: var(--color-mockup-bg);
-  border: 1px solid var(--color-mockup-border);
-  box-shadow: var(--shadow-hero);
+/* ── Left: text panel ── */
+.heroText {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  overflow: hidden;
-  min-height: 280px;
+  padding: 44px 32px;
+  background: #f0f2f5;
+  border-radius: 20px;
 }
 
 @media (min-width: 900px) {
-  .mockupPanel {
-    min-height: 460px;
+  .heroText {
+    border-radius: 20px;
+    padding: 36px 40px;
   }
 }
 
-.mockupCard {
-  width: 78%;
-  background: var(--color-mockup-card-bg);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-hero-card);
-  padding: var(--space-2);
+.overline {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9aa0b0;
+  display: block;
+  margin-bottom: 20px;
 }
 
-.mockupDots {
+.heroTitle {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 900;
+  font-size: 56px;
+  line-height: 1;
+  color: #0d0d0f;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+  margin-top: 25px;
+}
+
+@media (min-width: 900px) {
+  .heroTitle {
+    font-size: 100px;
+  }
+}
+
+.heroSubtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 22px;
+  line-height: 1.65;
+  color: rgba(13, 13, 15, 0.65);
+  margin-bottom: 28px;
+  max-width: 460px;
+}
+
+.heroButton {
+  align-self: flex-start;
+  border-radius: 999px !important;
+  padding: 16px 48px !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 20px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  margin-bottom: 25px;
+}
+
+/* ── Right: collage ── */
+.heroCollage {
+  position: relative;
+  height: 495px;
+  border-radius: 20px;
+  background: #2a2d3a;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .heroCollage {
+    min-height: 420px;
+    border-radius: 24px;
+  }
+}
+
+/* ── Shared card chrome ── */
+.collageCard {
+  position: absolute;
+  background: #ffffff;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.mockupHeader {
+  background: #f9f9fc;
+  padding: 10px 14px;
   display: flex;
-  gap: var(--space-1);
-  margin-bottom: var(--space-2);
+  align-items: center;
 }
 
-.mockupDot {
+.mockupHeaderDots {
+  display: flex;
+  gap: 6px;
+}
+
+.dotRed,
+.dotYellow,
+.dotGreen {
   width: 10px;
   height: 10px;
   border-radius: 50%;
 }
 
-.mockupDotRed { background: var(--color-mockup-dot-red); }
-.mockupDotYellow { background: var(--color-mockup-dot-yellow); }
-.mockupDotGreen { background: var(--color-mockup-dot-green); }
+.dotRed { background: #f87171; }
+.dotYellow { background: #fbbf24; }
+.dotGreen { background: #4ade80; }
 
-.mockupGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-1);
+.mockupBody {
+  padding: 14px 16px 16px;
+}
+
+.mockupCardTitle {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: rgba(13, 13, 15, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
 }
 
 .mockupRow {
-  height: 54px;
-  border-radius: var(--radius-sm);
-  background: var(--color-mockup-stripe);
   display: flex;
   align-items: center;
-  padding: 0 var(--space-1-5);
-  gap: var(--space-1);
+  gap: 10px;
+  padding: 8px 0;
 }
 
-.mockupRow:nth-child(even) {
-  background: var(--color-mockup-row-hover);
+.mockupRow + .mockupRow {
+  border-top: 1px solid rgba(13, 13, 15, 0.06);
 }
 
-.mockupRowDot {
-  width: 26px;
-  height: 26px;
+.mockupRowText {
+  min-width: 0;
+}
+
+.mockupRowName {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #0d0d0f;
+}
+
+.mockupRowSub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: rgba(13, 13, 15, 0.65);
+}
+
+.mockupRowCoords {
+  font-family: monospace;
+  font-size: 11px;
+  color: rgba(13, 13, 15, 0.65);
+}
+
+.mockupRowDate {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Players ── */
+.collagePlayers {
+  width: 280px;
+  top: 5%;
+  left: 6%;
+  z-index: 3;
+  transform: rotate(-2deg);
+}
+
+.mockupAvatar {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.mockupRowBar {
-  width: 60%;
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--color-mockup-row-alt);
+.mockupLocDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-/* Right panel — text */
-.textPanel {
-  background: var(--color-primary-light);
-  border-radius: var(--radius-3xl);
-  padding: var(--space-6);
+/* ── Locations ── */
+.collageLocations {
+  width: 300px;
+  bottom: 6%;
+  left: 4%;
+  z-index: 4;
+  transform: rotate(1.5deg);
+}
+
+/* ── Todos ── */
+.collageTodos {
+  width: 270px;
+  top: 8%;
+  right: 6%;
+  z-index: 2;
+  transform: rotate(2.5deg);
+}
+
+.mockupCheckbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 2px solid rgba(13, 13, 15, 0.65);
+  flex-shrink: 0;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: var(--space-3);
 }
 
+.mockupCheckSvg {
+  width: 15px;
+  height: 15px;
+}
+
+.mockupTodoDone {
+  text-decoration: line-through;
+  color: rgba(13, 13, 15, 0.65);
+}
+
+/* ── Timeline ── */
+.collageTimeline {
+  width: 280px;
+  bottom: 10%;
+  right: 6%;
+  z-index: 5;
+  transform: rotate(-1.5deg);
+}
+
+.mockupTimelineNode {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Mobile ── */
 @media (max-width: 899px) {
-  .textPanel {
-    padding: var(--space-4);
+  .heroText {
+    border-radius: 24px 24px 0 0;
+    padding: 48px 32px;
   }
-}
 
-.overline {
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-sm);
-  letter-spacing: var(--letter-spacing-overline-lg);
-  text-transform: uppercase;
-  color: var(--color-primary-dark);
-  display: block;
-  margin-bottom: var(--space-4);
-}
-
-.heroTitle {
-  font-weight: var(--font-weight-black);
-  font-size: 44px;
-  line-height: 1.1;
-  color: var(--color-text);
-  margin-bottom: var(--space-6);
-  letter-spacing: var(--letter-spacing-snug);
-}
-
-@media (min-width: 900px) {
   .heroTitle {
-    font-size: 76px;
+    font-size: 44px;
   }
-}
 
-.heroTitleAccent {
-  color: var(--color-primary);
-}
-
-.panelOverline {
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-sm);
-  letter-spacing: var(--letter-spacing-overline-lg);
-  text-transform: uppercase;
-  color: var(--color-primary-dark);
-}
-
-.panelTitle {
-  font-weight: var(--font-weight-black);
-  font-size: var(--font-size-3xl);
-  letter-spacing: var(--letter-spacing-snug);
-  line-height: var(--line-height-snug);
-  color: var(--color-text);
-}
-
-@media (min-width: 900px) {
-  .panelTitle {
-    font-size: var(--font-size-5xl);
+  .heroSubtitle {
+    font-size: 17px;
   }
-}
 
-.description {
-  font-size: var(--font-size-md);
-  line-height: var(--line-height-relaxed);
-  color: var(--color-text-secondary);
+  .heroCollage {
+    min-height: 380px;
+    border-radius: 0 0 24px 24px;
+  }
+
+  .collageCard {
+    border-radius: 22px;
+  }
+
+  .collagePlayers {
+    width: 190px;
+    top: 4%;
+    left: 3%;
+  }
+
+  .collageLocations {
+    width: 200px;
+    bottom: 4%;
+    left: 1%;
+  }
+
+  .collageTodos {
+    width: 180px;
+    top: 6%;
+    right: 2%;
+  }
+
+  .collageTimeline {
+    width: 190px;
+    bottom: 8%;
+    right: 3%;
+  }
+
+  .mockupAvatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .mockupLocDot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .mockupRowName {
+    font-size: 12px;
+  }
+
+  .mockupRowSub,
+  .mockupRowCoords,
+  .mockupRowDate {
+    font-size: 10px;
+  }
 }

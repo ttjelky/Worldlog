@@ -16,6 +16,7 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
+import sharedStyles from '../shared/section.module.css'
 import styles from './PlayersSection.module.css'
 
 export default function PlayersSection({ worldId }) {
@@ -61,8 +62,8 @@ export default function PlayersSection({ worldId }) {
 
   return (
     <div>
-      <div className={styles.sectionHeader}>
-        <h6 className={styles.sectionTitle}>Гравці ({players.length})</h6>
+      <div className={sharedStyles.sectionHeader}>
+        <h6 className={sharedStyles.sectionTitle}>Гравці ({players.length})</h6>
         <Button
           variant="contained"
           color="primary"
@@ -94,14 +95,16 @@ export default function PlayersSection({ worldId }) {
           </Card>
         ))}
         {players.length === 0 && (
-          <p className={styles.emptyMsg}>Тут поки нікого немає. Додай першого гравця світу.</p>
+          <p className={sharedStyles.emptyMsg}>
+            Тут поки нікого немає. Додай першого гравця світу.
+          </p>
         )}
       </div>
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати гравця' : 'Новий гравець'}</DialogTitle>
           <DialogContent>
-            <div className={styles.formFields}>
+            <div className={sharedStyles.formFields}>
               <TextField
                 label="Нікнейм"
                 value={form.nickname}
@@ -122,7 +125,7 @@ export default function PlayersSection({ worldId }) {
               />
             </div>
           </DialogContent>
-          <DialogActions className={styles.dialogActions}>
+          <DialogActions className={sharedStyles.dialogActions}>
             <Button onClick={() => setOpen(false)} color="inherit">
               Скасувати
             </Button>

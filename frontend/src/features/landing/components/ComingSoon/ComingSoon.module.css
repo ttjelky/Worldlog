@@ -1,13 +1,13 @@
 .section {
-  padding: var(--space-12) 0;
-  background: var(--color-black);
-  color: var(--color-white);
+  padding: 96px 0;
+  background: #0d0d0f;
+  color: #ffffff;
 }
 
 .sectionInner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--space-3);
+  padding: 0 24px;
 }
 
 .content {
@@ -18,33 +18,35 @@
 
 .badge {
   display: inline-block;
-  padding: 4px 16px;
-  border-radius: var(--radius-pill);
-  background: var(--color-secondary-light);
-  color: var(--color-black);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-base);
-  margin-bottom: var(--space-3);
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
 }
 
 .title {
-  font-weight: var(--font-weight-black);
-  font-size: var(--font-size-3xl);
-  letter-spacing: var(--letter-spacing-snug);
-  line-height: var(--line-height-snug);
-  color: var(--color-white);
-  margin-bottom: var(--space-3);
+  font-weight: 900;
+  font-size: 40px;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: #ffffff;
+  margin-bottom: 24px;
 }
 
 @media (min-width: 900px) {
   .title {
-    font-size: var(--font-size-5xl);
+    font-size: 56px;
   }
 }
 
 .description {
-  font-size: var(--font-size-md);
-  line-height: var(--line-height-relaxed);
-  color: var(--color-text-on-dark);
-  margin-bottom: var(--space-4);
+  font-size: 17px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.72);
+  margin-bottom: 32px;
 }

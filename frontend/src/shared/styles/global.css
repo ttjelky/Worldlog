@@ -10,8 +10,6 @@
 @import '@fontsource/dm-sans/700.css';
 @import '@fontsource/dm-sans/900.css';
 
-@import './tokens.css';
-
 /* ---- Reset ---- */
 *,
 *::before,
@@ -28,11 +26,10 @@ html {
 }
 
 body {
-  font-family: var(--font-family);
-  font-size: var(--font-size-md);
-  line-height: var(--line-height-relaxed);
-  color: var(--color-text);
-  background: var(--color-bg);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  color: #0d0d0f;
   min-height: 100vh;
 }
 
@@ -70,7 +67,7 @@ ol {
 
 /* ---- Focus-visible ring for accessibility ---- */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid #7c83f5;
   outline-offset: 2px;
 }
 

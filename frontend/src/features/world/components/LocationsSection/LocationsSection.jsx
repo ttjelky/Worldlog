@@ -24,6 +24,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined'
 import api from '../../../../api'
+import sharedStyles from '../shared/section.module.css'
 import styles from './LocationsSection.module.css'
 
 const categories = [
@@ -107,8 +108,8 @@ export default function LocationsSection({ worldId }) {
 
   return (
     <div>
-      <div className={styles.sectionHeader}>
-        <h6 className={styles.sectionTitle}>Локації ({locations.length})</h6>
+      <div className={sharedStyles.sectionHeader}>
+        <h6 className={sharedStyles.sectionTitle}>Локації ({locations.length})</h6>
         <Button
           variant="contained"
           color="primary"
@@ -169,7 +170,7 @@ export default function LocationsSection({ worldId }) {
         ))}
         {locations.length === 0 && (
           <Grid size={12}>
-            <p className={styles.emptyMsg}>Світ ще не досліджений. Додай першу локацію.</p>
+            <p className={sharedStyles.emptyMsg}>Світ ще не досліджений. Додай першу локацію.</p>
           </Grid>
         )}
       </Grid>
@@ -178,7 +179,7 @@ export default function LocationsSection({ worldId }) {
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати локацію' : 'Нова локація'}</DialogTitle>
           <DialogContent>
-            <div className={styles.formFields}>
+            <div className={sharedStyles.formFields}>
               <TextField
                 label="Назва"
                 value={form.name}
@@ -219,7 +220,7 @@ export default function LocationsSection({ worldId }) {
               </TextField>
             </div>
           </DialogContent>
-          <DialogActions className={styles.dialogActions}>
+          <DialogActions className={sharedStyles.dialogActions}>
             <Button onClick={() => setOpen(false)} color="inherit">
               Скасувати
             </Button>

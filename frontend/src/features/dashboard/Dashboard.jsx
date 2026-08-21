@@ -1,13 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import Grid from '@mui/material/Grid2'
 import {
   Button,
-  Card,
-  CardActionArea,
-  CardContent,
-  CardMedia,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,11 +13,18 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import MapIcon from '@mui/icons-material/Map'
 import api from '../../api'
+import Navbar from '../../shared/components/Navbar/Navbar'
 import styles from './Dashboard.module.css'
 
 const emptyWorld = { name: '', description: '', seed: '', start_date: '', cover_image: null }
+
+const PLACEHOLDER_COPY = {
+  overview: 'Тут з\'явиться загальна статистика по всіх твоїх світах.',
+  worlds: 'Тут з\'явиться повний перелік світів з фільтрами та сортуванням.',
+  friends: 'Тут з\'являться світи та профілі твоїх друзів.',
+  search: 'Тут з\'явиться пошук по світах, персонажах і подіях.',
+}
 
 function useWorldForm(initial) {
   const [form, setForm] = useState(initial)
@@ -86,10 +87,36 @@ function WorldForm({ open, onClose, initial, onSubmit }) {
   )
 }
 
+function getWorldStatus(world) {
+  const total = world.todos_count || 0
+  const done = world.todos_done || 0
+  if (total === 0) return { label: 'Новий', variant: 'default' }
+  const ratio = done / total
+  if (ratio >= 0.8) return { label: 'Активний', variant: 'success' }
+  if (ratio >= 0.3) return { label: 'В роботі', variant: 'warning' }
+  return { label: 'Початок', variant: 'default' }
+}
+
+function getCompletionPercent(world) {
+  if (!world.todos_count) return 0
+  return Math.round((world.todos_done / world.todos_count) * 100)
+}
+
+function PlaceholderPage({ id, label }) {
+  return (
+    <div className={styles.placeholder}>
+      <h1 className={styles.placeholderTitle}>{label}</h1>
+      <p className={styles.placeholderText}>{PLACEHOLDER_COPY[id]}</p>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [activePage, setActivePage] = useState('home')
+
   const { data: worlds = [], isLoading } = useQuery({
     queryKey: ['worlds'],
     queryFn: () => api.get('/worlds/').then((r) => r.data),
@@ -118,73 +145,124 @@ export default function Dashboard() {
     setOpen(true)
   }
 
+  const totalProgress = worlds.length
+    ? Math.round(worlds.reduce((sum, w) => sum + getCompletionPercent(w), 0) / worlds.length)
+    : 0
+
+  const NAV_ITEMS = [
+    { id: 'home', label: 'Головна' },
+    { id: 'overview', label: 'Огляд' },
+    { id: 'worlds', label: 'Мої світи' },
+    { id: 'friends', label: 'Друзі' },
+    { id: 'search', label: 'Пошук' },
+  ]
+
+  const activeNavItem = NAV_ITEMS.find((n) => n.id === activePage)
+
   return (
-    <div>
-      <div className={styles.header}>
-        <div>
-          <h4 className={styles.headerTitle}>Мої світи</h4>
-          <p className={styles.headerSub}>{worlds.length} світ(ів) у твоєму літописі</p>
-        </div>
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={openCreate}>
-          Новий світ
-        </Button>
-      </div>
+    <div className={styles.appShell}>
+      <Navbar activePage={activePage} onNavigate={setActivePage} />
 
-      {isLoading && <LinearProgress />}
+      <div className={styles.page}>
+        {activePage !== 'home' ? (
+          <PlaceholderPage id={activeNavItem.id} label={activeNavItem.label} />
+        ) : (
+          <>
+            <section className={styles.hero}>
+              <p className={styles.heroGreeting}>Твій літопис</p>
+              <h1 className={styles.heroTitle}>Мої світи</h1>
+            </section>
 
-      <Grid container spacing={3}>
-        {worlds.map((w) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={w.id}>
-            <Card>
-              <CardActionArea onClick={() => (location.href = `/app/worlds/${w.id}`)}>
-                {w.cover_image_url ? (
-                  <CardMedia component="img" height="160" image={w.cover_image_url} alt={w.name} />
-                ) : (
-                  <div className={styles.placeholder}>
-                    <MapIcon className={styles.placeholderIcon} />
-                  </div>
-                )}
-                <CardContent>
-                  <h6 className={styles.cardTitle}>{w.name}</h6>
-                  <p className={styles.cardDesc}>{w.description || 'Немає опису'}</p>
-                  <div className={styles.chipRow}>
-                    <Chip size="small" label={`👤 ${w.players_count}`} />
-                    <Chip size="small" label={`📌 ${w.locations_count}`} />
-                    <Chip size="small" label={`☑️ ${w.todos_done}/${w.todos_count}`} />
-                    <Chip size="small" label={`🕑 ${w.history_count}`} />
-                  </div>
-                </CardContent>
-              </CardActionArea>
-              <div className={styles.cardActions}>
-                <IconButton size="small" onClick={() => openEdit(w)} title="Редагувати">
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={() => {
-                    if (confirm('Видалити світ безповоротно?')) deleteWorld.mutate(w.id)
-                  }}
-                  title="Видалити"
-                >
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
+            <div className={styles.statsBar}>
+              <span className={styles.statsText}>
+                {worlds.length} {worlds.length === 1 ? 'світ' : worlds.length < 5 ? 'світи' : 'світів'}
+              </span>
+              <div className={styles.statsRight}>
+                <span className={styles.statsText}>{totalProgress}% виконано</span>
+                <div className={styles.progressTrack}>
+                  <div className={styles.progressFill} style={{ width: `${totalProgress}%` }} />
+                </div>
               </div>
-            </Card>
-          </Grid>
-        ))}
-        {worlds.length === 0 && !isLoading && (
-          <Grid size={12}>
-            <div className={styles.empty}>
-              <h5 className={styles.emptyTitle}>Ще немає жодного світу</h5>
-              <p className={styles.emptySub}>Створи перший паспорт свого світу</p>
-              <Button variant="contained" color="primary" onClick={openCreate}>
-                Новий світ
-              </Button>
             </div>
-          </Grid>
+
+            {isLoading && <LinearProgress />}
+
+            <div className={styles.grid}>
+              {worlds.map((w, i) => {
+                const status = getWorldStatus(w)
+                const percent = getCompletionPercent(w)
+                return (
+                  <button
+                    key={w.id}
+                    className={styles.worldCard}
+                    onClick={() => (location.href = `/app/worlds/${w.id}`)}
+                  >
+                    <div className={styles.cardTop}>
+                      <span className={styles.cardNumber}>{String(i + 1).padStart(2, '0')}</span>
+                      <span className={`${styles.cardBadge} ${styles[`badge${status.variant}`]}`}>
+                        {status.label}
+                      </span>
+                    </div>
+                    <h3 className={styles.cardTitle}>{w.name}</h3>
+                    <div className={styles.cardBottom}>
+                      <div className={styles.cardOwner}>
+                        <div className={styles.ownerAvatar}>
+                          {(w.owner_username || '?')[0].toUpperCase()}
+                        </div>
+                        <span className={styles.ownerName}>{w.owner_username}</span>
+                      </div>
+                      <div className={styles.cardProgress}>
+                        <div className={styles.cardProgressTrack}>
+                          <div className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.cardActions}>
+                      <IconButton
+                        size="small"
+                        className={styles.cardActionBtn}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openEdit(w)
+                        }}
+                        title="Редагувати"
+                      >
+                        <EditOutlinedIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        className={styles.cardActionBtn}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (confirm('Видалити світ безповоротно?')) deleteWorld.mutate(w.id)
+                        }}
+                        title="Видалити"
+                      >
+                        <DeleteOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </div>
+                  </button>
+                )
+              })}
+
+              <button className={`${styles.worldCard} ${styles.addCard}`} onClick={openCreate}>
+                <AddIcon className={styles.addIcon} />
+                <span className={styles.addText}>Новий світ</span>
+              </button>
+            </div>
+
+            {worlds.length === 0 && !isLoading && (
+              <div className={styles.empty}>
+                <h5 className={styles.emptyTitle}>Ще немає жодного світу</h5>
+                <p className={styles.emptySub}>Створи перший паспорт свого світу</p>
+                <Button variant="contained" color="primary" onClick={openCreate}>
+                  Новий світ
+                </Button>
+              </div>
+            )}
+          </>
         )}
-      </Grid>
+      </div>
 
       <WorldForm
         open={open}

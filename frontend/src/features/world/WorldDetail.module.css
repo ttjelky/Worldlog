@@ -1,24 +1,5 @@
-.backBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-0-5);
-  font-family: var(--font-family);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
-  background: none;
-  border: none;
-  padding: 0;
-  margin-bottom: var(--space-3);
-  cursor: pointer;
-}
-
-.backBtn:hover {
-  color: var(--color-primary);
-}
-
 .coverCard {
-  margin-bottom: var(--space-3);
+  margin-bottom: 24px;
   overflow: hidden;
 }
 
@@ -31,34 +12,34 @@
 
 .coverPlaceholder {
   height: 120px;
-  background: var(--color-primary-light);
+  background: #f0f2f5;
 }
 
 .coverContent {
-  padding: var(--space-4);
+  padding: 32px;
 }
 
 .worldTitle {
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-3xl);
-  color: var(--color-text);
+  font-weight: 700;
+  font-size: 40px;
+  color: #0d0d0f;
 }
 
 .worldDesc {
-  font-size: var(--font-size-md);
-  color: var(--color-text-secondary);
-  margin-top: var(--space-1);
+  font-size: 17px;
+  color: rgba(13, 13, 15, 0.65);
+  margin-top: 8px;
 }
 
 .metaRow {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
-  margin-top: var(--space-2);
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .tabs {
-  margin-bottom: var(--space-3);
+  margin-bottom: 24px;
 }
 
 .tabs :global(.MuiTab-root) {
@@ -68,26 +49,27 @@
 }
 
 .tabs :global(.MuiTabs-indicator) {
-  background-color: var(--color-primary);
+  background-color: #7c83f5;
 }
 
 .statCard {
   text-align: center;
-  padding: var(--space-4) !important;
+  padding: 32px !important;
 }
 
 .statValue {
   display: block;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-3xl);
-  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 40px;
+  color: #3d4155;
 }
 
 .statLabel {
   display: block;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-sm);
-  letter-spacing: var(--letter-spacing-overline);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-top: var(--space-0-5);
+  color: #9aa0b0;
+  margin-top: 4px;
 }

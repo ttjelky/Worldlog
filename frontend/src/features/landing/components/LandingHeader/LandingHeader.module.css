@@ -1,16 +1,15 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--color-divider-light);
+  z-index: 10;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(13, 13, 15, 0.08);
 }
 
 .headerInner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-2) var(--space-3);
+  padding: 16px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,7 +17,7 @@
 
 .nav {
   display: none;
-  gap: var(--space-4);
+  gap: 32px;
   align-items: center;
 }
 
@@ -29,17 +28,17 @@
 }
 
 .navLink {
-  font-family: var(--font-family);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: rgba(13, 13, 15, 0.65);
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
-  letter-spacing: var(--letter-spacing-wide);
+  letter-spacing: 0.02em;
 }
 
 .navLink:hover {
-  color: var(--color-primary);
+  color: #7c83f5;
 }

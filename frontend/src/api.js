@@ -15,39 +15,6 @@ function getRefresh() {
   return localStorage.getItem(REFRESH_KEY)
 }
 
-api.interceptors.request.use((config) => {
-  const token = getAccess()
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
-api.interceptors.response.use(
-  (res) => res,
-  async (error) => {
-    const original = error.config
-    const refresh = getRefresh()
-    if (
-      error.response?.status === 401 &&
-      !original._retry &&
-      refresh &&
-      !original.url.includes('/auth/token')
-    ) {
-      original._retry = true
-      try {
-        const res = await axios.post(`${api.defaults.baseURL}/auth/token/refresh/`, { refresh })
-        localStorage.setItem(TOKEN_KEY, res.data.access)
-        original.headers.Authorization = `Bearer ${res.data.access}`
-        return api(original)
-      } catch {
-        clearAuth()
-      }
-    }
-    return Promise.reject(error)
-  },
-)
-
 function setAuth(access, refresh) {
   localStorage.setItem(TOKEN_KEY, access)
   if (refresh) localStorage.setItem(REFRESH_KEY, refresh)
@@ -61,6 +28,62 @@ function clearAuth() {
 function isAuthenticated() {
   return Boolean(getAccess())
 }
+
+api.interceptors.request.use((config) => {
+  const token = getAccess()
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+let refreshPromise = null
+
+api.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const original = error.config
+    const refresh = getRefresh()
+
+    if (
+      error.response?.status !== 401 ||
+      original._retry ||
+      !refresh ||
+      original.url.includes('/auth/token')
+    ) {
+      return Promise.reject(error)
+    }
+
+    original._retry = true
+
+    if (!refreshPromise) {
+      refreshPromise = axios
+        .post(`${api.defaults.baseURL}/auth/token/refresh/`, { refresh })
+        .then((res) => {
+          const newAccess = res.data.access
+          const newRefresh = res.data.refresh
+          setAuth(newAccess, newRefresh)
+          return newAccess
+        })
+        .catch((err) => {
+          clearAuth()
+          window.location.href = '/login'
+          return Promise.reject(err)
+        })
+        .finally(() => {
+          refreshPromise = null
+        })
+    }
+
+    try {
+      const newAccess = await refreshPromise
+      original.headers.Authorization = `Bearer ${newAccess}`
+      return api(original)
+    } catch {
+      return Promise.reject(error)
+    }
+  },
+)
 
 export const auth = { getAccess, setAuth, clearAuth, isAuthenticated }
 export default api

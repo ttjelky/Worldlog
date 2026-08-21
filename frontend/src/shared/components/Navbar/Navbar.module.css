@@ -1,0 +1,152 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px clamp(20px, 4vw, 56px);
+  border-bottom: 1px solid rgba(145, 102, 200, 0.14);
+}
+
+.navLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.logoMark {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: #9166c8;
+}
+
+.logoMark::before,
+.logoMark::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.logoMark::before {
+  width: 16px;
+  height: 16px;
+  top: 7px;
+  left: 7px;
+}
+
+.logoMark::after {
+  width: 5px;
+  height: 5px;
+  background: #ffffff;
+  border: none;
+  bottom: 7px;
+  right: 7px;
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.92;
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: #9166c8;
+  white-space: nowrap;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.navLinks::-webkit-scrollbar {
+  display: none;
+}
+
+.navLink {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(145, 102, 200, 0.6);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.navLink:hover {
+  color: #9166c8;
+  background: rgba(145, 102, 200, 0.1);
+}
+
+.navLinkActive {
+  color: #9166c8;
+  background: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  box-shadow: 0 4px 14px rgba(145, 102, 200, 0.28);
+}
+
+.navLinkActive:hover {
+  color: #9166c8;
+  background: #ffffff;
+}
+
+.navRight {
+  flex-shrink: 0;
+}
+
+.profileButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 10px 6px 6px;
+  border-radius: 999px;
+  transition: background 0.18s ease;
+}
+
+.profileButton:hover {
+  background: rgba(145, 102, 200, 0.1);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #9166c8;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.profileName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #9166c8;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: #9166c8;
+  opacity: 0.7;
+  display: flex;
+}

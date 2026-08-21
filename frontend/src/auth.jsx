@@ -1,10 +1,27 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import api, { auth } from './api'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [hydrating, setHydrating] = useState(true)
+
+  useEffect(() => {
+    if (!auth.isAuthenticated()) {
+      setHydrating(false)
+      return
+    }
+    api
+      .get('/me/')
+      .then((res) => {
+        setUser({ username: res.data.username, email: res.data.email, id: res.data.id })
+      })
+      .catch(() => {
+        auth.clearAuth()
+      })
+      .finally(() => setHydrating(false))
+  }, [])
 
   const login = useCallback(async (username, password) => {
     const res = await api.post('/auth/token/', { username, password })
@@ -16,7 +33,7 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(
     async (username, email, password) => {
-      const res = await api.post('/auth/register/', { username, email, password })
+      await api.post('/auth/register/', { username, email, password })
       return login(username, password)
     },
     [login],
@@ -28,8 +45,8 @@ export function AuthProvider({ children }) {
   }, [])
 
   const value = useMemo(
-    () => ({ user, setUser, login, register, logout }),
-    [user, login, register, logout],
+    () => ({ user, login, register, logout, hydrating }),
+    [user, login, register, logout, hydrating],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

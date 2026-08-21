@@ -9,8 +9,7 @@ export default function ComingSoon({ onStart }) {
           <span className={styles.badge}>В розробці</span>
           <h2 className={styles.title}>Скоро: спільні світи</h2>
           <p className={styles.description}>
-            Запрошуй друзів у світ, давай ролі редактора чи глядача і документуйте історію разом. Ми
-            вже заклали архітектуру — залишилось трохи почекати.
+            Запрошуй друзів у світ, давай ролі редактора чи глядача і документуйте історію разом.
           </p>
           <Button variant="contained" color="secondary" onClick={onStart}>
             Взяти участь
