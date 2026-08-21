@@ -299,6 +299,37 @@
   max-width: 480px;
 }
 
+.dialogBackdrop {
+  background: rgba(145, 102, 200, 0.35) !important;
+  backdrop-filter: blur(4px);
+}
+
+.dialogPaper {
+  background: #ece2fe !important;
+  border-radius: 28px !important;
+  box-shadow: 0 8px 40px rgba(145, 102, 200, 0.25) !important;
+  overflow: hidden;
+}
+
+.dialogTitle {
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  color: #3d2a6e !important;
+  padding: 32px 32px 0 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.dialogContent {
+  padding: 16px 32px 8px !important;
+}
+
+.dialogDescription {
+  font-size: 15px;
+  font-weight: 500;
+  color: #9166c8;
+  margin-bottom: 4px;
+}
+
 .formFields {
   display: flex;
   flex-direction: column;
@@ -307,7 +338,27 @@
 }
 
 .dialogActions {
-  padding: 24px;
+  padding: 16px 32px 28px !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+}
+
+.dialogBtnCancel {
+  color: #9166c8 !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+}
+
+.dialogBtnSubmit {
+  background: #9166c8 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  border-radius: 999px !important;
+}
+
+.dialogBtnSubmit:hover {
+  background: #7a55b3 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

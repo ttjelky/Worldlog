@@ -44,10 +44,26 @@ function WorldForm({ open, onClose, initial, onSubmit }) {
     onSubmit(data)
   }
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{
+        paper: { className: styles.dialogPaper },
+        backdrop: { className: styles.dialogBackdrop },
+      }}
+    >
       <form onSubmit={submit}>
-        <DialogTitle>{initial.name ? 'Редагувати світ' : 'Новий світ'}</DialogTitle>
-        <DialogContent>
+        <DialogTitle className={styles.dialogTitle}>
+          {initial.name ? 'Редагувати світ' : 'Новий світ'}
+        </DialogTitle>
+        <DialogContent className={styles.dialogContent}>
+          <p className={styles.dialogDescription}>
+            {initial.name
+              ? 'Оновіть інформацію про свій світ.'
+              : 'Створіть новий світ та почніть досліджувати.'}
+          </p>
           <div className={styles.formFields}>
             <TextField label="Назва світу" value={form.name} onChange={set('name')} required />
             <TextField
@@ -75,10 +91,10 @@ function WorldForm({ open, onClose, initial, onSubmit }) {
           </div>
         </DialogContent>
         <DialogActions className={styles.dialogActions}>
-          <Button onClick={onClose} color="inherit">
+          <Button onClick={onClose} className={styles.dialogBtnCancel}>
             Скасувати
           </Button>
-          <Button type="submit" variant="contained" color="primary">
+          <Button type="submit" className={styles.dialogBtnSubmit}>
             Зберегти
           </Button>
         </DialogActions>
@@ -178,7 +194,7 @@ export default function Dashboard() {
                 {worlds.length} {worlds.length === 1 ? 'світ' : worlds.length < 5 ? 'світи' : 'світів'}
               </span>
               <div className={styles.statsRight}>
-                <span className={styles.statsText}>{totalProgress}% виконано</span>
+                <span className={styles.statsText}>{totalProgress}% задач виконано</span>
                 <div className={styles.progressTrack}>
                   <div className={styles.progressFill} style={{ width: `${totalProgress}%` }} />
                 </div>
