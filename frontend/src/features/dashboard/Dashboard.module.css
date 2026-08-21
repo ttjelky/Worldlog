@@ -6,28 +6,25 @@
 }
 
 .page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: clamp(28px, 5vw, 56px) clamp(20px, 4vw, 56px) 64px;
+  padding: clamp(28px, 5vw, 56px) clamp(5px, 3vw, 20px) 64px;
 }
 
 .hero {
   margin-bottom: 8px;
+  margin-left: clamp(20px, 40px, 60px);
 }
 
 .heroGreeting {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 50px;
+  font-weight: 500;
   color: #9166c8;
-  opacity: 0.65;
-  margin-bottom: 4px;
 }
 
 .heroTitle {
-  font-size: clamp(44px, 8vw, 88px);
-  font-weight: 900;
+  font-size: clamp(100px, 18vw, 180px);
+  font-weight: 500;
   color: #9166c8;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.05em;
   line-height: 1;
 }
 
@@ -35,7 +32,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 0;
+  padding: 24px 50px;
   margin-top: 28px;
   border-bottom: 2px solid rgba(145, 102, 200, 0.15);
   margin-bottom: 32px;

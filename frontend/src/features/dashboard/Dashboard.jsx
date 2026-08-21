@@ -169,8 +169,8 @@ export default function Dashboard() {
         ) : (
           <>
             <section className={styles.hero}>
-              <p className={styles.heroGreeting}>Твій літопис</p>
-              <h1 className={styles.heroTitle}>Мої світи</h1>
+              <p className={styles.heroGreeting}>Керуйте світами</p>
+              <h1 className={styles.heroTitle}>Головна сторінка</h1>
             </section>
 
             <div className={styles.statsBar}>
@@ -250,16 +250,6 @@ export default function Dashboard() {
                 <span className={styles.addText}>Новий світ</span>
               </button>
             </div>
-
-            {worlds.length === 0 && !isLoading && (
-              <div className={styles.empty}>
-                <h5 className={styles.emptyTitle}>Ще немає жодного світу</h5>
-                <p className={styles.emptySub}>Створи перший паспорт свого світу</p>
-                <Button variant="contained" color="primary" onClick={openCreate}>
-                  Новий світ
-                </Button>
-              </div>
-            )}
           </>
         )}
       </div>
