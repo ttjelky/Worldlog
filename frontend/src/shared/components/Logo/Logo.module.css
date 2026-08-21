@@ -12,5 +12,8 @@
   height: 40px;
   width: auto;
   display: block;
+}
+
+.logoImgDark {
   filter: invert(23%) sepia(50%) saturate(2800%) hue-rotate(260deg) brightness(90%) contrast(95%);
 }

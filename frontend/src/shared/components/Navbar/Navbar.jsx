@@ -22,7 +22,7 @@ export default function Navbar({ activePage, onNavigate }) {
   return (
     <nav className={styles.navbar}>
       <div className={styles.navGroup}>
-        <Logo onClick={() => onNavigate('home')} />
+        <Logo onClick={() => onNavigate('home')} variant="dark" />
 
         <div className={styles.navLinks} role="tablist" aria-label="Розділи">
           {NAV_ITEMS.map((item) => (
