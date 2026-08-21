@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Menu, MenuItem } from '@mui/material'
+import { Button, Menu, MenuItem } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../auth'
@@ -12,6 +12,19 @@ const NAV_ITEMS = [
   { id: 'friends', label: 'Друзі' },
   { id: 'search', label: 'Пошук' },
 ]
+
+function NavLinkButton({ item, activePage, onNavigate }) {
+  return (
+    <Button
+      role="tab"
+      aria-selected={activePage === item.id}
+      className={`${styles.navLink} ${activePage === item.id ? styles.navLinkActive : ''}`}
+      onClick={() => onNavigate(item.id)}
+    >
+      {item.label}
+    </Button>
+  )
+}
 
 export default function Navbar({ activePage, onNavigate }) {
   const [anchorEl, setAnchorEl] = useState(null)
@@ -30,21 +43,18 @@ export default function Navbar({ activePage, onNavigate }) {
 
         <div className={styles.navLinks} role="tablist" aria-label="Розділи">
           {NAV_ITEMS.map((item) => (
-            <button
+            <NavLinkButton
               key={item.id}
-              role="tab"
-              aria-selected={activePage === item.id}
-              className={`${styles.navLink} ${activePage === item.id ? styles.navLinkActive : ''}`}
-              onClick={() => onNavigate(item.id)}
-            >
-              {item.label}
-            </button>
+              item={item}
+              activePage={activePage}
+              onNavigate={onNavigate}
+            />
           ))}
         </div>
       </div>
 
       <div className={styles.navRight}>
-        <button
+        <Button
           className={styles.profileButton}
           onClick={(e) => setAnchorEl(e.currentTarget)}
           aria-haspopup="menu"
@@ -55,7 +65,7 @@ export default function Navbar({ activePage, onNavigate }) {
           <span className={styles.chevron}>
             <KeyboardArrowDownIcon fontSize="small" />
           </span>
-        </button>
+        </Button>
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
           <MenuItem onClick={() => setAnchorEl(null)}>Профіль</MenuItem>
           <MenuItem onClick={() => setAnchorEl(null)}>Налаштування</MenuItem>

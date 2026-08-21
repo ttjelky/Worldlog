@@ -44,10 +44,13 @@ export default function WorldDetail({ onBack }) {
 
   return (
     <div>
-      <button className={backBtnStyles.backBtn} onClick={onBack}>
+      <Button
+        className={backBtnStyles.backBtn}
+        onClick={onBack}
+      >
         <ArrowBackIcon fontSize="small" />
         До всіх світів
-      </button>
+      </Button>
 
       <Card className={styles.coverCard}>
         {world.cover_image_url ? (

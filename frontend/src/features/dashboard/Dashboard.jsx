@@ -152,12 +152,92 @@ function getCompletionPercent(world) {
   return Math.round((world.todos_done / world.todos_count) * 100)
 }
 
+function WorldCard({ world, index, onEdit, onDelete }) {
+  const status = getWorldStatus(world)
+  const percent = getCompletionPercent(world)
+
+  return (
+    <Button
+      className={styles.worldCard}
+      onClick={() => (location.href = `/app/worlds/${world.id}`)}
+      disableRipple={false}
+      sx={{
+        '& .MuiTouchRipple-ripple': {
+          color: 'rgba(0, 0, 0, 0.18)',
+        },
+      }}
+    >
+      <div className={styles.cardTop}>
+        <span className={styles.cardNumber}>{String(index + 1).padStart(2, '0')}</span>
+        <span className={`${styles.cardBadge} ${styles[`badge${status.variant}`]}`}>
+          {status.label}
+        </span>
+      </div>
+      <h3 className={styles.cardTitle}>{world.name}</h3>
+      <div className={styles.cardBottom}>
+        <div className={styles.cardOwner}>
+          <div className={styles.ownerAvatar}>
+            {(world.owner_username || '?')[0].toUpperCase()}
+          </div>
+          <span className={styles.ownerName}>{world.owner_username}</span>
+        </div>
+        <div className={styles.cardProgress}>
+          <div className={styles.cardProgressTrack}>
+            <div className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
+          </div>
+        </div>
+      </div>
+      <div className={styles.cardActions}>
+        <IconButton
+          size="small"
+          className={styles.cardActionBtn}
+          onClick={(e) => {
+            e.stopPropagation()
+            onEdit(world)
+          }}
+          title="Редагувати"
+        >
+          <EditOutlinedIcon fontSize="small" />
+        </IconButton>
+        <IconButton
+          size="small"
+          className={styles.cardActionBtn}
+          onClick={(e) => {
+            e.stopPropagation()
+            if (confirm('Видалити світ безповоротно?')) onDelete(world.id)
+          }}
+          title="Видалити"
+        >
+          <DeleteOutlinedIcon fontSize="small" />
+        </IconButton>
+      </div>
+    </Button>
+  )
+}
+
 function PlaceholderPage({ id, label }) {
   return (
     <div className={styles.placeholder}>
       <h1 className={styles.placeholderTitle}>{label}</h1>
       <p className={styles.placeholderText}>{PLACEHOLDER_COPY[id]}</p>
     </div>
+  )
+}
+
+function AddCardButton({ onClick }) {
+  return (
+    <Button
+      className={`${styles.worldCard} ${styles.addCard}`}
+      onClick={onClick}
+      sx={{
+        '& .MuiTouchRipple-ripple': {
+          color: 'rgba(0, 0, 0, 0.18)',
+        },
+      }}
+    >
+      <AddIcon className={styles.addIcon} />
+      <span className={styles.addText}>Новий світ</span>
+    </Button>
   )
 }
 
@@ -238,67 +318,17 @@ export default function Dashboard() {
             {isLoading && <LinearProgress />}
 
             <div className={styles.grid}>
-              {worlds.map((w, i) => {
-                const status = getWorldStatus(w)
-                const percent = getCompletionPercent(w)
-                return (
-                  <button
-                    key={w.id}
-                    className={styles.worldCard}
-                    onClick={() => (location.href = `/app/worlds/${w.id}`)}
-                  >
-                    <div className={styles.cardTop}>
-                      <span className={styles.cardNumber}>{String(i + 1).padStart(2, '0')}</span>
-                      <span className={`${styles.cardBadge} ${styles[`badge${status.variant}`]}`}>
-                        {status.label}
-                      </span>
-                    </div>
-                    <h3 className={styles.cardTitle}>{w.name}</h3>
-                    <div className={styles.cardBottom}>
-                      <div className={styles.cardOwner}>
-                        <div className={styles.ownerAvatar}>
-                          {(w.owner_username || '?')[0].toUpperCase()}
-                        </div>
-                        <span className={styles.ownerName}>{w.owner_username}</span>
-                      </div>
-                      <div className={styles.cardProgress}>
-                        <div className={styles.cardProgressTrack}>
-                          <div className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    <div className={styles.cardActions}>
-                      <IconButton
-                        size="small"
-                        className={styles.cardActionBtn}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          openEdit(w)
-                        }}
-                        title="Редагувати"
-                      >
-                        <EditOutlinedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        className={styles.cardActionBtn}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (confirm('Видалити світ безповоротно?')) deleteWorld.mutate(w.id)
-                        }}
-                        title="Видалити"
-                      >
-                        <DeleteOutlinedIcon fontSize="small" />
-                      </IconButton>
-                    </div>
-                  </button>
-                )
-              })}
+              {worlds.map((w, i) => (
+                <WorldCard
+                  key={w.id}
+                  world={w}
+                  index={i}
+                  onEdit={openEdit}
+                  onDelete={(id) => deleteWorld.mutate(id)}
+                />
+              ))}
 
-              <button className={`${styles.worldCard} ${styles.addCard}`} onClick={openCreate}>
-                <AddIcon className={styles.addIcon} />
-                <span className={styles.addText}>Новий світ</span>
-              </button>
+              <AddCardButton onClick={openCreate} />
             </div>
           </>
         )}

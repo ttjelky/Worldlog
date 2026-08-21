@@ -33,9 +33,9 @@ export function Login() {
       footer={
         <span>
           Немає акаунта?{' '}
-          <button className={styles.footerLink} onClick={() => navigate('/register')}>
+          <Button className={styles.footerLink} onClick={() => navigate('/register')}>
             Зареєструватись
-          </button>
+          </Button>
         </span>
       }
     >
@@ -98,9 +98,9 @@ export function Register() {
       footer={
         <span>
           Вже є акаунт?{' '}
-          <button className={styles.footerLink} onClick={() => navigate('/login')}>
+          <Button className={styles.footerLink} onClick={() => navigate('/login')}>
             Увійти
-          </button>
+          </Button>
         </span>
       }
     >

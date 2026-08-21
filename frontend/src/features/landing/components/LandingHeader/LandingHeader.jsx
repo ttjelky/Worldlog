@@ -4,6 +4,14 @@ import styles from './LandingHeader.module.css'
 
 const navLinks = ['Головна', 'Про проєкт', 'GitHub']
 
+function NavLinkButton({ link }) {
+  return (
+    <Button className={styles.navLink}>
+      {link}
+    </Button>
+  )
+}
+
 export default function LandingHeader({ onStart }) {
   return (
     <header className={styles.header}>
@@ -11,9 +19,7 @@ export default function LandingHeader({ onStart }) {
         <Logo />
         <nav className={styles.nav}>
           {navLinks.map((link) => (
-            <button key={link} className={styles.navLink}>
-              {link}
-            </button>
+            <NavLinkButton key={link} link={link} />
           ))}
         </nav>
         <Button variant="contained" color="primary" onClick={onStart}>

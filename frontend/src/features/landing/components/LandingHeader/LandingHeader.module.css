@@ -28,17 +28,15 @@
 }
 
 .navLink {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  color: rgba(13, 13, 15, 0.65);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  letter-spacing: 0.02em;
+  min-width: 0 !important;
+  padding: 0 !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  color: rgba(13, 13, 15, 0.65) !important;
+  text-transform: none !important;
+  letter-spacing: 0.02em !important;
 }
 
 .navLink:hover {
-  color: #7c83f5;
+  color: #7c83f5 !important;
 }
