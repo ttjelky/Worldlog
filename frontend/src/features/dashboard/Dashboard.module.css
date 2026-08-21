@@ -399,7 +399,6 @@
 
 .formFields :global(.MuiOutlinedInput-notchedOutline) {
   border-color: var(--md-outline);
-  overflow: visible !important;
 }
 
 .formFields :global(.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline) {

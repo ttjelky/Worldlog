@@ -19,6 +19,17 @@
   padding: 0;
 }
 
+/* MUI OutlinedInput: universal reset kills the notch legend padding.
+   Restore it so the border renders correctly when field is unfocused. */
+.MuiOutlinedInput-notchedOutline {
+  border-radius: inherit !important;
+}
+.MuiOutlinedInput-notchedOutline legend {
+  padding: 0 4px;
+  margin-left: -4px;
+  max-width: 100%;
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -71,10 +82,13 @@ ol {
   outline-offset: 2px;
 }
 
-/* Fix MUI OutlinedInput notch — legend too narrow hides border behind label */
+/* MUI OutlinedInput: restore legend padding killed by universal reset */
+.MuiOutlinedInput-notchedOutline {
+  border-radius: inherit !important;
+}
 .MuiOutlinedInput-notchedOutline legend {
-  margin-left: -2px;
   padding: 0 4px;
+  margin-left: -4px;
   max-width: 100%;
 }
 
