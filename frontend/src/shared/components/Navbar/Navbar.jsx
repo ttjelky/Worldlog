@@ -3,6 +3,7 @@ import { Menu, MenuItem } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../auth'
+import Logo from '../Logo/Logo'
 import styles from './Navbar.module.css'
 
 const NAV_ITEMS = [
@@ -21,13 +22,7 @@ export default function Navbar({ activePage, onNavigate }) {
   return (
     <nav className={styles.navbar}>
       <div className={styles.navGroup}>
-        <div className={styles.navLeft}>
-          <span className={styles.logoMark} aria-hidden="true" />
-          <span className={styles.logoText}>
-            <span>МОЇ</span>
-            <span>СВІТИ</span>
-          </span>
-        </div>
+        <Logo onClick={() => onNavigate('home')} />
 
         <div className={styles.navLinks} role="tablist" aria-label="Розділи">
           {NAV_ITEMS.map((item) => (
