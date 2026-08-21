@@ -72,8 +72,8 @@ export default function Navbar({ activePage, onNavigate }) {
           <MenuItem
             onClick={() => {
               setAnchorEl(null)
-              logout()
               navigate('/')
+              logout()
             }}
           >
             Вийти
