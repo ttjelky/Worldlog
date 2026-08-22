@@ -6,8 +6,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   IconButton,
   LinearProgress,
+  Switch,
   TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
@@ -18,7 +20,7 @@ import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
 import styles from './Dashboard.module.css'
 
-const emptyWorld = { name: '', description: '', seed: '', start_date: '', cover_image: null }
+const emptyWorld = { name: '', description: '', seed: '', start_date: '', cover_image: null, is_public: false }
 
 const PLACEHOLDER_COPY = {
   overview: 'Тут з\'явиться загальна статистика по всіх твоїх світах.',
@@ -30,12 +32,13 @@ const PLACEHOLDER_COPY = {
 function useWorldForm(initial) {
   const [form, setForm] = useState(initial)
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
+  const setBool = (k) => (_e, checked) => setForm((f) => ({ ...f, [k]: checked }))
   const setFile = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.files?.[0] || null }))
-  return { form, set, setFile, setForm }
+  return { form, set, setBool, setFile, setForm }
 }
 
 function WorldForm({ open, onClose, initial, onSubmit }) {
-  const { form, set, setFile } = useWorldForm(initial)
+  const { form, set, setBool, setFile } = useWorldForm(initial)
   const submit = (e) => {
     e.preventDefault()
     const data = new FormData()
@@ -94,6 +97,23 @@ function WorldForm({ open, onClose, initial, onSubmit }) {
             />
 
             <TextField label="Сід (seed)" value={form.seed} onChange={set('seed')} />
+
+            <FormControlLabel
+              className={styles.toggleRow}
+              control={
+                <Switch
+                  checked={form.is_public}
+                  onChange={setBool('is_public')}
+                  className={styles.toggleSwitch}
+                />
+              }
+              label={
+                <span className={styles.toggleLabel}>
+                  <span className={styles.toggleTitle}>Публічний світ</span>
+                  <span className={styles.toggleHint}>Публічні світи видно всім користувачам</span>
+                </span>
+              }
+            />
 
             <div className={styles.orDivider} role="separator">
               <span className={styles.orDividerLine} />

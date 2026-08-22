@@ -260,6 +260,7 @@ class WorldSerializer(serializers.ModelSerializer):
             'start_date',
             'cover_image',
             'cover_image_url',
+            'is_public',
             'created_at',
             'updated_at',
             'players_count',

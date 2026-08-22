@@ -11,6 +11,7 @@ class World(models.Model):
     seed = models.CharField(max_length=200, blank=True)
     start_date = models.DateField(null=True, blank=True)
     cover_image = models.ImageField(upload_to='world_covers/', blank=True, null=True)
+    is_public = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

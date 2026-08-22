@@ -462,6 +462,44 @@
   color: var(--md-on-surface-variant);
 }
 
+/* Toggle row — public world switch */
+.toggleRow {
+  margin: 4px 0 !important;
+  align-items: flex-start !important;
+}
+
+.toggleSwitch :global(.MuiSwitch-switchBase.Mui-checked) {
+  color: var(--md-primary) !important;
+}
+
+.toggleSwitch :global(.MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track) {
+  background: var(--md-primary) !important;
+  opacity: 0.4;
+}
+
+.toggleSwitch :global(.MuiSwitch-track) {
+  border-radius: 999px;
+}
+
+.toggleLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
+}
+
+.toggleTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--md-on-surface);
+}
+
+.toggleHint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
+}
+
 /* World-file upload — M3 filled tonal surface, shape.md, solid outline */
 .fileDropzone {
   position: relative;
