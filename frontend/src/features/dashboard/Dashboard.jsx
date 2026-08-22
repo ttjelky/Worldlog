@@ -7,14 +7,12 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
-  IconButton,
   LinearProgress,
   Switch,
   TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
@@ -157,23 +155,12 @@ function WorldForm({ open, onClose, initial, onSubmit }) {
   )
 }
 
-function getWorldStatus(world) {
-  const total = world.todos_count || 0
-  const done = world.todos_done || 0
-  if (total === 0) return { label: 'Новий', variant: 'default' }
-  const ratio = done / total
-  if (ratio >= 0.8) return { label: 'Активний', variant: 'success' }
-  if (ratio >= 0.3) return { label: 'В роботі', variant: 'warning' }
-  return { label: 'Початок', variant: 'default' }
-}
-
 function getCompletionPercent(world) {
   if (!world.todos_count) return 0
   return Math.round((world.todos_done / world.todos_count) * 100)
 }
 
-function WorldCard({ world, index, onEdit, onDelete }) {
-  const status = getWorldStatus(world)
+function WorldCard({ world, index }) {
   const percent = getCompletionPercent(world)
 
   return (
@@ -189,47 +176,21 @@ function WorldCard({ world, index, onEdit, onDelete }) {
     >
       <div className={styles.cardTop}>
         <span className={styles.cardNumber}>{String(index + 1).padStart(2, '0')}</span>
-        <span className={`${styles.cardBadge} ${styles[`badge${status.variant}`]}`}>
-          {status.label}
+        <span className={styles.cardBadge}>
+          {world.is_public ? 'Публічний' : 'Приватний'}
         </span>
       </div>
       <h3 className={styles.cardTitle}>{world.name}</h3>
-      <div className={styles.cardBottom}>
+      <div className={styles.cardFooter}>
         <div className={styles.cardOwner}>
           <div className={styles.ownerAvatar}>
             {(world.owner_username || '?')[0].toUpperCase()}
           </div>
           <span className={styles.ownerName}>{world.owner_username}</span>
         </div>
-        <div className={styles.cardProgress}>
-          <div className={styles.cardProgressTrack}>
-            <div className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
-          </div>
+        <div className={styles.cardProgressTrack}>
+          <div className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
         </div>
-      </div>
-      <div className={styles.cardActions}>
-        <IconButton
-          size="small"
-          className={styles.cardActionBtn}
-          onClick={(e) => {
-            e.stopPropagation()
-            onEdit(world)
-          }}
-          title="Редагувати"
-        >
-          <EditOutlinedIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          size="small"
-          className={styles.cardActionBtn}
-          onClick={(e) => {
-            e.stopPropagation()
-            if (confirm('Видалити світ безповоротно?')) onDelete(world.id)
-          }}
-          title="Видалити"
-        >
-          <DeleteOutlinedIcon fontSize="small" />
-        </IconButton>
       </div>
     </Button>
   )
@@ -281,17 +242,9 @@ export default function Dashboard() {
       api.patch(`/worlds/${id}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
     onSuccess: () => qc.invalidateQueries(['worlds']),
   })
-  const deleteWorld = useMutation({
-    mutationFn: (id) => api.delete(`/worlds/${id}/`),
-    onSuccess: () => qc.invalidateQueries(['worlds']),
-  })
 
   const openCreate = () => {
     setEditing(null)
-    setOpen(true)
-  }
-  const openEdit = (w) => {
-    setEditing(w)
     setOpen(true)
   }
 
@@ -339,16 +292,25 @@ export default function Dashboard() {
 
             <div className={styles.grid}>
               {worlds.map((w, i) => (
-                <WorldCard
-                  key={w.id}
-                  world={w}
-                  index={i}
-                  onEdit={openEdit}
-                  onDelete={(id) => deleteWorld.mutate(id)}
-                />
+                <WorldCard key={w.id} world={w} index={i} />
               ))}
 
-              <AddCardButton onClick={openCreate} />
+              {worlds.length >= 1 ? (
+                <Button
+                  className={`${styles.worldCard} ${styles.addCard}`}
+                  onClick={() => setActivePage('worlds')}
+                  sx={{
+                    '& .MuiTouchRipple-ripple': {
+                      color: 'rgba(0, 0, 0, 0.18)',
+                    },
+                  }}
+                >
+                  <ArrowForwardIcon className={styles.addIcon} />
+                  <span className={styles.addText}>Перейти на сторінку "Мої світи"</span>
+                </Button>
+              ) : (
+                <AddCardButton onClick={openCreate} />
+              )}
             </div>
           </>
         )}

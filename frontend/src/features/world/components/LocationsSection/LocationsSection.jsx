@@ -1,13 +1,7 @@
 import { useState } from 'react'
-import Grid from '@mui/material/Grid2'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
-  Card,
-  CardActionArea,
-  CardContent,
-  CardMedia,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -36,18 +30,10 @@ const categories = [
   ['temple', 'Храм'],
   ['other', 'Інше'],
 ]
+const categoryLabels = Object.fromEntries(categories)
 const empty = { name: '', description: '', x: 0, y: 0, z: 0, category: 'other' }
 
-function CategoryChip({ category }) {
-  const label = (categories.find(([v]) => v === category) || ['other', 'Інше'])[1]
-  const color =
-    category === 'base' ? 'var(--color-location-base-fg)' : 'var(--color-location-default-fg)'
-  const bg =
-    category === 'base' ? 'var(--color-location-base-bg)' : 'var(--color-location-default-bg)'
-  return <Chip size="small" label={label} style={{ background: bg, color }} />
-}
-
-export default function LocationsSection({ worldId }) {
+export default function LocationsSection({ worldId, accent }) {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -107,12 +93,11 @@ export default function LocationsSection({ worldId }) {
   }
 
   return (
-    <div>
+    <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h6 className={sharedStyles.sectionTitle}>Локації ({locations.length})</h6>
+        <h3 className={sharedStyles.sectionTitle}>Локації ({locations.length})</h3>
         <Button
           variant="contained"
-          color="primary"
           size="small"
           startIcon={<AddIcon />}
           onClick={openNew}
@@ -120,62 +105,57 @@ export default function LocationsSection({ worldId }) {
           Нова локація
         </Button>
       </div>
-      <Grid container spacing={3}>
+
+      <div className={`${sharedStyles.body} ${styles.locGrid}`}>
         {locations.map((l) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={l.id}>
-            <Card>
-              <CardActionArea onClick={() => setGallery(l)}>
-                {l.screenshots?.[0] ? (
-                  <CardMedia
-                    component="img"
-                    height="150"
-                    image={l.screenshots[0].image}
-                    alt={l.name}
-                  />
-                ) : (
-                  <div className={styles.placeholder}>
-                    <PhotoCameraOutlinedIcon className={styles.placeholderIcon} />
-                  </div>
-                )}
-              </CardActionArea>
-              <CardContent>
-                <div className={styles.locMeta}>
-                  <div className={styles.locInfo}>
-                    <div className={styles.locName}>{l.name}</div>
-                    <div className={styles.coords}>
-                      X: {l.x} · Y: {l.y} · Z: {l.z}
-                    </div>
-                    <div className={styles.desc}>{l.description || 'Немає опису'}</div>
-                  </div>
-                  <CategoryChip category={l.category} />
+          <div key={l.id} className={styles.locTile}>
+            <button type="button" className={styles.locThumbBtn} onClick={() => setGallery(l)}>
+              {l.screenshots?.[0] ? (
+                <img className={styles.locThumb} src={l.screenshots[0].image} alt={l.name} />
+              ) : (
+                <div className={styles.locThumbPlaceholder}>
+                  <PhotoCameraOutlinedIcon fontSize="small" />
                 </div>
-                <div className={styles.locActions}>
-                  <Chip
-                    size="small"
-                    label={`${l.screenshots?.length || 0} фото`}
-                    variant="outlined"
-                    onClick={() => setGallery(l)}
-                  />
-                  <div className={styles.locSpacer} />
+              )}
+            </button>
+            <div className={styles.locBody}>
+              <div className={styles.locTopRow}>
+                <div className={styles.locName}>{l.name}</div>
+                <span className={styles.catPill}>{categoryLabels[l.category] || categoryLabels.other}</span>
+              </div>
+              <div className={styles.coords}>
+                X: {l.x} · Y: {l.y} · Z: {l.z}
+              </div>
+              {l.description && <div className={styles.desc}>{l.description}</div>}
+              <div className={styles.locActions}>
+                <span className={styles.photoCountChip} onClick={() => setGallery(l)}>
+                  {l.screenshots?.length || 0} фото
+                </span>
+                <div className={styles.locSpacer} />
+                <div className={styles.rowActions}>
                   <IconButton size="small" onClick={() => openEdit(l)}>
                     <EditOutlinedIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" color="error" onClick={() => remove.mutate(l.id)}>
+                  <IconButton size="small" onClick={() => remove.mutate(l.id)}>
                     <DeleteOutlinedIcon fontSize="small" />
                   </IconButton>
                 </div>
-              </CardContent>
-            </Card>
-          </Grid>
+              </div>
+            </div>
+          </div>
         ))}
         {locations.length === 0 && (
-          <Grid size={12}>
-            <p className={sharedStyles.emptyMsg}>Світ ще не досліджений. Додай першу локацію.</p>
-          </Grid>
+          <p className={sharedStyles.emptyMsg}>Світ ще не досліджений. Додай першу локацію.</p>
         )}
-      </Grid>
+      </div>
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+      >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати локацію' : 'Нова локація'}</DialogTitle>
           <DialogContent>
@@ -194,18 +174,18 @@ export default function LocationsSection({ worldId }) {
                 multiline
                 minRows={2}
               />
-              <Grid container spacing={2}>
+              <div className={styles.coordRow}>
                 {['x', 'y', 'z'].map((c) => (
-                  <Grid size={4} key={c}>
-                    <TextField
-                      label={c.toUpperCase()}
-                      type="number"
-                      value={form[c]}
-                      onChange={(e) => setForm((f) => ({ ...f, [c]: e.target.value }))}
-                    />
-                  </Grid>
+                  <TextField
+                    key={c}
+                    label={c.toUpperCase()}
+                    type="number"
+                    value={form[c]}
+                    onChange={(e) => setForm((f) => ({ ...f, [c]: e.target.value }))}
+                    className={styles.coordField}
+                  />
                 ))}
-              </Grid>
+              </div>
               <TextField
                 label="Категорія"
                 select
@@ -224,7 +204,7 @@ export default function LocationsSection({ worldId }) {
             <Button onClick={() => setOpen(false)} color="inherit">
               Скасувати
             </Button>
-            <Button type="submit" variant="contained" color="primary">
+            <Button type="submit" variant="contained">
               Зберегти
             </Button>
           </DialogActions>

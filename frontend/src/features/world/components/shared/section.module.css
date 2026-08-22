@@ -1,23 +1,88 @@
-/* Спільні стилі для CRUD-секцій світу (Players, Locations, Todos, History) */
+/* Спільні стилі для карток-секцій дошки світу (Players, Locations, Todos, History) */
+
+.card {
+  --accent: #A63C39;
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: 28px;
+  padding: 26px 26px 24px;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  box-shadow: 0 1px 3px rgba(13, 13, 15, 0.08), 0 14px 30px rgba(13, 13, 15, 0.12);
+}
 
 .sectionHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
 }
 
 .sectionTitle {
-  font-weight: 700;
-  font-size: 20px;
-  color: #0d0d0f;
+  font-weight: 500;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #ffffff;
+  margin: 0;
 }
 
 .emptyMsg {
-  font-size: 15px;
-  color: rgba(13, 13, 15, 0.65);
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 4px 2px;
 }
 
+/* Прокручуваний блок вмісту картки — картка сама тримає розмір, довгі списки
+   скролляться всередині, а не розтягують дошку. */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 440px;
+  padding-right: 4px;
+  margin-right: -4px;
+}
+
+.body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+}
+
+.body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Кругла біла кнопка-дія на кольоровій картці */
+.sectionHeader :global(.MuiButton-contained) {
+  background: #ffffff !important;
+  color: var(--accent) !important;
+  border-radius: 999px !important;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+  padding: 8px 16px !important;
+  box-shadow: none !important;
+  transition: transform 0.15s ease, background 0.15s ease !important;
+}
+
+.sectionHeader :global(.MuiButton-contained:hover) {
+  background: #ffffff !important;
+  box-shadow: none !important;
+  transform: translateY(-1px);
+}
+
+/* ---- Спільна тема діалогів (світлий попап поверх кольорових карток) ---- */
 .formFields {
   display: flex;
   flex-direction: column;
@@ -25,6 +90,56 @@
   padding-top: 8px;
 }
 
+.formFields :global(.MuiOutlinedInput-root) {
+  border-radius: 4px !important;
+}
+
+.dialogPaper {
+  border-radius: 32px !important;
+  overflow: hidden;
+}
+
+.dialogPaper :global(.MuiDialogTitle-root) {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-size: 42px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.02em !important;
+  padding: 32px 32px 0 !important;
+  line-height: 1.2 !important;
+  color: #1d1a22 !important;
+}
+
+.dialogPaper :global(.MuiDialogContent-root) {
+  padding: 9px 32px 4px !important;
+}
+
 .dialogActions {
-  padding: 24px;
+  padding: 20px 24px 24px !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+}
+
+.dialogActions :global(.MuiButton-root) {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.01em !important;
+  border-radius: 999px !important;
+  text-transform: none !important;
+  padding: 10px 24px !important;
+}
+
+.dialogActions :global(.MuiButton-contained) {
+  background: var(--accent, #6f42c6) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.dialogActions :global(.MuiButton-contained:hover) {
+  filter: brightness(0.92);
+  box-shadow: none !important;
+}
+
+.sectionHeader :global(.MuiButton-contained) {
+  background: #ffffff !important;
 }

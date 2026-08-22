@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,19 +18,17 @@ import sharedStyles from '../shared/section.module.css'
 import styles from './HistorySection.module.css'
 
 const categories = [
-  ['achievement', 'Досягнення', 'var(--color-timeline-achievement)'],
-  ['milestone', 'Віха', 'var(--color-timeline-milestone)'],
-  ['important', 'Важливо', 'var(--color-timeline-important)'],
-  ['completed', 'Завершено', 'var(--color-timeline-completed)'],
-  ['expansion', 'Розширення', 'var(--color-timeline-expansion)'],
-  ['other', 'Інше', 'var(--color-timeline-other)'],
+  ['achievement', 'Досягнення'],
+  ['milestone', 'Віха'],
+  ['important', 'Важливо'],
+  ['completed', 'Завершено'],
+  ['expansion', 'Розширення'],
+  ['other', 'Інше'],
 ]
-const categoryMeta = Object.fromEntries(
-  categories.map(([v, label, color]) => [v, { label, color }]),
-)
+const categoryLabels = Object.fromEntries(categories)
 const empty = { title: '', description: '', date: '', category: 'milestone' }
 
-export default function HistorySection({ worldId }) {
+export default function HistorySection({ worldId, accent }) {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -70,12 +67,11 @@ export default function HistorySection({ worldId }) {
   const sorted = [...events].sort((a, b) => new Date(a.date) - new Date(b.date))
 
   return (
-    <div>
+    <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h6 className={sharedStyles.sectionTitle}>Історія світу ({events.length})</h6>
+        <h3 className={sharedStyles.sectionTitle}>Історія світу ({events.length})</h3>
         <Button
           variant="contained"
-          color="primary"
           size="small"
           startIcon={<AddIcon />}
           onClick={openNew}
@@ -83,42 +79,38 @@ export default function HistorySection({ worldId }) {
           Нова подія
         </Button>
       </div>
-      <div className={styles.timeline}>
+
+      <div className={`${sharedStyles.body} ${styles.timeline}`}>
         {sorted.map((h, i) => {
-          const { label, color } = categoryMeta[h.category] || categoryMeta.other
+          const label = categoryLabels[h.category] || categoryLabels.other
           const isLast = i === sorted.length - 1
-          const boxShadow = `0 0 0 6px ${color}33`
           return (
             <div key={h.id} className={`${styles.event} ${isLast ? styles.eventLast : ''}`}>
               {!isLast && <div className={styles.rail} />}
-              <div className={styles.node} style={{ background: color, boxShadow }}>
+              <div className={styles.node}>
                 {String(new Date(h.date).getDate()).padStart(2, '0')}
               </div>
               <div className={styles.eventCard}>
                 <div className={styles.eventHeader}>
                   <div className={styles.eventLeft}>
                     <div className={styles.eventMeta}>
-                      <span className={styles.eventDate} style={{ color }}>
+                      <span className={styles.eventDate}>
                         {new Date(h.date).toLocaleDateString('uk-UA')}
                       </span>
-                      <Chip
-                        size="small"
-                        label={label}
-                        style={{ background: `${color}22`, color, fontWeight: 700 }}
-                      />
+                      <span className={styles.catPill}>{label}</span>
                     </div>
                     <div className={styles.eventTitle}>{h.title}</div>
+                    {h.description && <p className={styles.eventDesc}>{h.description}</p>}
                   </div>
-                  <div>
+                  <div className={styles.rowActions}>
                     <IconButton size="small" onClick={() => openEdit(h)}>
                       <EditOutlinedIcon fontSize="small" />
                     </IconButton>
-                    <IconButton size="small" color="error" onClick={() => remove.mutate(h.id)}>
+                    <IconButton size="small" onClick={() => remove.mutate(h.id)}>
                       <DeleteOutlinedIcon fontSize="small" />
                     </IconButton>
                   </div>
                 </div>
-                {h.description && <p className={styles.eventDesc}>{h.description}</p>}
               </div>
             </div>
           )
@@ -127,7 +119,14 @@ export default function HistorySection({ worldId }) {
           <p className={sharedStyles.emptyMsg}>Літопис порожній. Зафіксуй першу подію світу.</p>
         )}
       </div>
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+      >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати подію' : 'Нова подія'}</DialogTitle>
           <DialogContent>
@@ -172,7 +171,7 @@ export default function HistorySection({ worldId }) {
             <Button onClick={() => setOpen(false)} color="inherit">
               Скасувати
             </Button>
-            <Button type="submit" variant="contained" color="primary">
+            <Button type="submit" variant="contained">
               Зберегти
             </Button>
           </DialogActions>

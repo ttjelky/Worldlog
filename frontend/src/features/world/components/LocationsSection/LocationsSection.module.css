@@ -1,58 +1,147 @@
-.coords {
-  font-family: monospace;
-  font-size: 15px;
-  color: rgba(13, 13, 15, 0.65);
+.locGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  align-content: start;
 }
 
-.desc {
-  font-size: 15px;
-  color: rgba(13, 13, 15, 0.65);
+.locTile {
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  transition: background 0.15s ease;
+}
+
+.locTile:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.locThumbBtn {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  display: block;
+  width: 100%;
+}
+
+.locThumb {
+  width: 100%;
+  height: 88px;
+  object-fit: cover;
+  display: block;
+}
+
+.locThumbPlaceholder {
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.locBody {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.locTopRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.locName {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #ffffff;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.locMeta {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.locInfo {
-  min-width: 0;
-  flex: 1;
-}
-
-.locName {
+.catPill {
+  font-size: 9px;
   font-weight: 700;
-  font-size: 20px;
-  color: #0d0d0f;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.coords {
+  font-family: monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .locActions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.photoCountChip {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .locSpacer {
   flex: 1;
 }
 
-.placeholder {
-  height: 150px;
+.rowActions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f0f2f5;
-  color: #9aa0b0;
 }
 
-.placeholderIcon {
-  font-size: 40px;
+.rowActions :global(.MuiIconButton-root) {
+  color: rgba(255, 255, 255, 0.85);
+  padding: 3px;
 }
 
+.rowActions :global(.MuiIconButton-root:hover) {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Форма локації — координати в один ряд */
+.coordRow {
+  display: flex;
+  gap: 12px;
+}
+
+.coordField {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- Галерея скріншотів (нейтральний світлий діалог) ---- */
 .galleryHeader {
   display: flex;
   justify-content: space-between;
@@ -65,6 +154,7 @@
 }
 
 .galleryTitle {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   font-weight: 700;
   font-size: 20px;
   color: #0d0d0f;

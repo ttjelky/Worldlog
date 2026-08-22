@@ -3,16 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
   Checkbox,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   MenuItem,
   TextField,
 } from '@mui/material'
@@ -24,14 +19,14 @@ import sharedStyles from '../shared/section.module.css'
 import styles from './TodosSection.module.css'
 
 const priorities = {
-  low: ['var(--color-priority-low-bg)', 'var(--color-priority-low-fg)', 'Низький'],
-  medium: ['var(--color-priority-medium-bg)', 'var(--color-priority-medium-fg)', 'Середній'],
-  high: ['var(--color-priority-high-bg)', 'var(--color-priority-high-fg)', 'Високий'],
-  urgent: ['var(--color-priority-urgent-bg)', 'var(--color-priority-urgent-fg)', 'Терміновий'],
+  low: ['#B7EAC7', 'Низький'],
+  medium: ['#FFE29A', 'Середній'],
+  high: ['#FFB199', 'Високий'],
+  urgent: ['#FF8A80', 'Терміновий'],
 }
 const empty = { title: '', description: '', priority: 'medium', due_date: '' }
 
-export default function TodosSection({ worldId }) {
+export default function TodosSection({ worldId, accent }) {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -77,14 +72,13 @@ export default function TodosSection({ worldId }) {
   const done = todos.filter((t) => t.is_done).length
 
   return (
-    <div>
+    <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h6 className={sharedStyles.sectionTitle}>
+        <h3 className={sharedStyles.sectionTitle}>
           Todo-лист ({done}/{todos.length})
-        </h6>
+        </h3>
         <Button
           variant="contained"
-          color="primary"
           size="small"
           startIcon={<AddIcon />}
           onClick={openNew}
@@ -92,45 +86,55 @@ export default function TodosSection({ worldId }) {
           Нове завдання
         </Button>
       </div>
-      <List disablePadding className={styles.todoList}>
+
+      <div className={`${sharedStyles.body} ${styles.todoList}`}>
         {todos.map((t) => {
-          const [bg, color, label] = priorities[t.priority]
+          const [dot, label] = priorities[t.priority]
           return (
-            <ListItem
+            <div
               key={t.id}
-              disableGutters
               className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''}`}
             >
-              <ListItemIcon className={styles.todoCheckbox}>
-                <Checkbox checked={t.is_done} onChange={() => toggle.mutate(t)} />
-              </ListItemIcon>
-              <ListItemText
-                className={styles.todoText}
-                primary={
-                  <span className={`${styles.todoTitle} ${t.is_done ? styles.todoTitleDone : ''}`}>
-                    {t.title}
-                  </span>
-                }
-                secondary={t.description}
+              <Checkbox
+                className={styles.todoCheckbox}
+                checked={t.is_done}
+                onChange={() => toggle.mutate(t)}
+                size="small"
               />
-              <div className={styles.todoMeta}>
-                <Chip size="small" label={label} style={{ background: bg, color }} />
-                {t.due_date && <Chip size="small" variant="outlined" label={t.due_date} />}
-                <IconButton size="small" onClick={() => openEdit(t)}>
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" color="error" onClick={() => remove.mutate(t.id)}>
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
+              <div className={styles.todoText}>
+                <div className={styles.todoTitle}>{t.title}</div>
+                {t.description && <div className={styles.todoDesc}>{t.description}</div>}
               </div>
-            </ListItem>
+              <div className={styles.todoMeta}>
+                <span className={styles.priorityChip}>
+                  <span className={styles.priorityDot} style={{ background: dot }} />
+                  {label}
+                </span>
+                {t.due_date && <span className={styles.dueChip}>{t.due_date}</span>}
+                <div className={styles.rowActions}>
+                  <IconButton size="small" onClick={() => openEdit(t)}>
+                    <EditOutlinedIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => remove.mutate(t.id)}>
+                    <DeleteOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </div>
+              </div>
+            </div>
           )
         })}
         {todos.length === 0 && (
           <p className={sharedStyles.emptyMsg}>Плани ще не складені. Додай перше завдання.</p>
         )}
-      </List>
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+      </div>
+
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+      >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати завдання' : 'Нове завдання'}</DialogTitle>
           <DialogContent>
@@ -157,7 +161,7 @@ export default function TodosSection({ worldId }) {
               >
                 {Object.entries(priorities).map(([k, v]) => (
                   <MenuItem key={k} value={k}>
-                    {v[2]}
+                    {v[1]}
                   </MenuItem>
                 ))}
               </TextField>
@@ -174,7 +178,7 @@ export default function TodosSection({ worldId }) {
             <Button onClick={() => setOpen(false)} color="inherit">
               Скасувати
             </Button>
-            <Button type="submit" variant="contained" color="primary">
+            <Button type="submit" variant="contained">
               Зберегти
             </Button>
           </DialogActions>

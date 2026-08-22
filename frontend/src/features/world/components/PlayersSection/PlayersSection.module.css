@@ -1,13 +1,21 @@
 .playerList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
-.playerCard {
+.playerRow {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.15s ease;
+}
+
+.playerRow:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .playerInfo {
@@ -16,19 +24,40 @@
 }
 
 .playerName {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   font-weight: 700;
-  font-size: 20px;
-  color: #0d0d0f;
+  font-size: 16px;
+  color: #ffffff;
 }
 
 .playerRole {
-  font-size: 15px;
-  color: rgba(13, 13, 15, 0.65);
-  margin-top: 2px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .avatar {
-  width: 48px;
-  height: 48px;
-  background: #7c83f5;
+  width: 40px !important;
+  height: 40px !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  flex-shrink: 0;
+}
+
+.rowActions {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.rowActions :global(.MuiIconButton-root) {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rowActions :global(.MuiIconButton-root:hover) {
+  background: rgba(255, 255, 255, 0.16);
 }

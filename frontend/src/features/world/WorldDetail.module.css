@@ -1,75 +1,157 @@
-.coverCard {
-  margin-bottom: 24px;
-  overflow: hidden;
+.page {
+  min-height: 100vh;
+  background: #F4FBC3;
+  padding: clamp(20px, 4vw, 40px) clamp(16px, 4vw, 48px) 80px;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
 }
+
+/* ---------- Дошка (масонрі-розкладка карток) ---------- */
+
+.board {
+  columns: 3 320px;
+  column-gap: 24px;
+  margin-top: 28px;
+}
+
+@media (max-width: 1100px) {
+  .board {
+    columns: 2 280px;
+  }
+}
+
+@media (max-width: 680px) {
+  .board {
+    columns: 1;
+  }
+}
+
+.slot {
+  break-inside: avoid;
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 24px;
+  vertical-align: top;
+  transition: transform 0.2s ease;
+}
+
+.slot:hover {
+  transform: rotate(0deg) translateY(-3px);
+  z-index: 2;
+  position: relative;
+}
+
+/* Легкий "приколотий на дошку" нахил — статичний, але для кожної картки свій,
+   щоб розкладка не виглядала як звичайна рівна сітка. */
+.slotInfo {
+  transform: rotate(-0.6deg);
+}
+
+.slotPlayers {
+  transform: rotate(0.9deg);
+}
+
+.slotLocations {
+  transform: rotate(-0.5deg);
+}
+
+.slotTodos {
+  transform: rotate(0.7deg);
+}
+
+.slotHistory {
+  transform: rotate(-0.9deg);
+}
+
+@media (max-width: 680px) {
+  .slotInfo,
+  .slotPlayers,
+  .slotLocations,
+  .slotTodos,
+  .slotHistory {
+    transform: none;
+  }
+}
+
+/* ---------- Інфокартка світу ---------- */
 
 .coverImg {
   width: 100%;
-  height: 220px;
+  height: 160px;
   object-fit: cover;
+  border-radius: 20px;
   display: block;
+  margin-bottom: 18px;
 }
 
-.coverPlaceholder {
-  height: 120px;
-  background: #f0f2f5;
+.infoTitle {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  font-size: 38px;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: #ffffff;
+  margin: 0;
 }
 
-.coverContent {
-  padding: 32px;
-}
-
-.worldTitle {
-  font-weight: 700;
-  font-size: 40px;
-  color: #0d0d0f;
-}
-
-.worldDesc {
-  font-size: 17px;
-  color: rgba(13, 13, 15, 0.65);
+.infoDesc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
   margin-top: 8px;
+  line-height: 1.45;
 }
 
 .metaRow {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
-.tabs {
-  margin-bottom: 24px;
+.metaChip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
 }
 
-.tabs :global(.MuiTab-root) {
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: none;
+.statsMini {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 22px;
 }
 
-.tabs :global(.MuiTabs-indicator) {
-  background-color: #7c83f5;
-}
-
-.statCard {
-  text-align: center;
-  padding: 32px !important;
+.statTile {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  padding: 14px 16px;
 }
 
 .statValue {
   display: block;
-  font-weight: 700;
-  font-size: 40px;
-  color: #3d4155;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #ffffff;
 }
 
 .statLabel {
   display: block;
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 800;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #9aa0b0;
-  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot {
+    transition: none !important;
+  }
 }

@@ -3,15 +3,17 @@
 .backBtn {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  gap: 6px !important;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
   font-weight: 700 !important;
   font-size: 15px !important;
   color: rgba(13, 13, 15, 0.65) !important;
   min-width: 0 !important;
   padding: 0 !important;
   text-transform: none !important;
+  margin-bottom: 16px !important;
 }
 
 .backBtn:hover {
-  color: #7c83f5 !important;
+  color: #0d0d0f !important;
 }

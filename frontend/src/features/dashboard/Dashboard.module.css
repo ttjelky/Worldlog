@@ -83,6 +83,8 @@
   position: relative;
   display: flex !important;
   flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
   padding: 28px !important;
   border-radius: 28px !important;
   background: #ab8cdd !important;
@@ -91,7 +93,7 @@
   cursor: pointer;
   transition: background 0.18s ease !important;
   overflow: hidden;
-  min-height: 210px !important;
+  min-height: 260px !important;
   text-transform: none !important;
 }
 
@@ -104,7 +106,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: auto;
 }
 
 .cardNumber {
@@ -116,39 +117,28 @@
 .cardBadge {
   padding: 5px 14px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  font-size: 14px;
+  font-weight: 500;
   color: #ffffff;
-}
-
-.badgesuccess {
   background: #2fb872;
 }
 
-.badgewarning {
-  background: #f0954a;
-}
-
-.badgedefault {
-  background: rgba(255, 255, 255, 0.22);
-}
-
 .cardTitle {
-  font-size: 27px;
-  font-weight: 800;
+  font-size: 54px;
+  font-weight: 500;
+  letter-spacing: -0.05em;
   color: #ffffff;
-  margin: 18px 0;
+  margin: 20px 0 0;
   line-height: 1.15;
+  text-align: left;
 }
 
-.cardBottom {
+.cardFooter {
   margin-top: auto;
+  padding-top: 18px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .cardOwner {
@@ -181,47 +171,19 @@
   text-overflow: ellipsis;
 }
 
-.cardProgress {
-  flex-shrink: 0;
-  width: 84px;
-}
-
 .cardProgressTrack {
-  height: 5px;
+  width: 100%;
+  height: 6px;
   background: rgba(255, 255, 255, 0.24);
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .cardProgressFill {
   height: 100%;
   background: #ffffff;
-  border-radius: 3px;
+  border-radius: 4px;
   transition: width 0.3s ease;
-}
-
-.cardActions {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.worldCard:hover .cardActions,
-.worldCard:focus-within .cardActions {
-  opacity: 1;
-}
-
-.cardActionBtn {
-  background: rgba(255, 255, 255, 0.18) !important;
-  color: #ffffff !important;
-}
-
-.cardActionBtn:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .addCard {
@@ -254,7 +216,7 @@
 
 .addText {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 500;
   color: #ffffff;
 }
 

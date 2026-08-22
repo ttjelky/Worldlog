@@ -3,8 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Avatar,
   Button,
-  Card,
-  CardContent,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,7 +17,7 @@ import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import styles from './PlayersSection.module.css'
 
-export default function PlayersSection({ worldId }) {
+export default function PlayersSection({ worldId, accent }) {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -61,38 +59,38 @@ export default function PlayersSection({ worldId }) {
   }
 
   return (
-    <div>
+    <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h6 className={sharedStyles.sectionTitle}>Гравці ({players.length})</h6>
+        <h3 className={sharedStyles.sectionTitle}>Гравці ({players.length})</h3>
         <Button
           variant="contained"
-          color="primary"
           size="small"
           startIcon={<AddIcon />}
           onClick={openNew}
         >
-          Додати гравця
+          Додати
         </Button>
       </div>
-      <div className={styles.playerList}>
+
+      <div className={`${sharedStyles.body} ${styles.playerList}`}>
         {players.map((p) => (
-          <Card key={p.id}>
-            <CardContent className={styles.playerCard}>
-              <Avatar src={p.avatar || undefined} className={styles.avatar}>
-                {(p.nickname || '?')[0].toUpperCase()}
-              </Avatar>
-              <div className={styles.playerInfo}>
-                <div className={styles.playerName}>{p.nickname}</div>
-                <div className={styles.playerRole}>{p.role_note || 'Немає ролі'}</div>
-              </div>
+          <div key={p.id} className={styles.playerRow}>
+            <Avatar src={p.avatar || undefined} className={styles.avatar}>
+              {(p.nickname || '?')[0].toUpperCase()}
+            </Avatar>
+            <div className={styles.playerInfo}>
+              <div className={styles.playerName}>{p.nickname}</div>
+              <div className={styles.playerRole}>{p.role_note || 'Немає ролі'}</div>
+            </div>
+            <div className={styles.rowActions}>
               <IconButton size="small" onClick={() => openEdit(p)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
-              <IconButton size="small" color="error" onClick={() => remove.mutate(p.id)}>
+              <IconButton size="small" onClick={() => remove.mutate(p.id)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
         {players.length === 0 && (
           <p className={sharedStyles.emptyMsg}>
@@ -100,7 +98,14 @@ export default function PlayersSection({ worldId }) {
           </p>
         )}
       </div>
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+      >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати гравця' : 'Новий гравець'}</DialogTitle>
           <DialogContent>
@@ -129,7 +134,7 @@ export default function PlayersSection({ worldId }) {
             <Button onClick={() => setOpen(false)} color="inherit">
               Скасувати
             </Button>
-            <Button type="submit" variant="contained" color="primary">
+            <Button type="submit" variant="contained">
               Зберегти
             </Button>
           </DialogActions>
