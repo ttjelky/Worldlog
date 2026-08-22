@@ -542,7 +542,7 @@ export default function WorldDetail({ onBack }) {
       <div className={styles.topBar}>
         <Button className={backBtnStyles.backBtn} onClick={onBack}>
           <ArrowBackIcon fontSize="small" />
-          До всіх світів
+          Назад
         </Button>
         <div className={styles.topActions}>
           {editMode && (

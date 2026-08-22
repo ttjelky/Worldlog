@@ -24,7 +24,7 @@ const priorities = {
   high: ['#FFB199', 'Високий'],
   urgent: ['#FF8A80', 'Терміновий'],
 }
-const empty = { title: '', description: '', priority: 'medium', due_date: '' }
+const empty = { title: '', description: '', priority: 'medium' }
 
 export default function TodosSection({ worldId, accent }) {
   const qc = useQueryClient()
@@ -65,7 +65,7 @@ export default function TodosSection({ worldId, accent }) {
   }
   const submit = (e) => {
     e.preventDefault()
-    const payload = { ...form, due_date: form.due_date || null }
+    const payload = { ...form }
     if (editing) delete payload.is_done
     mutation.mutateAsync(payload).then(() => setOpen(false))
   }
@@ -110,7 +110,6 @@ export default function TodosSection({ worldId, accent }) {
                   <span className={styles.priorityDot} style={{ background: dot }} />
                   {label}
                 </span>
-                {t.due_date && <span className={styles.dueChip}>{t.due_date}</span>}
                 <div className={styles.rowActions}>
                   <IconButton size="small" onClick={() => openEdit(t)}>
                     <EditOutlinedIcon fontSize="small" />
@@ -165,13 +164,6 @@ export default function TodosSection({ worldId, accent }) {
                   </MenuItem>
                 ))}
               </TextField>
-              <TextField
-                label="Дедлайн"
-                type="date"
-                value={form.due_date}
-                onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
-                InputLabelProps={{ shrink: true }}
-              />
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>

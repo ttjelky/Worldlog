@@ -178,7 +178,10 @@ class LocationScreenshotSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         request = self.context.get('request')
-        url = obj.image.url
+        try:
+            url = obj.image.url
+        except (ValueError, OSError):
+            return None
         return request.build_absolute_uri(url) if request else url
 
 
@@ -212,7 +215,10 @@ class PlayerSerializer(serializers.ModelSerializer):
     def get_avatar(self, obj):
         if obj.avatar:
             request = self.context.get('request')
-            url = obj.avatar.url
+            try:
+                url = obj.avatar.url
+            except (ValueError, OSError):
+                return None
             return request.build_absolute_uri(url) if request else url
         return None
 
@@ -273,7 +279,10 @@ class WorldSerializer(serializers.ModelSerializer):
 
     def get_cover_image_url(self, obj):
         if obj.cover_image:
-            url = obj.cover_image.url
+            try:
+                url = obj.cover_image.url
+            except (ValueError, OSError):
+                return None
             request = self.context.get('request')
             return request.build_absolute_uri(url) if request else url
         return None

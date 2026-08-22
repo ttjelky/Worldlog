@@ -88,7 +88,7 @@ export default function HistorySection({ worldId, accent }) {
             <div key={h.id} className={`${styles.event} ${isLast ? styles.eventLast : ''}`}>
               {!isLast && <div className={styles.rail} />}
               <div className={styles.node}>
-                {String(new Date(h.date).getDate()).padStart(2, '0')}
+                {i + 1}
               </div>
               <div className={styles.eventCard}>
                 <div className={styles.eventHeader}>
