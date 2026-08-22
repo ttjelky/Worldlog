@@ -23,8 +23,8 @@ export function AuthProvider({ children }) {
       .finally(() => setHydrating(false))
   }, [])
 
-  const login = useCallback(async (username, password) => {
-    const res = await api.post('/auth/token/', { username, password })
+  const login = useCallback(async (email, password) => {
+    const res = await api.post('/auth/token/', { email, password })
     auth.setAuth(res.data.access, res.data.refresh)
     const me = await api.get('/me/')
     setUser({ username: me.data.username, email: me.data.email, id: me.data.id })
@@ -34,7 +34,7 @@ export function AuthProvider({ children }) {
   const register = useCallback(
     async (username, email, password) => {
       await api.post('/auth/register/', { username, email, password })
-      return login(username, password)
+      return login(email, password)
     },
     [login],
   )

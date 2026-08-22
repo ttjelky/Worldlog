@@ -161,37 +161,37 @@ class AuthLoginTests(TestCase):
 
     def test_successful_login(self):
         resp = self.client.post(self.login_url, {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'TestPass123!',
         }, format='json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertIn('access', resp.data)
         self.assertIn('refresh', resp.data)
 
-    def test_login_case_insensitive_username(self):
+    def test_login_case_insensitive_email(self):
         resp = self.client.post(self.login_url, {
-            'username': 'TestUser',
+            'email': 'TEST@EXAMPLE.COM',
             'password': 'TestPass123!',
         }, format='json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_login_wrong_password(self):
         resp = self.client.post(self.login_url, {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'WrongPass123!',
         }, format='json')
         self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_login_nonexistent_user(self):
+    def test_login_nonexistent_email(self):
         resp = self.client.post(self.login_url, {
-            'username': 'nobody',
+            'email': 'nobody@example.com',
             'password': 'TestPass123!',
         }, format='json')
         self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_login_empty_credentials(self):
         resp = self.client.post(self.login_url, {
-            'username': '',
+            'email': '',
             'password': '',
         }, format='json')
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
@@ -212,7 +212,7 @@ class AuthLogoutTests(TestCase):
             username='testuser', email='test@example.com', password='TestPass123!'
         )
         resp = self.client.post('/api/auth/token/', {
-            'username': 'testuser',
+            'email': 'test@example.com',
             'password': 'TestPass123!',
         }, format='json')
         self.access = resp.data['access']
@@ -251,7 +251,7 @@ class UserProfileTests(TestCase):
             username='testuser', email='test@example.com', password='TestPass123!'
         )
         resp = self.client.post('/api/auth/token/', {
-            'username': 'testuser', 'password': 'TestPass123!'
+            'email': 'test@example.com', 'password': 'TestPass123!'
         }, format='json')
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {resp.data["access"]}')
 
@@ -320,7 +320,7 @@ class AuthFlowTests(TestCase):
         self.assertEqual(reg.status_code, status.HTTP_201_CREATED)
 
         login = self.client.post('/api/auth/token/', {
-            'username': 'flowuser',
+            'email': 'flow@test.com',
             'password': 'Str0ng!Pass1',
         }, format='json')
         self.assertEqual(login.status_code, status.HTTP_200_OK)
@@ -338,7 +338,7 @@ class AuthFlowTests(TestCase):
         }, format='json')
 
         login = self.client.post('/api/auth/token/', {
-            'username': 'refreshuser',
+            'email': 'refresh@test.com',
             'password': 'Str0ng!Pass1',
         }, format='json')
 

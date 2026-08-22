@@ -4,6 +4,7 @@ from django.contrib.auth import password_validation
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import (
@@ -18,9 +19,26 @@ from .models import (
 
 
 class CustomTokenObtainSerializer(TokenObtainPairSerializer):
+    email = serializers.EmailField()
+
+    class Meta:
+        model = User
+        fields = ('email', 'password')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'username' in self.fields:
+            del self.fields['username']
+
     def validate(self, attrs):
-        if 'username' in attrs:
-            attrs['username'] = attrs['username'].strip().lower()
+        email = attrs.pop('email', '').strip().lower()
+        try:
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            raise AuthenticationFailed(
+                'Невірна електронна пошта або пароль'
+            )
+        attrs['username'] = user.username
         return super().validate(attrs)
 
 USERNAME_RE = re.compile(r'^[\w.@+-]+$')

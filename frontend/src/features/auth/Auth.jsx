@@ -8,7 +8,7 @@ import styles from './Auth.module.css'
 export function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -18,10 +18,10 @@ export function Login() {
     setLoading(true)
     setError('')
     try {
-      await login(username, password)
+      await login(email, password)
       navigate('/app')
     } catch {
-      setError('Невірне ім\u2019я користувача або пароль')
+      setError('Невірна електронна пошта або пароль')
       setLoading(false)
     }
   }
@@ -42,9 +42,10 @@ export function Login() {
       <form className={styles.form} onSubmit={submit}>
         {error && <Alert severity="error">{error}</Alert>}
         <TextField
-          label="Ім'я користувача"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          label="Електронна пошта"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
           autoFocus
         />
