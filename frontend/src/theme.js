@@ -1,13 +1,10 @@
 import { createTheme } from '@mui/material/styles'
 
 /*
- * Font: DM Sans — imported once via global.css (@fontsource/dm-sans).
- * No fallback fonts: DM Sans does NOT contain Cyrillic glyphs, so Ukrainian
- * text renders in the browser's default system font. This is a conscious
- * trade-off for design consistency (single Latin font), not a bug.
- * Cyrillic rendering will look different across OS/browsers.
+ * Font: Inter — imported via global.css (@fontsource/inter).
+ * Inter supports Cyrillic (Ukrainian), Latin, and all needed glyphs.
  */
-const fontFamily = '"DM Sans"'
+const fontFamily = '"Inter", system-ui, -apple-system, sans-serif'
 
 const palette = {
   primary: {

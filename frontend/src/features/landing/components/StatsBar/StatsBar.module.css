@@ -1,5 +1,5 @@
 .statsBar {
-  margin-top: 80px;
+  margin-top: 48px;
   border-top: 1px solid rgba(13, 13, 15, 0.08);
   border-bottom: 1px solid rgba(13, 13, 15, 0.08);
 }
@@ -21,7 +21,7 @@
 }
 
 .statsItem {
-  padding: 40px 32px;
+  padding: 36px 32px;
 }
 
 .statsItem + .statsItem {
@@ -40,17 +40,21 @@
 
 .statsValue {
   font-weight: 900;
-  font-size: 56px;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
-  color: #3d4155;
+  font-size: 48px;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #7C83F5;
 }
 
 .statsLabel {
   font-weight: 700;
+  font-size: 15px;
+  color: #0d0d0f;
+  margin-top: 8px;
+}
+
+.statsDesc {
   font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #9aa0b0;
-  margin-top: 4px;
+  color: rgba(13, 13, 15, 0.45);
+  margin-top: 2px;
 }

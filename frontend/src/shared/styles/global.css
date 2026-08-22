@@ -1,16 +1,10 @@
-/* ================================================
-   WorldLog Global Styles
-   Font, reset, base element styles.
-   Imported once in main.jsx.
-   ================================================ */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/inter/800.css';
+@import '@fontsource/inter/900.css';
 
-/* DM Sans — all weights used in the project. */
-@import '@fontsource/dm-sans/400.css';
-@import '@fontsource/dm-sans/500.css';
-@import '@fontsource/dm-sans/700.css';
-@import '@fontsource/dm-sans/900.css';
-
-/* ---- Reset ---- */
 *,
 *::before,
 *::after {
@@ -23,10 +17,10 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
   font-size: 17px;
   line-height: 1.65;
   color: #0d0d0f;
@@ -65,20 +59,16 @@ ol {
   list-style: none;
 }
 
-/* ---- Focus-visible ring for accessibility ---- */
 :focus-visible {
   outline: 2px solid #7c83f5;
   outline-offset: 2px;
 }
 
-/* MUI OutlinedInput: universal reset kills the notch legend.
-   Restore so border renders behind label when field is unfocused. */
 .MuiOutlinedInput-notchedOutline legend {
   padding: 0 5px !important;
   margin-left: -3px !important;
 }
 
-/* ---- Utility: visually hidden (screen reader only) ---- */
 .sr-only {
   position: absolute;
   width: 1px;

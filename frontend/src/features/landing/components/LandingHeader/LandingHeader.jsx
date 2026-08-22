@@ -1,30 +1,18 @@
-import { Button } from '@mui/material'
 import Logo from '../../../../shared/components/Logo/Logo'
 import styles from './LandingHeader.module.css'
 
-const navLinks = ['Головна', 'Про проєкт', 'GitHub']
-
-function NavLinkButton({ link }) {
-  return (
-    <Button className={styles.navLink}>
-      {link}
-    </Button>
-  )
-}
-
 export default function LandingHeader({ onStart }) {
   return (
-    <header className={styles.header}>
-      <div className={styles.headerInner}>
-        <Logo />
+    <header className={styles.headerWrap}>
+      <div className={styles.headerBar}>
+        <Logo className={styles.logoImg} />
         <nav className={styles.nav}>
-          {navLinks.map((link) => (
-            <NavLinkButton key={link} link={link} />
-          ))}
+          <a href="#features" className={styles.navLink}>Можливості</a>
+          <a href="https://github.com/ttjelky/Worldlog" className={styles.navLink} target="_blank" rel="noreferrer">GitHub</a>
         </nav>
-        <Button variant="contained" color="primary" onClick={onStart}>
-          Створити паспорт світу
-        </Button>
+        <button className={styles.ctaBtn} onClick={onStart}>
+          Створити світ
+        </button>
       </div>
     </header>
   )

@@ -2,7 +2,7 @@
   min-height: 100vh;
   background: #dfcefd;
   color: #9166c8;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  /* font inherited from body/theme */
 }
 
 .page {

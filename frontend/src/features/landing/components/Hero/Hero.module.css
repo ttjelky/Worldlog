@@ -1,139 +1,310 @@
-/* ── Hero section ── */
+/* ─────────────────────────────────────────
+   Hero – Material 3 card + big typography
+   ───────────────────────────────────────── */
+
 .heroSection {
-  padding: 10px 0;
-}
-
-.heroInner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-/* ── Two-column grid ── */
-.heroGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
-  align-items: start;
+  padding: 88px 24px 0;
 }
 
 @media (min-width: 900px) {
-  .heroGrid {
-    grid-template-columns: 780px 1fr;
-    gap: 10px;
+  .heroSection {
+    padding: 100px 32px 0;
   }
 }
 
-/* ── Left: text panel ── */
+/* ── Main card ── */
+.heroCard {
+  position: relative;
+  max-width: 1340px;
+  margin: 0 auto;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 3px rgba(13, 13, 15, 0.06),
+    0 8px 24px rgba(13, 13, 15, 0.10);
+}
+
+/* ── Background ── */
+.heroBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.heroGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #1a1b2e 0%, #2a2d4a 35%, #3d2855 65%, #1a2840 100%);
+}
+
+.heroGrain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(124, 131, 245, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(76, 175, 125, 0.20) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(229, 115, 153, 0.15) 0%, transparent 60%);
+}
+
+/* ── Content wrapper ── */
+.heroContent {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Top row: text + visual ── */
+.heroTop {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+@media (min-width: 900px) {
+  .heroTop {
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 460px;
+  }
+}
+
+/* ── Left: text — BIG typography ── */
 .heroText {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 44px 32px;
-  background: #f0f2f5;
-  border-radius: 20px;
+  padding: 40px 32px 32px;
 }
 
 @media (min-width: 900px) {
   .heroText {
-    border-radius: 20px;
-    padding: 36px 40px;
+    flex: 0 0 50%;
+    max-width: 560px;
+    padding: 56px 52px;
   }
 }
 
-.overline {
-  font-family: 'DM Sans', sans-serif;
+.heroBadge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.80);
   font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #9aa0b0;
-  display: block;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 
 .heroTitle {
-  font-family: 'DM Sans', sans-serif;
   font-weight: 900;
-  font-size: 56px;
-  line-height: 1;
-  color: #0d0d0f;
-  letter-spacing: -0.03em;
+  font-size: 52px;
+  line-height: 0.98;
+  color: #ffffff;
+  letter-spacing: -0.04em;
   margin-bottom: 20px;
-  margin-top: 25px;
 }
 
 @media (min-width: 900px) {
   .heroTitle {
-    font-size: 100px;
+    font-size: 88px;
+    letter-spacing: -0.045em;
   }
 }
 
 .heroSubtitle {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 22px;
-  line-height: 1.65;
-  color: rgba(13, 13, 15, 0.65);
-  margin-bottom: 28px;
-  max-width: 460px;
-}
-
-.heroButton {
-  align-self: flex-start;
-  border-radius: 999px !important;
-  padding: 16px 48px !important;
-  font-family: 'DM Sans', sans-serif !important;
-  font-weight: 700 !important;
-  font-size: 20px !important;
-  text-transform: none !important;
-  letter-spacing: 0 !important;
-  margin-bottom: 25px;
-}
-
-/* ── Right: collage ── */
-.heroCollage {
-  position: relative;
-  height: 495px;
-  border-radius: 20px;
-  background: #2a2d3a;
-  overflow: hidden;
+  font-size: 17px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.62);
+  margin-bottom: 32px;
+  max-width: 380px;
 }
 
 @media (min-width: 900px) {
-  .heroCollage {
-    min-height: 420px;
-    border-radius: 24px;
+  .heroSubtitle {
+    font-size: 18px;
   }
 }
 
-/* ── Shared card chrome ── */
+.heroButtons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.heroButtonPrimary {
+  border-radius: 999px !important;
+  padding: 14px 32px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  background: #7C83F5 !important;
+  color: #ffffff !important;
+}
+
+.heroButtonPrimary:hover {
+  background: #5C63E0 !important;
+}
+
+.heroButtonSecondary {
+  border-radius: 999px !important;
+  padding: 14px 28px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.heroButtonSecondary:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* ── Right: visual collage ── */
+.heroVisual {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .heroVisual {
+    display: block;
+    flex: 1;
+    position: relative;
+    min-height: 400px;
+  }
+}
+
+.heroCollage {
+  position: absolute;
+  inset: 20px;
+}
+
+/* ── Bottom nav bar ── */
+.heroNav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 32px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (min-width: 900px) {
+  .heroNav {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 52px 20px;
+  }
+}
+
+.heroNavLabel {
+  font-weight: 700;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.heroNavPills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.heroNavPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+}
+
+.heroNavPill:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.heroNavPillIcon {
+  font-size: 14px !important;
+}
+
+/* ─────────────────────────────────────────
+   Mockup cards inside hero
+   ───────────────────────────────────────── */
+
 .collageCard {
   position: absolute;
   background: #ffffff;
-  border-radius: 28px;
+  border-radius: 14px;
   overflow: hidden;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.06);
+    0 4px 16px rgba(0, 0, 0, 0.12),
+    0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
+.collagePlayers {
+  width: 220px;
+  top: 0;
+  left: 8%;
+  z-index: 3;
+  transform: rotate(-3deg);
+}
+
+.collageLocations {
+  width: 240px;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  transform: rotate(2deg);
+}
+
+.collageTodos {
+  width: 210px;
+  top: 4%;
+  right: 8%;
+  z-index: 2;
+  transform: rotate(3deg);
+}
+
+.collageTimeline {
+  width: 220px;
+  bottom: 4%;
+  right: 0;
+  z-index: 5;
+  transform: rotate(-2deg);
+}
+
+/* ── Shared mockup card chrome ── */
 .mockupHeader {
   background: #f9f9fc;
-  padding: 10px 14px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
 }
 
 .mockupHeaderDots {
   display: flex;
-  gap: 6px;
+  gap: 5px;
 }
 
 .dotRed,
 .dotYellow,
 .dotGreen {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
 }
 
@@ -142,24 +313,23 @@
 .dotGreen { background: #4ade80; }
 
 .mockupBody {
-  padding: 14px 16px 16px;
+  padding: 10px 12px 12px;
 }
 
 .mockupCardTitle {
-  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
-  font-size: 13px;
-  color: rgba(13, 13, 15, 0.65);
+  font-size: 10px;
+  color: rgba(13, 13, 15, 0.45);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .mockupRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
+  gap: 8px;
+  padding: 5px 0;
 }
 
 .mockupRow + .mockupRow {
@@ -171,78 +341,48 @@
 }
 
 .mockupRowName {
-  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 12px;
   color: #0d0d0f;
 }
 
 .mockupRowSub {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12px;
-  color: rgba(13, 13, 15, 0.65);
+  font-size: 10px;
+  color: rgba(13, 13, 15, 0.50);
 }
 
 .mockupRowCoords {
-  font-family: monospace;
-  font-size: 11px;
-  color: rgba(13, 13, 15, 0.65);
+  font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
+  font-size: 9px;
+  color: rgba(13, 13, 15, 0.50);
 }
 
 .mockupRowDate {
-  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-/* ── Players ── */
-.collagePlayers {
-  width: 280px;
-  top: 5%;
-  left: 6%;
-  z-index: 3;
-  transform: rotate(-2deg);
-}
-
 .mockupAvatar {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .mockupLocDot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-/* ── Locations ── */
-.collageLocations {
-  width: 300px;
-  bottom: 6%;
-  left: 4%;
-  z-index: 4;
-  transform: rotate(1.5deg);
-}
-
-/* ── Todos ── */
-.collageTodos {
-  width: 270px;
-  top: 8%;
-  right: 6%;
-  z-index: 2;
-  transform: rotate(2.5deg);
-}
-
 .mockupCheckbox {
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
-  border: 2px solid rgba(13, 13, 15, 0.65);
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 2px solid rgba(13, 13, 15, 0.40);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -250,96 +390,66 @@
 }
 
 .mockupCheckSvg {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
 }
 
 .mockupTodoDone {
   text-decoration: line-through;
-  color: rgba(13, 13, 15, 0.65);
-}
-
-/* ── Timeline ── */
-.collageTimeline {
-  width: 280px;
-  bottom: 10%;
-  right: 6%;
-  z-index: 5;
-  transform: rotate(-1.5deg);
+  color: rgba(13, 13, 15, 0.45);
 }
 
 .mockupTimelineNode {
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-/* ── Mobile ── */
+/* ─────────────────────────────────────────
+   Mobile
+   ───────────────────────────────────────── */
 @media (max-width: 899px) {
+  .heroSection {
+    padding: 80px 16px 0;
+  }
+
+  .heroCard {
+    border-radius: 20px;
+  }
+
   .heroText {
-    border-radius: 24px 24px 0 0;
-    padding: 48px 32px;
+    padding: 32px 24px 24px;
   }
 
   .heroTitle {
-    font-size: 44px;
+    font-size: 40px;
+    letter-spacing: -0.035em;
   }
 
   .heroSubtitle {
-    font-size: 17px;
+    font-size: 15px;
   }
 
-  .heroCollage {
-    min-height: 380px;
-    border-radius: 0 0 24px 24px;
+  .heroNav {
+    padding: 14px 24px 18px;
   }
 
-  .collageCard {
-    border-radius: 22px;
+  .heroNavPills {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
 
-  .collagePlayers {
-    width: 190px;
-    top: 4%;
-    left: 3%;
+  .heroNavPills::-webkit-scrollbar {
+    display: none;
   }
 
-  .collageLocations {
-    width: 200px;
-    bottom: 4%;
-    left: 1%;
-  }
-
-  .collageTodos {
-    width: 180px;
-    top: 6%;
-    right: 2%;
-  }
-
+  .collagePlayers,
+  .collageLocations,
+  .collageTodos,
   .collageTimeline {
-    width: 190px;
-    bottom: 8%;
-    right: 3%;
-  }
-
-  .mockupAvatar {
-    width: 28px;
-    height: 28px;
-  }
-
-  .mockupLocDot {
-    width: 8px;
-    height: 8px;
-  }
-
-  .mockupRowName {
-    font-size: 12px;
-  }
-
-  .mockupRowSub,
-  .mockupRowCoords,
-  .mockupRowDate {
-    font-size: 10px;
+    display: none;
   }
 }

@@ -1,7 +1,7 @@
 import styles from './Logo.module.css'
 
-export default function Logo({ onClick }) {
-  const rootClass = onClick ? `${styles.root} ${styles.rootInteractive}` : styles.root
+export default function Logo({ onClick, className }) {
+  const rootClass = [styles.root, onClick && styles.rootInteractive, className].filter(Boolean).join(' ')
 
   return (
     <div

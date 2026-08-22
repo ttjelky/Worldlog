@@ -8,11 +8,11 @@ export default function LandingFooter() {
       <div className={styles.footerInner}>
         <Logo />
         <span className={styles.copyright}>
-          © {new Date().getFullYear()} DiJital. Публічний open-source проєкт.
+          &copy; {new Date().getFullYear()} DiJital. Публічний open-source проєкт.
         </span>
         <a
           className={styles.gitHubBtn}
-          href="https://github.com/dijital/worldlog"
+          href="https://github.com/ttjelky/Worldlog"
           target="_blank"
           rel="noreferrer"
         >
