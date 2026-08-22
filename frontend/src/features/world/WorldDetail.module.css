@@ -1,92 +1,297 @@
 .page {
   min-height: 100vh;
   background: #F4FBC3;
-  padding: clamp(20px, 4vw, 40px) clamp(16px, 4vw, 48px) 80px;
+  padding: clamp(20px, 4vw, 40px) clamp(16px, 3vw, 20px) 80px;
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
 }
 
-/* ---------- Дошка (масонрі-розкладка карток) ---------- */
+/* ---------- Топ-бар ---------- */
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editBtn {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  border-radius: 999px !important;
+  text-transform: none !important;
+  padding: 8px 20px !important;
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #1d1a22 !important;
+  box-shadow: none !important;
+  transition: background 0.15s ease !important;
+}
+
+.editBtn:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.editBtnActive {
+  background: #1d1a22 !important;
+  color: #ffffff !important;
+}
+
+.editBtnActive:hover {
+  background: #333333 !important;
+}
+
+.resetBtn {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  border-radius: 999px !important;
+  text-transform: none !important;
+  padding: 8px 20px !important;
+  color: #1d1a22 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Дошка (flex-рядки) ---------- */
 
 .board {
-  columns: 3 320px;
-  column-gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   margin-top: 28px;
 }
 
-@media (max-width: 1100px) {
-  .board {
-    columns: 2 280px;
-  }
+.row {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
 }
 
-@media (max-width: 680px) {
-  .board {
-    columns: 1;
-  }
+.rowTop {
+  height: 320px;
 }
+
+.rowBottom {
+  min-height: 0;
+}
+
+/* ---------- Слот (обгортка картки) ---------- */
 
 .slot {
-  break-inside: avoid;
-  display: inline-block;
-  width: 100%;
-  margin-bottom: 24px;
-  vertical-align: top;
-  transition: transform 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
-.slot:hover {
-  transform: rotate(0deg) translateY(-3px);
-  z-index: 2;
+.slot > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.slotTypeInfo      { flex: 2; }
+.slotTypeCover     { flex: 3; }
+.slotTypePlayers   { flex: 1; }
+.slotTypeLocations { flex: 2; }
+.slotTypeTodos     { flex: 1; }
+.slotTypeHistory   { flex: 1; }
+
+/* ---------- Resize bar між картками ---------- */
+
+.resizeBar {
+  width: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
   position: relative;
 }
 
-/* Легкий "приколотий на дошку" нахил — статичний, але для кожної картки свій,
-   щоб розкладка не виглядала як звичайна рівна сітка. */
-.slotInfo {
-  transform: rotate(-0.6deg);
+.resizeBarLine {
+  width: 4px;
+  height: 0;
+  border-radius: 999px;
+  background: transparent;
+  transition: height 0.15s ease, background 0.15s ease;
 }
 
-.slotPlayers {
-  transform: rotate(0.9deg);
+.resizeBarVisible {
+  cursor: col-resize;
 }
 
-.slotLocations {
-  transform: rotate(-0.5deg);
+.resizeBarVisible:hover .resizeBarLine,
+.page.editMode .resize:hover .resizeBarLine {
+  height: 40px;
+  background: rgba(0, 0, 0, 0.25);
 }
 
-.slotTodos {
-  transform: rotate(0.7deg);
+.resizeBarVisible:active .resizeBarLine {
+  height: 56px;
+  background: rgba(0, 0, 0, 0.4);
 }
 
-.slotHistory {
-  transform: rotate(-0.9deg);
+/* ---------- Edit mode ---------- */
+
+.page.editMode .slot {
+  outline: 2px dashed rgba(0, 0, 0, 0.15);
+  outline-offset: 4px;
+  border-radius: 32px;
+  transition: outline-color 0.15s ease;
 }
 
-@media (max-width: 680px) {
-  .slotInfo,
-  .slotPlayers,
-  .slotLocations,
-  .slotTodos,
-  .slotHistory {
-    transform: none;
-  }
+.page.editMode .slot:hover {
+  outline-color: rgba(0, 0, 0, 0.35);
+}
+
+.dragging {
+  opacity: 0.4;
+}
+
+.dragOver {
+  outline: 2px solid #1d1a22 !important;
+  outline-offset: 4px;
+}
+
+/* ---------- Drag handle ---------- */
+
+.dragHandle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.page.editMode .slot:hover .dragHandle {
+  opacity: 1;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* ---------- Ряд 1: Інфокартка ---------- */
+
+.infoCard {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ---------- Ряд 1: Обкладинка світу ---------- */
+
+.coverCard {
+  height: 100%;
+  padding: 0 !important;
+  overflow: hidden;
+  position: relative;
+}
+
+.coverImgFull {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.coverFileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.coverOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.coverCard:hover .coverOverlay {
+  opacity: 1;
+}
+
+.coverAction {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #1d1a22 !important;
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.coverAction:hover {
+  background: #ffffff !important;
+}
+
+.coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  border: none;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+  font-family: inherit;
+  padding: 24px;
+}
+
+.coverPlaceholder:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.coverPlaceholder:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.coverPlaceholderIcon {
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.coverPlaceholderText {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.coverProgress {
+  width: 120px;
 }
 
 /* ---------- Інфокартка світу ---------- */
 
-.coverImg {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  border-radius: 20px;
-  display: block;
-  margin-bottom: 18px;
-}
-
 .infoTitle {
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   font-weight: 500;
-  font-size: 38px;
+  font-size: 52px;
   letter-spacing: -0.04em;
   line-height: 1.1;
   color: #ffffff;
@@ -94,7 +299,7 @@
 }
 
 .infoDesc {
-  font-size: 15px;
+  font-size: 16px;
   color: rgba(255, 255, 255, 0.85);
   margin-top: 8px;
   line-height: 1.45;
@@ -111,17 +316,17 @@
   padding: 6px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: #ffffff;
 }
 
 .statsMini {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  margin-top: 22px;
+  margin-top: auto;
+  padding-top: 22px;
 }
 
 .statTile {
@@ -142,16 +347,47 @@
 
 .statLabel {
   display: block;
-  font-weight: 800;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: -0.04em;
   color: rgba(255, 255, 255, 0.75);
   margin-top: 3px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .slot {
-    transition: none !important;
+/* ---------- Адаптивність ---------- */
+
+@media (max-width: 1100px) {
+  .rowTop {
+    height: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .row {
+    flex-direction: column;
+  }
+
+  .rowTop,
+  .rowBottom {
+    height: auto;
+  }
+
+  .infoCard {
+    height: auto;
+  }
+
+  .coverCard {
+    height: 220px;
+  }
+
+  .resizeBar {
+    width: 100%;
+    height: 16px;
+    cursor: row-resize;
+  }
+
+  .resizeBarLine {
+    width: 40px;
+    height: 4px;
   }
 }

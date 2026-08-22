@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!auth.isAuthenticated()) {
+      auth.clearAuth()
       setHydrating(false)
       return
     }
@@ -39,7 +40,15 @@ export function AuthProvider({ children }) {
     [login],
   )
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const refresh = auth.getRefresh()
+    try {
+      if (refresh) {
+        await api.post('/auth/logout/', { refresh })
+      }
+    } catch {
+      // best-effort — clear local state even if backend call fails
+    }
     auth.clearAuth()
     setUser(null)
   }, [])

@@ -25,30 +25,86 @@ function clearAuth() {
   localStorage.removeItem(REFRESH_KEY)
 }
 
-function isAuthenticated() {
-  return Boolean(getAccess())
+function getTokenPayload(token) {
+  if (!token) return null
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload
+  } catch {
+    return null
+  }
 }
 
-api.interceptors.request.use((config) => {
+function isTokenExpired(token) {
+  const payload = getTokenPayload(token)
+  if (!payload || !payload.exp) return true
+  return payload.exp * 1000 < Date.now()
+}
+
+function isAuthenticated() {
   const token = getAccess()
+  if (!token) return false
+  if (!isTokenExpired(token)) return true
+  const refresh = getRefresh()
+  if (!refresh) return false
+  return !isTokenExpired(refresh)
+}
+
+let refreshPromise = null
+
+async function refreshTokens() {
+  if (refreshPromise) return refreshPromise
+
+  const refresh = getRefresh()
+  if (!refresh) throw new Error('No refresh token')
+
+  refreshPromise = axios
+    .post(`${api.defaults.baseURL}/auth/token/refresh/`, { refresh })
+    .then((res) => {
+      setAuth(res.data.access, res.data.refresh)
+      return res.data.access
+    })
+    .catch((err) => {
+      clearAuth()
+      throw err
+    })
+    .finally(() => {
+      refreshPromise = null
+    })
+
+  return refreshPromise
+}
+
+api.interceptors.request.use(async (config) => {
+  if (config.url.includes('/auth/token')) {
+    return config
+  }
+
+  let token = getAccess()
+  const refresh = getRefresh()
+
+  if (token && refresh && isTokenExpired(token)) {
+    try {
+      token = await refreshTokens()
+    } catch {
+      // refresh failed — response interceptor will handle 401
+    }
+  }
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })
 
-let refreshPromise = null
-
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config
-    const refresh = getRefresh()
 
     if (
       error.response?.status !== 401 ||
       original._retry ||
-      !refresh ||
       original.url.includes('/auth/token')
     ) {
       return Promise.reject(error)
@@ -56,27 +112,8 @@ api.interceptors.response.use(
 
     original._retry = true
 
-    if (!refreshPromise) {
-      refreshPromise = axios
-        .post(`${api.defaults.baseURL}/auth/token/refresh/`, { refresh })
-        .then((res) => {
-          const newAccess = res.data.access
-          const newRefresh = res.data.refresh
-          setAuth(newAccess, newRefresh)
-          return newAccess
-        })
-        .catch((err) => {
-          clearAuth()
-          window.location.href = '/login'
-          return Promise.reject(err)
-        })
-        .finally(() => {
-          refreshPromise = null
-        })
-    }
-
     try {
-      const newAccess = await refreshPromise
+      const newAccess = await refreshTokens()
       original.headers.Authorization = `Bearer ${newAccess}`
       return api(original)
     } catch {
@@ -85,5 +122,5 @@ api.interceptors.response.use(
   },
 )
 
-export const auth = { getAccess, setAuth, clearAuth, isAuthenticated }
+export const auth = { getAccess, getRefresh, setAuth, clearAuth, isAuthenticated }
 export default api
