@@ -24,6 +24,7 @@ import LocationsSection from './components/LocationsSection/LocationsSection'
 import TodosSection from './components/TodosSection/TodosSection'
 import HistorySection from './components/HistorySection/HistorySection'
 import sharedStyles from './components/shared/section.module.css'
+import ExpandableCard from './components/shared/ExpandableCard'
 import styles from './WorldDetail.module.css'
 
 const RED = '#A63C39'
@@ -267,10 +268,10 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
 const CARD_CONTENT = {
   info: (props) => <InfoCard world={props.world} />,
   cover: (props) => <CoverImageCard world={props.world} worldId={props.worldId} />,
-  players: (props) => <PlayersSection worldId={props.worldId} accent={GREEN} />,
-  locations: (props) => <LocationsSection worldId={props.worldId} accent={RED} />,
-  todos: (props) => <TodosSection worldId={props.worldId} accent={GREEN} />,
-  history: (props) => <HistorySection worldId={props.worldId} accent={RED} />,
+  players: (props) => <ExpandableCard><PlayersSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
+  locations: (props) => <ExpandableCard><LocationsSection worldId={props.worldId} accent={RED} /></ExpandableCard>,
+  todos: (props) => <ExpandableCard><TodosSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
+  history: (props) => <ExpandableCard><HistorySection worldId={props.worldId} accent={RED} /></ExpandableCard>,
 }
 
 export default function WorldDetail({ onBack }) {
