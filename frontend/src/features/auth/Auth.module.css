@@ -10,7 +10,7 @@
 }
 
 .form :global(.MuiOutlinedInput-root) {
-  border-radius: 4px;
+  border-radius: 12px;
   background: transparent;
   border: 1px solid var(--md-outline, #7d7188);
   transition: border-color 150ms linear;

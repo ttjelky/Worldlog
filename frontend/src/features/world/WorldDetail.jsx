@@ -1,13 +1,22 @@
 import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, IconButton, LinearProgress } from '@mui/material'
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  LinearProgress,
+  TextField,
+} from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import TuneIcon from '@mui/icons-material/Tune'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api'
 import backBtnStyles from '../../shared/styles/backButton.module.css'
 import PlayersSection from './components/PlayersSection/PlayersSection'
@@ -144,6 +153,117 @@ function CoverImageCard({ world, worldId }) {
   )
 }
 
+const LOCKED_CARDS = ['info', 'cover']
+
+function WorldEditDialog({ open, onClose, world, worldId }) {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    seed: '',
+    start_date: '',
+    is_public: false,
+  })
+
+  useEffect(() => {
+    if (world) {
+      setForm({
+        name: world.name || '',
+        description: world.description || '',
+        seed: world.seed || '',
+        start_date: world.start_date || '',
+        is_public: world.is_public || false,
+      })
+    }
+  }, [world])
+
+  const updateMutation = useMutation({
+    mutationFn: () => api.patch(`/worlds/${worldId}/`, form),
+    onSuccess: () => {
+      qc.invalidateQueries(['world', String(worldId)])
+      onClose()
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/worlds/${worldId}/`),
+    onSuccess: () => {
+      qc.invalidateQueries(['worlds'])
+      navigate('/app')
+    },
+  })
+
+  const submit = (e) => {
+    e.preventDefault()
+    updateMutation.mutate()
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{ paper: { className: sharedStyles.dialogPaper } }}
+    >
+      <form onSubmit={submit}>
+        <DialogTitle>Редагувати світ</DialogTitle>
+        <DialogContent>
+          <div className={sharedStyles.formFields}>
+            <TextField
+              label="Назва світу"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              required
+            />
+            <TextField
+              label="Опис"
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              multiline
+              minRows={2}
+              maxRows={3}
+            />
+            <TextField
+              label="Сід (seed)"
+              value={form.seed}
+              onChange={(e) => setForm((f) => ({ ...f, seed: e.target.value }))}
+            />
+            <TextField
+              label="Дата початку"
+              type="date"
+              value={form.start_date}
+              onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
+              InputLabelProps={{ shrink: true }}
+            />
+          </div>
+        </DialogContent>
+        <DialogActions className={sharedStyles.dialogActions}>
+          <Button
+            onClick={() => {
+              if (window.confirm('Ви впевнені, що хочете видалити цей світ? Це незворотно.')) {
+                deleteMutation.mutate()
+              }
+            }}
+            startIcon={<DeleteOutlinedIcon />}
+            className={sharedStyles.dialogBtnCancel}
+          >
+            Видалити світ
+          </Button>
+          <div style={{ flex: 1 }} />
+          <Button onClick={onClose} className={sharedStyles.dialogBtnCancel}>
+            Скасувати
+          </Button>
+          <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
+            Зберегти
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
+  )
+}
+
 const CARD_CONTENT = {
   info: (props) => <InfoCard world={props.world} />,
   cover: (props) => <CoverImageCard world={props.world} worldId={props.worldId} />,
@@ -161,6 +281,7 @@ export default function WorldDetail({ onBack }) {
   })
 
   const [editMode, setEditMode] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [layout, setLayout] = useState(() => {
     const saved = loadLayout(worldId)
     return saved || { cards: DEFAULT_CARDS, flexes: {} }
@@ -362,28 +483,27 @@ export default function WorldDetail({ onBack }) {
     const flex = flexes[cardId]
     const style = {}
     if (flex) {
-      // grow/shrink stay enabled so the card can adapt if the window is
-      // resized after a manual resize, instead of overflowing the screen
       style.flex = `1 1 ${flex}px`
     }
     const isDragging = drag?.id === cardId
     const isOver = drag?.over === cardId
     const slotClass = CARD_META[cardId]?.slotClass || ''
+    const isLocked = editMode && LOCKED_CARDS.includes(cardId)
 
     return (
       <div
         key={cardId}
         id={`slot-${cardId}`}
-        className={`${styles.slot} ${styles[slotClass]} ${isDragging ? styles.dragging : ''} ${isOver ? styles.dragOver : ''}`}
-        draggable={editMode}
-        onDragStart={(e) => onDragStart(e, cardId)}
-        onDragOver={(e) => onDragOver(e, cardId)}
-        onDrop={(e) => onDrop(e, cardId)}
+        className={`${styles.slot} ${styles[slotClass]} ${isDragging ? styles.dragging : ''} ${isOver ? styles.dragOver : ''} ${isLocked ? styles.locked : ''}`}
+        draggable={editMode && !isLocked}
+        onDragStart={isLocked ? undefined : (e) => onDragStart(e, cardId)}
+        onDragOver={isLocked ? undefined : (e) => onDragOver(e, cardId)}
+        onDrop={isLocked ? undefined : (e) => onDrop(e, cardId)}
         onDragEnd={onDragEnd}
         style={style}
       >
         {CARD_CONTENT[cardId]?.({ world, worldId })}
-        {editMode && (
+        {editMode && !isLocked && (
           <div className={styles.dragHandle}>
             <DragIndicatorIcon fontSize="small" />
           </div>
@@ -399,11 +519,14 @@ export default function WorldDetail({ onBack }) {
       if (i < rowCards.length - 1) {
         const leftId = rowCards[i].id
         const rightId = rowCards[i + 1].id
+        const leftLocked = editMode && LOCKED_CARDS.includes(leftId)
+        const rightLocked = editMode && LOCKED_CARDS.includes(rightId)
+        const locked = leftLocked || rightLocked
         result.push(
           <div
             key={`resize-${leftId}-${rightId}`}
-            className={`${styles.resizeBar} ${editMode ? styles.resizeBarVisible : ''}`}
-            onMouseDown={(e) => onResizeStart(e, leftId, rightId)}
+            className={`${styles.resizeBar} ${editMode && !locked ? styles.resizeBarVisible : ''}`}
+            onMouseDown={editMode && !locked ? (e) => onResizeStart(e, leftId, rightId) : undefined}
           >
             <div className={styles.resizeBarLine} />
           </div>,
@@ -427,11 +550,18 @@ export default function WorldDetail({ onBack }) {
             </Button>
           )}
           <Button
+            className={styles.worldEditBtn}
+            onClick={() => setEditDialogOpen(true)}
+            startIcon={<EditOutlinedIcon />}
+          >
+            Світ
+          </Button>
+          <Button
             className={`${styles.editBtn} ${editMode ? styles.editBtnActive : ''}`}
             onClick={() => setEditMode((v) => !v)}
             startIcon={<TuneIcon />}
           >
-            {editMode ? 'Готово' : 'Редагувати'}
+            {editMode ? 'Готово' : 'Оверлей'}
           </Button>
         </div>
       </div>
@@ -447,6 +577,13 @@ export default function WorldDetail({ onBack }) {
           {renderRow(getRowCards(2))}
         </div>
       </div>
+
+      <WorldEditDialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        world={world}
+        worldId={worldId}
+      />
     </div>
   )
 }

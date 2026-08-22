@@ -175,10 +175,10 @@ export default function TodosSection({ worldId, accent }) {
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>
-            <Button onClick={() => setOpen(false)} color="inherit">
+            <Button onClick={() => setOpen(false)} className={sharedStyles.dialogBtnCancel}>
               Скасувати
             </Button>
-            <Button type="submit" variant="contained">
+            <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
               Зберегти
             </Button>
           </DialogActions>

@@ -89,18 +89,51 @@
   padding-top: 8px;
 }
 
+/* M3 outlined text field: shape.xs 4dp corners, 1dp outline, no fieldset */
 .formFields :global(.MuiOutlinedInput-root) {
-  border-radius: 4px !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  border: 1px solid #7d7188 !important;
+  transition: border-color 150ms linear !important;
 }
 
+.formFields :global(.MuiOutlinedInput-notchedOutline) {
+  display: none !important;
+}
+
+.formFields :global(.MuiOutlinedInput-root:hover) {
+  border-color: #1d1a22 !important;
+}
+
+.formFields :global(.MuiOutlinedInput-root.Mui-focused) {
+  border-color: var(--accent, #6f42c6) !important;
+  border-width: 2px !important;
+  margin: -1px !important;
+}
+
+.formFields :global(.MuiInputLabel-root) {
+  background: #fbf8ff !important;
+  padding: 0 4px !important;
+  margin-left: -4px !important;
+}
+
+.formFields :global(.MuiInputLabel-root.Mui-focused) {
+  color: var(--accent, #6f42c6) !important;
+}
+
+/* M3 dialog surface — light purple like Dashboard */
 .dialogPaper {
+  background: #fbf8ff !important;
   border-radius: 32px !important;
+  box-shadow: 0 1px 3px rgba(29, 26, 34, 0.15), 0 4px 24px rgba(29, 26, 34, 0.1) !important;
   overflow: hidden;
+  max-height: none !important;
+  margin: 24px !important;
 }
 
 .dialogPaper :global(.MuiDialogTitle-root) {
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
-  font-size: 42px !important;
+  font-size: 50px !important;
   font-weight: 500 !important;
   letter-spacing: -0.02em !important;
   padding: 32px 32px 0 !important;
@@ -118,23 +151,39 @@
   gap: 8px !important;
 }
 
-.dialogActions :global(.MuiButton-root) {
+/* M3 text button: accent-colored text, shape.full */
+.dialogBtnCancel {
+  color: var(--accent, #6f42c6) !important;
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
   font-weight: 500 !important;
   font-size: 16px !important;
   letter-spacing: 0.01em !important;
   border-radius: 999px !important;
+  padding: 10px 20px !important;
   text-transform: none !important;
-  padding: 10px 24px !important;
+  transition: background 150ms linear !important;
 }
 
-.dialogActions :global(.MuiButton-contained) {
+.dialogBtnCancel:hover {
+  background: color-mix(in srgb, var(--accent, #6f42c6) 8%, transparent) !important;
+}
+
+/* M3 filled button: accent-colored fill, shape.full */
+.dialogBtnSubmit {
   background: var(--accent, #6f42c6) !important;
   color: #ffffff !important;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.01em !important;
+  border-radius: 999px !important;
+  padding: 10px 24px !important;
+  text-transform: none !important;
   box-shadow: none !important;
+  transition: background 150ms linear !important;
 }
 
-.dialogActions :global(.MuiButton-contained:hover) {
+.dialogBtnSubmit:hover {
   filter: brightness(0.92);
   box-shadow: none !important;
 }

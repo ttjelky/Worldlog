@@ -350,7 +350,7 @@
 /* M3 outlined text field: shape.xs (4dp) corners, 1dp outline at rest,
    2dp primary outline on focus, regular-weight body text and label. */
 .formFields :global(.MuiOutlinedInput-root) {
-  border-radius: 4px;
+  border-radius: 12px;
   background: transparent;
 }
 
@@ -368,7 +368,7 @@
 }
 
 .formFields :global(.MuiOutlinedInput-root) {
-  border-radius: 4px;
+  border-radius: 12px;
   background: transparent;
   border: 1px solid var(--md-outline);
   transition: border-color 150ms linear;
