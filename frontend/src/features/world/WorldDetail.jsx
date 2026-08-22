@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, IconButton, LinearProgress } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -167,6 +167,7 @@ export default function WorldDetail({ onBack }) {
   })
   const [drag, setDrag] = useState(null)
   const [resize, setResize] = useState(null)
+  const flipSnapshotRef = useRef(null)
 
   const saveTimerRef = useRef(null)
   useEffect(() => {
@@ -199,6 +200,15 @@ export default function WorldDetail({ onBack }) {
     setDrag(null)
     if (sourceId === targetId) return
 
+    // FLIP step 1 (First): snapshot every card's current position/size
+    // before the swap so we can animate from here after the DOM updates.
+    const snapshot = {}
+    Object.keys(CARD_META).forEach((id) => {
+      const el = document.getElementById(`slot-${id}`)
+      if (el) snapshot[id] = el.getBoundingClientRect()
+    })
+    flipSnapshotRef.current = snapshot
+
     setLayout((prev) => {
       const srcIdx = prev.cards.findIndex((c) => c.id === sourceId)
       const tgtIdx = prev.cards.findIndex((c) => c.id === targetId)
@@ -227,6 +237,53 @@ export default function WorldDetail({ onBack }) {
   }
 
   const onDragEnd = () => setDrag(null)
+
+  // FLIP steps 2-4 (Last, Invert, Play): once React has committed the new
+  // positions, measure where each card ended up, offset it back to where it
+  // used to be with a transform, then transition that transform away so the
+  // card visibly glides into place instead of jumping.
+  useLayoutEffect(() => {
+    const snapshot = flipSnapshotRef.current
+    if (!snapshot) return
+    flipSnapshotRef.current = null
+
+    Object.keys(snapshot).forEach((id) => {
+      const el = document.getElementById(`slot-${id}`)
+      if (!el) return
+      const before = snapshot[id]
+      const after = el.getBoundingClientRect()
+      const dx = before.left - after.left
+      const dy = before.top - after.top
+      const sx = after.width ? before.width / after.width : 1
+      const sy = after.height ? before.height / after.height : 1
+
+      const unchanged =
+        Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx - 1) < 0.01 && Math.abs(sy - 1) < 0.01
+      if (unchanged) return
+
+      el.style.transition = 'none'
+      el.style.transformOrigin = 'top left'
+      el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+
+      // Force a reflow so the browser registers the inverted position
+      // before we transition away from it.
+      // eslint-disable-next-line no-unused-expressions
+      el.offsetHeight
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)'
+          el.style.transform = ''
+          const cleanup = () => {
+            el.style.transition = ''
+            el.style.transformOrigin = ''
+            el.removeEventListener('transitionend', cleanup)
+          }
+          el.addEventListener('transitionend', cleanup)
+        })
+      })
+    })
+  }, [layout.cards])
 
   const onResizeStart = (e, leftId, rightId) => {
     e.preventDefault()
