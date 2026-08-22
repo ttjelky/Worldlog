@@ -242,11 +242,18 @@ export default function WorldDetail({ onBack }) {
   // positions, measure where each card ended up, offset it back to where it
   // used to be with a transform, then transition that transform away so the
   // card visibly glides into place instead of jumping.
+  //
+  // Reads and writes are batched into separate passes (read all, then write
+  // all) instead of interleaved per card — interleaving forces the browser
+  // to recompute layout on every single card, which is what made the
+  // animation feel choppy.
   useLayoutEffect(() => {
     const snapshot = flipSnapshotRef.current
     if (!snapshot) return
     flipSnapshotRef.current = null
 
+    // Pass 1 — reads only: measure how far each card actually moved.
+    const moves = []
     Object.keys(snapshot).forEach((id) => {
       const el = document.getElementById(`slot-${id}`)
       if (!el) return
@@ -259,24 +266,33 @@ export default function WorldDetail({ onBack }) {
 
       const unchanged =
         Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx - 1) < 0.01 && Math.abs(sy - 1) < 0.01
-      if (unchanged) return
+      if (!unchanged) moves.push({ el, dx, dy, sx, sy })
+    })
 
+    if (moves.length === 0) return
+
+    // Pass 2 — writes only: pin every moved card back to its old spot.
+    moves.forEach(({ el, dx, dy, sx, sy }) => {
+      el.style.willChange = 'transform'
       el.style.transition = 'none'
       el.style.transformOrigin = 'top left'
       el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+    })
 
-      // Force a reflow so the browser registers the inverted position
-      // before we transition away from it.
-      // eslint-disable-next-line no-unused-expressions
-      el.offsetHeight
+    // A single forced reflow flushes all the writes above at once, instead
+    // of once per card.
+    // eslint-disable-next-line no-unused-expressions
+    document.body.offsetHeight
 
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
+        moves.forEach(({ el }) => {
           el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)'
           el.style.transform = ''
           const cleanup = () => {
             el.style.transition = ''
             el.style.transformOrigin = ''
+            el.style.willChange = ''
             el.removeEventListener('transitionend', cleanup)
           }
           el.addEventListener('transitionend', cleanup)
