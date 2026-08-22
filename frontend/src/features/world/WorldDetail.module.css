@@ -29,7 +29,7 @@
   background: rgba(0, 0, 0, 0.06) !important;
   color: #1d1a22 !important;
   box-shadow: none !important;
-  transition: background 0.15s ease !important;
+  transition: background 0.2s ease !important;
 }
 
 .editBtn:hover {
@@ -85,8 +85,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  min-width: 340px;
+  max-width: calc(100% - 340px - 24px);
   min-height: 0;
+  transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slot > * {
@@ -100,6 +102,10 @@
 .slotTypeLocations { flex: 2; }
 .slotTypeTodos     { flex: 1; }
 .slotTypeHistory   { flex: 1; }
+
+.resizing .slot {
+  transition: none !important;
+}
 
 /* ---------- Resize bar між картками ---------- */
 
@@ -118,21 +124,20 @@
   height: 0;
   border-radius: 999px;
   background: transparent;
-  transition: height 0.15s ease, background 0.15s ease;
+  transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
 }
 
 .resizeBarVisible {
   cursor: col-resize;
 }
 
-.resizeBarVisible:hover .resizeBarLine,
-.page.editMode .resize:hover .resizeBarLine {
+.resizeBarVisible:hover .resizeBarLine {
   height: 40px;
   background: rgba(0, 0, 0, 0.25);
 }
 
 .resizeBarVisible:active .resizeBarLine {
-  height: 56px;
+  height: 48px;
   background: rgba(0, 0, 0, 0.4);
 }
 
@@ -142,11 +147,15 @@
   outline: 2px dashed rgba(0, 0, 0, 0.15);
   outline-offset: 4px;
   border-radius: 32px;
-  transition: outline-color 0.15s ease;
+  transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), outline-color 0.25s ease;
 }
 
 .page.editMode .slot:hover {
   outline-color: rgba(0, 0, 0, 0.35);
+}
+
+.page.resizing .slot {
+  transition: none !important;
 }
 
 .dragging {
@@ -175,15 +184,18 @@
   cursor: grab;
   z-index: 10;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transform: scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .page.editMode .slot:hover .dragHandle {
   opacity: 1;
+  transform: scale(1);
 }
 
 .dragHandle:active {
   cursor: grabbing;
+  transform: scale(0.92);
 }
 
 /* ---------- Ряд 1: Інфокартка ---------- */
@@ -226,7 +238,7 @@
   justify-content: center;
   gap: 12px;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s ease;
 }
 
 .coverCard:hover .coverOverlay {
@@ -257,7 +269,7 @@
   justify-content: center;
   gap: 12px;
   cursor: pointer;
-  transition: background 0.18s ease;
+  transition: background 0.2s ease;
   font-family: inherit;
   padding: 24px;
 }
@@ -378,6 +390,11 @@
 
   .coverCard {
     height: 220px;
+  }
+
+  .slot {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .resizeBar {

@@ -19,7 +19,7 @@ import styles from './WorldDetail.module.css'
 
 const RED = '#A63C39'
 const GREEN = '#247A57'
-const STORAGE_KEY = 'world-layout'
+const MIN_SLOT_WIDTH = 340
 
 const CARD_META = {
   info:      { row: 0, slotClass: 'slotTypeInfo' },
@@ -39,17 +39,17 @@ const DEFAULT_CARDS = [
   { id: 'history', row: 2 },
 ]
 
-function loadLayout() {
+function loadLayout(worldId) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(`world-layout-${worldId}`)
     if (raw) return JSON.parse(raw)
   } catch {}
   return null
 }
 
-function saveLayout(data) {
+function saveLayout(worldId, data) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    localStorage.setItem(`world-layout-${worldId}`, JSON.stringify(data))
   } catch {}
 }
 
@@ -162,13 +162,18 @@ export default function WorldDetail({ onBack }) {
 
   const [editMode, setEditMode] = useState(false)
   const [layout, setLayout] = useState(() => {
-    const saved = loadLayout()
+    const saved = loadLayout(worldId)
     return saved || { cards: DEFAULT_CARDS, flexes: {} }
   })
   const [drag, setDrag] = useState(null)
   const [resize, setResize] = useState(null)
 
-  useEffect(() => { saveLayout(layout) }, [layout])
+  const saveTimerRef = useRef(null)
+  useEffect(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => saveLayout(worldId, layout), 300)
+    return () => clearTimeout(saveTimerRef.current)
+  }, [layout, worldId])
 
   const { cards, flexes } = layout
   const getRowCards = useCallback((row) => cards.filter((c) => c.row === row), [cards])
@@ -195,27 +200,29 @@ export default function WorldDetail({ onBack }) {
     if (sourceId === targetId) return
 
     setLayout((prev) => {
-      const nextCards = [...prev.cards]
-      const srcIdx = nextCards.findIndex((c) => c.id === sourceId)
-      const tgtIdx = nextCards.findIndex((c) => c.id === targetId)
+      const srcIdx = prev.cards.findIndex((c) => c.id === sourceId)
+      const tgtIdx = prev.cards.findIndex((c) => c.id === targetId)
       if (srcIdx === -1 || tgtIdx === -1) return prev
 
-      const srcRow = nextCards[srcIdx].row
-      const tgtRow = nextCards[tgtIdx].row
+      // Swap only the card ids between these two slots. Each slot keeps
+      // its own fixed `row`, so every row always keeps exactly the same
+      // number of cards — no more 3-in-a-row / cards landing in random rows.
+      const nextCards = prev.cards.map((c) => ({ ...c }))
+      nextCards[srcIdx].id = targetId
+      nextCards[tgtIdx].id = sourceId
 
-      if (srcRow === tgtRow) {
-        const rowCards = nextCards.filter((c) => c.row === srcRow)
-        const srcPos = rowCards.findIndex((c) => c.id === sourceId)
-        const tgtPos = rowCards.findIndex((c) => c.id === targetId)
-        rowCards.splice(srcPos, 1)
-        rowCards.splice(tgtPos, 0, nextCards[srcIdx])
-        const others = nextCards.filter((c) => c.row !== srcRow)
-        return { ...prev, cards: [...others, ...rowCards] }
-      } else {
-        nextCards[srcIdx] = { ...nextCards[srcIdx], row: tgtRow }
-        nextCards[tgtIdx] = { ...nextCards[tgtIdx], row: srcRow }
-        return { ...prev, cards: nextCards }
-      }
+      // A card's manually-resized width follows it wherever it goes,
+      // instead of leaking onto the card left behind (which caused the
+      // "random size" bug).
+      const nextFlexes = { ...prev.flexes }
+      const srcFlex = prev.flexes[sourceId]
+      const tgtFlex = prev.flexes[targetId]
+      if (srcFlex !== undefined) nextFlexes[targetId] = srcFlex
+      else delete nextFlexes[targetId]
+      if (tgtFlex !== undefined) nextFlexes[sourceId] = tgtFlex
+      else delete nextFlexes[sourceId]
+
+      return { ...prev, cards: nextCards, flexes: nextFlexes }
     })
   }
 
@@ -238,10 +245,14 @@ export default function WorldDetail({ onBack }) {
 
   useEffect(() => {
     if (!resize) return
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
     const onMove = (e) => {
       const dx = e.clientX - resize.startX
-      const newLeftW = Math.max(150, resize.startLeftW + dx)
-      const newRightW = Math.max(150, resize.startRightW - dx)
+      const totalW = resize.startLeftW + resize.startRightW
+      const maxLeft = totalW - MIN_SLOT_WIDTH
+      const newLeftW = Math.min(maxLeft, Math.max(MIN_SLOT_WIDTH, resize.startLeftW + dx))
+      const newRightW = totalW - newLeftW
       setLayout((prev) => ({
         ...prev,
         flexes: {
@@ -251,18 +262,24 @@ export default function WorldDetail({ onBack }) {
         },
       }))
     }
-    const onUp = () => setResize(null)
+    const onUp = () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      setResize(null)
+    }
     document.addEventListener('mousemove', onMove)
     document.addEventListener('mouseup', onUp)
     return () => {
       document.removeEventListener('mousemove', onMove)
       document.removeEventListener('mouseup', onUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
     }
   }, [resize])
 
   const resetLayout = () => {
     setLayout({ cards: DEFAULT_CARDS, flexes: {} })
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(`world-layout-${worldId}`)
   }
 
   if (isLoading) return <LinearProgress />
@@ -272,7 +289,9 @@ export default function WorldDetail({ onBack }) {
     const flex = flexes[cardId]
     const style = {}
     if (flex) {
-      style.flex = `0 0 ${flex}px`
+      // grow/shrink stay enabled so the card can adapt if the window is
+      // resized after a manual resize, instead of overflowing the screen
+      style.flex = `1 1 ${flex}px`
     }
     const isDragging = drag?.id === cardId
     const isOver = drag?.over === cardId
@@ -322,7 +341,7 @@ export default function WorldDetail({ onBack }) {
   }
 
   return (
-    <div className={`${styles.page} ${editMode ? styles.editMode : ''}`}>
+    <div className={`${styles.page} ${editMode ? styles.editMode : ''} ${resize ? styles.resizing : ''}`}>
       <div className={styles.topBar}>
         <Button className={backBtnStyles.backBtn} onClick={onBack}>
           <ArrowBackIcon fontSize="small" />
