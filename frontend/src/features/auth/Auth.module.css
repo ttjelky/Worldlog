@@ -4,10 +4,7 @@
   gap: 16px;
 }
 
-/* Disable MUI's own fieldset-based outline entirely — it's proven
-   unreliable (notch desync, stray gaps, browser fieldset quirks affecting
-   height). Draw a plain border on the input's own div instead: no
-   fieldset, no legend, no special browser layout rules to fight. */
+/* M3 outlined text field — matching Dashboard dialog style */
 .form :global(.MuiOutlinedInput-notchedOutline) {
   display: none !important;
 }
@@ -15,34 +12,64 @@
 .form :global(.MuiOutlinedInput-root) {
   border-radius: 4px;
   background: transparent;
-  border: 1px solid rgba(0, 0, 0, 0.23);
+  border: 1px solid var(--md-outline, #7d7188);
   transition: border-color 150ms linear;
 }
 
 .form :global(.MuiOutlinedInput-root:hover) {
-  border-color: rgba(0, 0, 0, 0.87);
+  border-color: var(--md-on-surface, #1d1a22);
 }
 
 .form :global(.MuiOutlinedInput-root.Mui-focused) {
-  border-color: #7c83f5;
+  border-color: var(--md-primary, #6f42c6);
   border-width: 2px;
   margin: -1px;
 }
 
-/* Simpler than fighting the outline's notch/legend sync: give the floating
-   label its own background matching the card surface it sits on, so it
-   visually covers the border line behind it instead of relying on the
-   outline to cut a gap for it. Adjust --auth-surface if AuthShell's card
-   background isn't white. */
 .form :global(.MuiInputLabel-root) {
-  background: var(--auth-surface, #ffffff);
+  background: var(--md-surface, #fbf8ff);
   padding: 0 4px;
   margin-left: -4px;
 }
 
+.form :global(.MuiInputLabel-root) {
+  color: var(--md-on-surface-variant, #4b4358);
+  font-weight: 400;
+}
+
+.form :global(.MuiInputLabel-root.Mui-focused) {
+  color: var(--md-primary, #6f42c6);
+}
+
+/* Submit button — M3 filled purple pill */
+.submitBtn {
+  background: #6f42c6 !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.01em !important;
+  border-radius: 999px !important;
+  padding: 12px 28px !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+  transition: background 150ms linear !important;
+}
+
+.submitBtn:hover {
+  background: #5c34a8 !important;
+}
+
+.submitBtn:active {
+  background: #4e2b94 !important;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5 !important;
+}
+
 .footerLink {
   font-weight: 700 !important;
-  color: #7c83f5 !important;
+  color: #6f42c6 !important;
   min-width: 0 !important;
   padding: 0 !important;
   font-size: inherit !important;
@@ -51,4 +78,8 @@
 
 .footerLink:hover {
   text-decoration: underline;
+}
+
+.errorAlert {
+  border-radius: 12px !important;
 }

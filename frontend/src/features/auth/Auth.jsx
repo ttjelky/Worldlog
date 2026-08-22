@@ -55,7 +55,7 @@ export function Login() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Button type="submit" variant="contained" color="primary" size="large" disabled={loading}>
+        <Button type="submit" className={styles.submitBtn} disabled={loading}>
           {loading ? 'Вхід...' : 'Увійти'}
         </Button>
       </form>
@@ -80,12 +80,12 @@ export function Register() {
       await register(username, email, password)
       navigate('/app')
     } catch (err) {
-      if (err.response?.status === 409) {
-        const detail = err.response.data
-        const msg = detail?.username?.[0] || detail?.email?.[0] || detail?.detail
-        setError(msg || 'Користувач з таким іменем або email вже існує')
+      const data = err.response?.data
+      if (err.response?.status === 400 && data) {
+        const msg = data?.username?.[0] || data?.email?.[0] || data?.password?.[0] || data?.detail
+        setError(msg || 'Перевір введені дані')
       } else {
-        setError('Реєстрація вдалась, але вхід не спрацював. Спробуй увійти вручну.')
+        setError('Щось пішло не так. Спробуй ще раз.')
       }
       setLoading(false)
     }
@@ -129,7 +129,7 @@ export function Register() {
           minLength={8}
           helperText="Мінімум 8 символів"
         />
-        <Button type="submit" variant="contained" color="primary" size="large" disabled={loading}>
+        <Button type="submit" className={styles.submitBtn} disabled={loading}>
           {loading ? 'Створення...' : 'Зареєструватись'}
         </Button>
       </form>

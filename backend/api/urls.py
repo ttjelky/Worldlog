@@ -6,6 +6,7 @@ from .views import (
     HistoryEventViewSet,
     LocationScreenshotViewSet,
     LocationViewSet,
+    LogoutView,
     MembershipViewSet,
     PlayerViewSet,
     RegisterView,
@@ -43,5 +44,6 @@ urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('me/', UserDetailView.as_view(), name='me'),
 ] + router.urls

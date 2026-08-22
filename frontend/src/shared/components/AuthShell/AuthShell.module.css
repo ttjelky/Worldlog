@@ -3,39 +3,59 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f6f8;
+  background: #dfcefd;
   padding: 16px;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
 }
 
 .paper {
+  --md-primary: #6f42c6;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #e9ddfb;
+  --md-on-primary-container: #26113f;
+  --md-surface: #fbf8ff;
+  --md-surface-container: #f2eafb;
+  --md-surface-container-high: #ece1f8;
+  --md-on-surface: #1d1a22;
+  --md-on-surface-variant: #4b4358;
+  --md-outline: #7d7188;
+  --md-outline-variant: #cdc0dd;
+
+  --auth-surface: var(--md-surface);
+
   width: 100%;
-  max-width: 440px;
-  padding: 48px;
-  background: #ffffff;
-  border-radius: 22px;
-  box-shadow: 0 10px 40px rgba(13, 13, 15, 0.08);
+  max-width: 480px;
+  padding: 40px 36px 36px;
+  background: var(--md-surface);
+  border-radius: 32px;
+  box-shadow:
+    0 1px 3px rgba(29, 26, 34, 0.15),
+    0 4px 24px rgba(29, 26, 34, 0.1);
 }
 
 @media (max-width: 600px) {
   .paper {
-    padding: 32px;
+    padding: 32px 24px 28px;
+    border-radius: 28px;
   }
 }
 
 .logoWrap {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .title {
-  font-weight: 700;
-  font-size: 28px;
-  color: #0d0d0f;
-  margin-bottom: 4px;
+  font-weight: 500;
+  font-size: 44px;
+  color: var(--md-on-surface);
+  margin-bottom: 6px;
+  line-height: 1.2;
 }
 
 .subtitle {
-  font-size: 15px;
-  color: rgba(13, 13, 15, 0.65);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
   margin-bottom: 24px;
 }
 
@@ -43,5 +63,5 @@
   margin-top: 24px;
   text-align: center;
   font-size: 15px;
-  color: rgba(13, 13, 15, 0.65);
+  color: var(--md-on-surface-variant);
 }

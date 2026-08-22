@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
-from rest_framework import generics, permissions, viewsets
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import (
     HistoryEvent,
@@ -20,6 +22,7 @@ from .serializers import (
     PlayerSerializer,
     TodoItemSerializer,
     UserSerializer,
+    UserUpdateSerializer,
     WorldSerializer,
 )
 
@@ -30,10 +33,30 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
 
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get('refresh')
+            if refresh_token:
+                from rest_framework_simplejwt.tokens import RefreshToken
+
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+        except Exception:
+            pass
+        return Response(status=status.HTTP_205_RESET_CONTENT)
+
+
 class UserDetailView(generics.RetrieveUpdateAPIView):
-    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.method in ('PUT', 'PATCH'):
+            return UserUpdateSerializer
+        return UserSerializer
 
     def get_object(self):
         return self.request.user

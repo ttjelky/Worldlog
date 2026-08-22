@@ -1,5 +1,10 @@
+import re
+
+from django.contrib.auth import password_validation
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import (
     HistoryEvent,
@@ -12,11 +17,66 @@ from .models import (
 )
 
 
+class CustomTokenObtainSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        if 'username' in attrs:
+            attrs['username'] = attrs['username'].strip().lower()
+        return super().validate(attrs)
+
+USERNAME_RE = re.compile(r'^[\w.@+-]+$')
+
+
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8)
+
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {
+            'email': {'required': True},
+            'password': {'write_only': True},
+        }
+
+    def validate_username(self, value):
+        value = value.strip().lower()
+        if not USERNAME_RE.match(value):
+            raise serializers.ValidationError(
+                'Допустимі символи: букви, цифри, @ . + - _'
+            )
+        if len(value) < 3:
+            raise serializers.ValidationError(
+                'Мінімальна довжина — 3 символи'
+            )
+        if User.objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError(
+                'Користувач з таким іменем вже існує'
+            )
+        return value
+
+    def validate_email(self, value):
+        value = value.strip().lower()
+        if not value:
+            raise serializers.ValidationError('Email є обов\'язковим')
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError(
+                'Користувач з таким email вже існує'
+            )
+        return value
+
+    def validate_password(self, value):
+        try:
+            password_validation.validate_password(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(list(e.messages))
+        return value
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if 'username' in attrs:
+            attrs['username'] = attrs['username'].strip().lower()
+        if 'email' in attrs:
+            attrs['email'] = attrs['email'].strip().lower()
+        return attrs
 
     def create(self, validated_data):
         user = User.objects.create_user(
@@ -25,6 +85,70 @@ class UserSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
         )
         return user
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    current_password = serializers.CharField(write_only=True, required=True)
+    new_password = serializers.CharField(write_only=True, min_length=8, required=False)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'current_password', 'new_password')
+
+    def validate_current_password(self, value):
+        if not self.instance.check_password(value):
+            raise serializers.ValidationError('Невірний поточний пароль')
+        return value
+
+    def validate_new_password(self, value):
+        if value:
+            try:
+                password_validation.validate_password(value, self.instance)
+            except DjangoValidationError as e:
+                raise serializers.ValidationError(list(e.messages))
+        return value
+
+    def validate_email(self, value):
+        value = value.strip().lower()
+        if User.objects.filter(email__iexact=value).exclude(pk=self.instance.pk).exists():
+            raise serializers.ValidationError(
+                'Користувач з таким email вже існує'
+            )
+        return value
+
+    def validate_username(self, value):
+        value = value.strip().lower()
+        if not USERNAME_RE.match(value):
+            raise serializers.ValidationError(
+                'Допустимі символи: букви, цифри, @ . + - _'
+            )
+        if len(value) < 3:
+            raise serializers.ValidationError(
+                'Мінімальна довжина — 3 символи'
+            )
+        if User.objects.filter(username__iexact=value).exclude(pk=self.instance.pk).exists():
+            raise serializers.ValidationError(
+                'Користувач з таким іменем вже існує'
+            )
+        return value
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if 'username' in attrs:
+            attrs['username'] = attrs['username'].strip().lower()
+        if 'email' in attrs:
+            attrs['email'] = attrs['email'].strip().lower()
+        return attrs
+
+    def update(self, instance, validated_data):
+        validated_data.pop('current_password', None)
+        new_password = validated_data.pop('new_password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if new_password:
+            instance.set_password(new_password)
+        instance.save()
+        return instance
 
 
 class LocationScreenshotSerializer(serializers.ModelSerializer):
