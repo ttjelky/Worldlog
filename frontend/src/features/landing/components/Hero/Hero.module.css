@@ -27,8 +27,7 @@
 
 .heroContent {
   position: relative;
-  z-index: 1;
-  overflow: hidden;
+  z-index: 10;
 }
 
 .heroTop {
@@ -148,8 +147,10 @@
 @media (min-width: 900px) {
   .heroVisual {
     display: block;
-    flex: 0 0 52%;
-    position: relative;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
   }
 }
 
@@ -229,33 +230,37 @@
 }
 
 .collagePlayers {
-  width: clamp(240px, 28vw, 380px);
-  top: 5%;
-  left: 5%;
+  width: 430px;
+  height: 250px;
+  top: -40px;
+  right: 25%;
   z-index: 3;
   transform: rotate(-2deg);
 }
 
 .collageTodos {
-  width: clamp(200px, 24vw, 320px);
-  top: 12%;
-  right: 3%;
+  width: 420px;
+  height: 230px;
+  top: 20px;
+  right: -100px;
   z-index: 2;
   transform: rotate(3deg);
 }
 
 .collageLocations {
-  width: clamp(300px, 36vw, 500px);
-  top: 55%;
-  left: 0;
+  width: 550px;
+  height: 300px;
+  left: 35%;
+  bottom: -120px;
   z-index: 4;
   transform: rotate(1.5deg);
 }
 
 .collageTimeline {
-  width: clamp(220px, 26vw, 340px);
-  top: 56%;
-  right: 0;
+  width: 430px;
+  height: 260px;
+  right: -80px;
+  bottom: -70px;
   z-index: 5;
   transform: rotate(-2.5deg);
 }
@@ -399,9 +404,11 @@
   }
 
   .heroVisual {
+    position: relative;
     display: block;
-    flex: none;
     width: 100%;
+    height: auto;
+    pointer-events: auto;
   }
 
   .heroCollage {
@@ -414,6 +421,7 @@
   .collageCard {
     position: static;
     width: 100% !important;
+    height: auto !important;
     transform: none !important;
   }
 }
