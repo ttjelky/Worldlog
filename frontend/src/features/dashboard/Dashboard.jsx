@@ -283,7 +283,7 @@ export default function Dashboard() {
         ) : (
           <>
             <section className={styles.hero}>
-              <p className={styles.heroGreeting}>Керуйте світами</p>
+              <p className={styles.heroGreeting}>WorldLog від DiJital</p>
               <h1 className={styles.heroTitle}>Головна сторінка</h1>
             </section>
 

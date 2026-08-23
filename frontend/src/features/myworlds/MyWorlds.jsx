@@ -134,7 +134,7 @@ export default function MyWorlds() {
         ) : (
           <>
             <section className={styles.hero}>
-          <p className={styles.heroGreeting}>Всі світи в одному місці</p>
+          <p className={styles.heroGreeting}>Керуйте світами</p>
           <h1 className={styles.heroTitle}>Мої світи</h1>
         </section>
 

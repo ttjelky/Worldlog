@@ -82,6 +82,11 @@
 
 .toolbar :global(.MuiInputLabel-root) {
   color: rgba(255, 255, 255, 0.7);
+  /* Підпис-«чип»: фон перекриває рамку поля */
+  background: #434343;
+  padding: 0 6px;
+  border-radius: 999px;
+  margin-left: -6px;
 }
 
 .toolbar :global(.MuiInputLabel-root.Mui-focused) {
@@ -281,7 +286,7 @@
   font-size: 14px;
   font-weight: 500;
   color: #ffffff;
-  background: rgba(0, 0, 0, 0.22);
+  background: #3ddc84;
 }
 
 .cardTitle {
