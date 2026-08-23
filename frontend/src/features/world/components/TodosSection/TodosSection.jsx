@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
+import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import styles from './TodosSection.module.css'
 
@@ -28,6 +29,9 @@ const empty = { title: '', description: '', priority: 'medium' }
 
 export default function TodosSection({ worldId, accent }) {
   const qc = useQueryClient()
+  // modal=true — копія всередині розкритої модалки (там знімаємо ліміт
+  // висоти списку), false — звичайна картка на дошці
+  const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
@@ -97,7 +101,11 @@ export default function TodosSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.todoList}`}>
+      <div
+        className={`${sharedStyles.body} ${styles.todoList} ${
+          section.modal ? styles.todoListFull : ''
+        }`}
+      >
         {todos.map((t) => {
           const [dot, label] = priorities[t.priority]
           return (

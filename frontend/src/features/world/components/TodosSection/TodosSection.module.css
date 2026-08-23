@@ -4,6 +4,12 @@
   gap: 8px;
 }
 
+/* У розкритій модалці список займає всю висоту картки,
+   а не обрізається спільним max-height: 320px */
+.todoList.todoListFull {
+  max-height: none;
+}
+
 .todoItem {
   display: flex;
   align-items: center;
