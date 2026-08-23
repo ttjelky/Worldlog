@@ -31,7 +31,7 @@ function MockupPlayers() {
             <div
               className={styles.mockupAvatar}
               style={{
-                background: i === 0 ? '#9166c8' : i === 1 ? '#247A57' : '#A63C39',
+                background: i === 0 ? '#d57c6a' : i === 1 ? '#54ac98' : '#9166c8',
               }}
             />
             <div className={styles.mockupRowText}>
@@ -53,9 +53,9 @@ function MockupLocations() {
       </div>
       <div className={styles.mockupBody}>
         {[
-          { name: "Дерев'яна база", coords: 'X: 120 Y: 64 Z: -340', color: '#9166c8' },
-          { name: 'Залізна шахта', coords: 'X: -55 Y: 32 Z: 780', color: '#247A57' },
-          { name: 'Вежа мага', coords: 'X: 310 Y: 88 Z: 15', color: '#A63C39' },
+          { name: "Дерев'яна база", coords: 'X: 120  Y: 64  Z: -340', color: '#d57c6a' },
+          { name: 'Залізна шахта', coords: 'X: -55  Y: 32  Z: 780', color: '#54ac98' },
+          { name: 'Вежа мага', coords: 'X: 310  Y: 88  Z: 15', color: '#9166c8' },
         ].map((loc) => (
           <div key={loc.name} className={styles.mockupRow}>
             <div className={styles.mockupLocDot} style={{ background: loc.color }} />
@@ -85,7 +85,7 @@ function MockupTodos() {
           <div key={i} className={styles.mockupRow}>
             <div
               className={styles.mockupCheckbox}
-              style={t.done ? { background: '#9166c8', borderColor: '#9166c8' } : {}}
+              style={t.done ? { background: '#54ac98', borderColor: '#54ac98' } : {}}
             >
               {t.done && (
                 <svg viewBox="0 0 16 16" fill="none" className={styles.mockupCheckSvg}>
@@ -135,6 +135,7 @@ export default function Hero({ onStart }) {
         <div className={styles.heroContent}>
           <div className={styles.heroTop}>
             <div className={styles.heroText}>
+              <span className={styles.heroBadge}>WorldLog від DiJital</span>
               <h1 className={styles.heroTitle}>
                 Документуй
                 <br />
@@ -146,7 +147,6 @@ export default function Hero({ onStart }) {
               <div className={styles.heroButtons}>
                 <Button
                   variant="contained"
-                  color="primary"
                   disableElevation
                   size="large"
                   endIcon={<ArrowForwardIcon />}
@@ -156,8 +156,7 @@ export default function Hero({ onStart }) {
                   Спробувати
                 </Button>
                 <Button
-                  variant="tonal"
-                  color="primary"
+                  variant="outlined"
                   size="large"
                   endIcon={<ExploreOutlinedIcon />}
                   onClick={() => scrollTo('features')}
