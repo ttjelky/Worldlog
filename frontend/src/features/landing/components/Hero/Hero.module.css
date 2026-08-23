@@ -6,7 +6,7 @@
 
 .heroSection {
   padding: 88px 24px 0;
-  background: linear-gradient(180deg, #3a2e28 0%, #f8f6f3 100%);
+  background: linear-gradient(180deg, #3a2e28 0%, #6b5d54 50%, #f8f6f3 100%);
 }
 
 @media (min-width: 900px) {
@@ -148,13 +148,17 @@
     display: block;
     flex: 1;
     position: relative;
-    min-height: 380px;
+    min-height: 440px;
+    overflow: visible;
   }
 }
 
 .heroCollage {
   position: absolute;
-  inset: 30px 40px;
+  top: -40px;
+  right: -60px;
+  bottom: 60px;
+  left: -20px;
 }
 
 .heroNav {
@@ -201,13 +205,13 @@
   font-weight: 600;
   font-size: 12px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 1.2s ease, border-color 1.2s ease, color 1.2s ease;
 }
 
 .heroNavPill:hover {
-  background: rgba(214, 123, 91, 0.22);
-  border-color: rgba(214, 123, 91, 0.45);
-  color: #ffffff;
+  background: rgba(89, 178, 146, 0.18);
+  border-color: rgba(89, 178, 146, 0.40);
+  color: #59b292;
 }
 
 .heroNavPillIcon {
@@ -221,41 +225,41 @@
 .collageCard {
   position: absolute;
   background: #5a5550;
-  border-radius: 14px;
+  border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(214, 123, 91, 0.15);
 }
 
 .collagePlayers {
-  width: 230px;
-  top: -2%;
-  left: 15%;
+  width: 320px;
+  top: -20px;
+  right: 40px;
   z-index: 3;
-  transform: rotate(-4deg);
+  transform: rotate(-3deg);
 }
 
 .collageLocations {
-  width: 260px;
-  bottom: 2%;
-  left: 10%;
+  width: 380px;
+  bottom: -60px;
+  left: -40px;
   z-index: 4;
-  transform: rotate(1.5deg);
+  transform: rotate(2deg);
 }
 
 .collageTodos {
-  width: 195px;
-  top: 2%;
-  right: 14%;
+  width: 280px;
+  top: 20px;
+  right: -40px;
   z-index: 2;
   transform: rotate(4deg);
 }
 
 .collageTimeline {
-  width: 210px;
-  bottom: 8%;
-  right: 8%;
+  width: 300px;
+  bottom: -30px;
+  right: -30px;
   z-index: 5;
-  transform: rotate(-2.5deg);
+  transform: rotate(-2deg);
 }
 
 .mockupHeader {
