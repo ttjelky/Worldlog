@@ -5,20 +5,8 @@
    ───────────────────────────────────────── */
 
 .heroSection {
-  padding: 88px 24px 80px;
-  background: #85837a;
-  position: relative;
-}
-
-.heroSection::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(180deg, transparent, #f8f6f3);
-  pointer-events: none;
+  padding: 88px 24px 0;
+  background: linear-gradient(180deg, #3a2e28 0%, #f8f6f3 100%);
 }
 
 @media (min-width: 900px) {
@@ -33,7 +21,7 @@
   margin: 0 auto;
   border-radius: 24px;
   overflow: hidden;
-  background: #3a2e28;
+  background: #85837a;
 }
 
 .heroContent {
@@ -88,7 +76,7 @@
   font-weight: 900;
   font-size: 52px;
   line-height: 0.98;
-  color: #ffffff;
+  color: #1a1815;
   letter-spacing: -0.04em;
   margin-bottom: 20px;
 }
@@ -103,7 +91,7 @@
 .heroSubtitle {
   font-size: 17px;
   line-height: 1.6;
-  color: rgba(214, 123, 91, 0.70);
+  color: rgba(26, 24, 21, 0.65);
   margin-bottom: 32px;
   max-width: 380px;
 }
@@ -139,13 +127,13 @@
   font-size: 15px !important;
   font-weight: 700 !important;
   background: transparent !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(214, 123, 91, 0.40) !important;
+  color: #1a1815 !important;
+  border: 1px solid rgba(26, 24, 21, 0.25) !important;
 }
 
 .heroButtonSecondary:hover {
-  background: rgba(214, 123, 91, 0.12) !important;
-  border-color: rgba(214, 123, 91, 0.65) !important;
+  background: rgba(26, 24, 21, 0.06) !important;
+  border-color: rgba(26, 24, 21, 0.45) !important;
 }
 
 .heroVisual {
@@ -171,7 +159,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 18px 32px 22px;
-  border-top: 1px solid rgba(214, 123, 91, 0.12);
+  border-top: 1px solid rgba(26, 24, 21, 0.12);
 }
 
 @media (min-width: 900px) {
@@ -186,7 +174,7 @@
 .heroNavLabel {
   font-weight: 700;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.30);
+  color: rgba(26, 24, 21, 0.35);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   white-space: nowrap;
@@ -204,9 +192,9 @@
   gap: 5px;
   padding: 6px 12px;
   border-radius: 10px;
-  background: rgba(214, 123, 91, 0.10);
-  border: 1px solid rgba(214, 123, 91, 0.15);
-  color: rgba(255, 255, 255, 0.70);
+  background: rgba(26, 24, 21, 0.06);
+  border: 1px solid rgba(26, 24, 21, 0.12);
+  color: rgba(26, 24, 21, 0.70);
   font-weight: 600;
   font-size: 12px;
   cursor: pointer;
@@ -214,9 +202,9 @@
 }
 
 .heroNavPill:hover {
-  background: rgba(214, 123, 91, 0.22);
-  border-color: rgba(214, 123, 91, 0.45);
-  color: #ffffff;
+  background: rgba(26, 24, 21, 0.10);
+  border-color: rgba(26, 24, 21, 0.25);
+  color: #1a1815;
 }
 
 .heroNavPillIcon {
@@ -229,7 +217,7 @@
 
 .collageCard {
   position: absolute;
-  background: #2e2420;
+  background: #5a5550;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(214, 123, 91, 0.15);
