@@ -6,7 +6,7 @@
 
 .heroSection {
   padding: 88px 24px 0;
-  background: linear-gradient(180deg, #3a2e28 0%, #6b5d54 50%, #f8f6f3 100%);
+  background: #f8f6f3;
 }
 
 @media (min-width: 900px) {
@@ -22,11 +22,13 @@
   border-radius: 24px;
   overflow: hidden;
   background: #434343;
+  z-index: 0;
 }
 
 .heroContent {
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
 
 .heroTop {
@@ -149,7 +151,6 @@
     flex: 1;
     position: relative;
     min-height: 440px;
-    overflow: visible;
   }
 }
 
