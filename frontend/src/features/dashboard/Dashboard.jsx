@@ -14,13 +14,14 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
+import { useNavigate } from 'react-router-dom'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
 import styles from './Dashboard.module.css'
 
-const emptyWorld = { name: '', description: '', seed: '', start_date: '', cover_image: null, is_public: false }
+export const emptyWorld = { name: '', description: '', seed: '', start_date: '', cover_image: null, is_public: false }
 
-const PLACEHOLDER_COPY = {
+export const PLACEHOLDER_COPY = {
   overview: 'Тут з\'явиться загальна статистика по всіх твоїх світах.',
   worlds: 'Тут з\'явиться повний перелік світів з фільтрами та сортуванням.',
   friends: 'Тут з\'являться світи та профілі твоїх друзів.',
@@ -35,7 +36,7 @@ function useWorldForm(initial) {
   return { form, set, setBool, setFile, setForm }
 }
 
-function WorldForm({ open, onClose, initial, onSubmit }) {
+export function WorldForm({ open, onClose, initial, onSubmit, dark = false }) {
   const { form, set, setBool, setFile } = useWorldForm(initial)
   const submit = (e) => {
     e.preventDefault()
@@ -52,8 +53,14 @@ function WorldForm({ open, onClose, initial, onSubmit }) {
       maxWidth="sm"
       fullWidth
       slotProps={{
-        paper: { className: styles.dialogPaper },
-        backdrop: { className: styles.dialogBackdrop },
+        paper: {
+          className: dark ? `${styles.dialogPaper} ${styles.dialogPaperDark}` : styles.dialogPaper,
+        },
+        backdrop: {
+          className: dark
+            ? `${styles.dialogBackdrop} ${styles.dialogBackdropDark}`
+            : styles.dialogBackdrop,
+        },
       }}
     >
       <form onSubmit={submit}>
@@ -224,6 +231,7 @@ function AddCardButton({ onClick }) {
 
 export default function Dashboard() {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [activePage, setActivePage] = useState('home')
@@ -264,7 +272,10 @@ export default function Dashboard() {
 
   return (
     <div className={styles.appShell}>
-      <Navbar activePage={activePage} onNavigate={setActivePage} />
+      <Navbar
+        activePage={activePage}
+        onNavigate={(id) => (id === 'worlds' ? navigate('/app/worlds') : setActivePage(id))}
+      />
 
       <div className={styles.page}>
         {activePage !== 'home' ? (
@@ -298,7 +309,7 @@ export default function Dashboard() {
               {worlds.length >= 1 ? (
                 <Button
                   className={`${styles.worldCard} ${styles.addCard}`}
-                  onClick={() => setActivePage('worlds')}
+                  onClick={() => navigate('/app/worlds')}
                   sx={{
                     '& .MuiTouchRipple-ripple': {
                       color: 'rgba(0, 0, 0, 0.18)',

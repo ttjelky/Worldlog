@@ -296,6 +296,47 @@
   background: rgba(29, 26, 34, 0.4) !important;
 }
 
+/* ==================================================================
+   Dark variant — сторінка «Мої світи»: та сама структура й токени,
+   інша палітра (тло #434343, кораловий акцент, білий текст)
+   ================================================================== */
+.dialogPaperDark {
+  --md-primary: #d57c6a;
+  --md-on-primary: #ffffff;
+  --md-primary-container: rgba(255, 255, 255, 0.14);
+  --md-on-primary-container: #ffffff;
+  --md-surface: #434343;
+  --md-surface-container: rgba(255, 255, 255, 0.08);
+  --md-surface-container-high: rgba(255, 255, 255, 0.16);
+  --md-on-surface: #ffffff;
+  --md-on-surface-variant: rgba(255, 255, 255, 0.72);
+  --md-outline: rgba(255, 255, 255, 0.35);
+  --md-outline-variant: rgba(255, 255, 255, 0.22);
+  /* Фокуси полів і дропзона — бірюзові */
+  --md-focus: #54ac98;
+}
+
+/* Дропзона файлу — бірюзна картка */
+.dialogPaperDark .fileDropzone,
+.dialogPaperDark .fileDropzone:hover,
+.dialogPaperDark .fileDropzone:focus-within {
+  background: #54ac98;
+}
+
+.dialogPaperDark .fileDropzone:hover,
+.dialogPaperDark .fileDropzone:focus-within {
+  background: #489c89;
+}
+
+.dialogPaperDark .fileDropzoneIcon {
+  background: rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+}
+
+.dialogBackdropDark {
+  background: rgba(0, 0, 0, 0.55) !important;
+}
+
 .dialogTitle {
   font-size: 50px !important;
   font-weight: 500 !important;
@@ -379,7 +420,7 @@
 }
 
 .formFields :global(.MuiOutlinedInput-root.Mui-focused) {
-  border-color: var(--md-primary);
+  border-color: var(--md-focus, var(--md-primary));
   border-width: 2px;
   margin: -1px;
 }
@@ -400,7 +441,7 @@
 }
 
 .formFields :global(.MuiInputLabel-root.Mui-focused) {
-  color: var(--md-primary);
+  color: var(--md-focus, var(--md-primary));
 }
 
 /* "OR" divider between the manual form and the file upload */
@@ -532,7 +573,7 @@
 
 /* M3 text button: no fill, state-layer on hover, shape.full */
 .dialogBtnCancel {
-  color: #6f42c6 !important;
+  color: var(--md-primary) !important;
   font-weight: 500 !important;
   font-size: 16px !important;
   letter-spacing: 0.01em !important;
@@ -545,17 +586,17 @@
 }
 
 .dialogBtnCancel:hover {
-  background: rgba(111, 66, 198, 0.08) !important;
+  background: color-mix(in srgb, var(--md-primary) 10%, transparent) !important;
 }
 
 .dialogBtnCancel:active {
-  background: rgba(111, 66, 198, 0.14) !important;
+  background: color-mix(in srgb, var(--md-primary) 16%, transparent) !important;
 }
 
 /* M3 filled button: elevation 0 at rest, shape.full, no drop shadow */
 .dialogBtnSubmit {
-  background: #6f42c6 !important;
-  color: #ffffff !important;
+  background: var(--md-primary) !important;
+  color: var(--md-on-primary) !important;
   font-weight: 500 !important;
   font-size: 16px !important;
   letter-spacing: 0.01em !important;
@@ -563,18 +604,18 @@
   padding: 10px 24px !important;
   text-transform: none !important;
   box-shadow: none !important;
-  transition: background 150ms linear !important;
+  transition: filter 150ms linear !important;
   position: relative;
   overflow: hidden;
 }
 
 .dialogBtnSubmit:hover {
-  background: #5c34a8 !important;
+  filter: brightness(0.9);
   box-shadow: none !important;
 }
 
 .dialogBtnSubmit:active {
-  background: #4e2b94 !important;
+  filter: brightness(0.82);
 }
 
 @media (prefers-reduced-motion: reduce) {

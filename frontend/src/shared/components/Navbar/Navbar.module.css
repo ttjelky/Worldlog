@@ -26,10 +26,22 @@
   padding: 4px;
   overflow-x: auto;
   scrollbar-width: none;
+  /* Акценти посилань можна перевизначити на конкретній сторінці */
+  --link-accent-1: var(--nav-link-1, #9166c8);
+  --link-accent-2: var(--nav-link-2, #9166c8);
 }
 
 .navLinks::-webkit-scrollbar {
   display: none;
+}
+
+/* Чергуємо акценти як кольори карток сітки */
+.navLinks > :nth-child(odd) {
+  --link-accent: var(--link-accent-1);
+}
+
+.navLinks > :nth-child(even) {
+  --link-accent: var(--link-accent-2);
 }
 
 .navLink {
@@ -39,18 +51,18 @@
   border-radius: 999px !important;
   font-size: 15px !important;
   font-weight: 600 !important;
-  color: rgba(145, 102, 200, 0.6) !important;
+  color: var(--link-accent, #9166c8) !important;
   text-transform: none !important;
   transition: background 0.18s ease, color 0.18s ease !important;
 }
 
 .navLink:hover {
-  color: #9166c8 !important;
-  background: rgba(145, 102, 200, 0.1) !important;
+  color: var(--link-accent, #9166c8) !important;
+  background: color-mix(in srgb, var(--link-accent, #9166c8) 12%, transparent) !important;
 }
 
 .navLinkActive {
-  color: #9166c8 !important;
+  color: var(--nav-active-text, var(--link-accent, #9166c8)) !important;
   background: #ffffff !important;
   font-size: 16px !important;
   font-weight: 600 !important;
@@ -58,7 +70,7 @@
 }
 
 .navLinkActive:hover {
-  color: #9166c8 !important;
+  color: var(--nav-active-text, var(--link-accent, #9166c8)) !important;
   background: #ffffff !important;
 }
 
@@ -67,6 +79,7 @@
 }
 
 .profileButton {
+  --profile-accent: var(--nav-profile, #9166c8);
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
@@ -78,14 +91,14 @@
 }
 
 .profileButton:hover {
-  background: rgba(145, 102, 200, 0.1) !important;
+  background: color-mix(in srgb, var(--profile-accent, #9166c8) 12%, transparent) !important;
 }
 
 .avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #9166c8;
+  background: var(--profile-accent, #9166c8);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -98,12 +111,12 @@
 .profileName {
   font-size: 15px;
   font-weight: 700;
-  color: #9166c8;
+  color: var(--profile-accent, #9166c8);
   white-space: nowrap;
 }
 
 .chevron {
-  color: #9166c8;
+  color: var(--profile-accent, #9166c8);
   opacity: 0.7;
   display: flex;
 }

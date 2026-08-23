@@ -1,0 +1,348 @@
+.appShell {
+  min-height: 100vh;
+  background: #434343;
+  color: #ffffff;
+  /* Навбар: білі посилання і лого, кораловий профіль */
+  --nav-link-1: #ffffff;
+  --nav-link-2: #ffffff;
+  /* Активна вкладка — темний текст на білій пігулці */
+  --nav-active-text: #434343;
+  --nav-profile: #d57c6a;
+}
+
+.page {
+  padding: clamp(20px, 3vw, 42px) clamp(5px, 3vw, 20px) 64px;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  margin-bottom: 4px;
+  margin-left: clamp(20px, 40px, 60px);
+}
+
+.heroGreeting {
+  font-size: 44px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.heroTitle {
+  font-size: clamp(100px, 16vw, 150px);
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+/* ---------- Toolbar: пошук / сортування / фільтр ---------- */
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: stretch;
+  padding: 0 clamp(20px, 40px, 60px);
+  margin-top: 22px;
+  margin-bottom: 16px;
+}
+
+.searchField {
+  flex: 1;
+  min-width: 220px;
+}
+
+.control {
+  width: 190px;
+}
+
+.controlIcon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.toolbar :global(.MuiOutlinedInput-root),
+.toolbar :global(.MuiOutlinedInput-root .MuiOutlinedInput-input) {
+  color: #ffffff;
+}
+
+.toolbar :global(.MuiOutlinedInput-root) {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: border-color 150ms linear;
+}
+
+.toolbar :global(.MuiOutlinedInput-root:hover) {
+  border-color: #ffffff;
+}
+
+.toolbar :global(.MuiOutlinedInput-notchedOutline) {
+  display: none !important;
+}
+
+.toolbar :global(.MuiInputLabel-root) {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.toolbar :global(.MuiInputLabel-root.Mui-focused) {
+  color: #ffffff;
+}
+
+.toolbar :global(.MuiSelect-select).MuiSelect-select {
+  padding-right: 32px !important;
+}
+
+.toolbar :global(.MuiSelect-icon) {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---------- Stats bar ---------- */
+
+.statsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 50px;
+  margin-bottom: 32px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.18);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.statsText {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.statsRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.progressTrack {
+  width: 140px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.loader {
+  max-width: 320px;
+  margin: 0 auto 24px;
+}
+
+.loader :global(.MuiLinearProgress-bar) {
+  background-color: #ffffff;
+}
+
+.loader :global(.MuiLinearProgress-dashed) {
+  display: none;
+}
+
+/* ---------- Заглушки інших вкладок ---------- */
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 40vh;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: clamp(28px, 5vw, 56px);
+}
+
+.placeholderTitle {
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+
+.placeholderText {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 480px;
+}
+
+.emptyMsg {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 40px 0;
+}
+
+/* ---------- Grid + cards ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.worldCard {
+  position: relative;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  padding: 28px !important;
+  border-radius: 28px !important;
+  border: none !important;
+  text-align: left !important;
+  cursor: pointer;
+  transition: background 0.18s ease !important;
+  overflow: hidden;
+  min-height: 260px !important;
+  text-transform: none !important;
+}
+
+.cardCoral {
+  background: #d57c6a !important;
+}
+
+.cardCoral:hover,
+.cardCoral:focus-visible {
+  background: #c76a58 !important;
+}
+
+.cardTeal {
+  background: #54ac98 !important;
+}
+
+.cardTeal:hover,
+.cardTeal:focus-visible {
+  background: #489c89 !important;
+}
+
+.addCard {
+  background: #54ac98 !important;
+  border-radius: 28px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  min-height: 210px !important;
+}
+
+.addCard:hover,
+.addCard:focus-visible {
+  background: #489c89 !important;
+}
+
+.addCard:active {
+  background: #3f8d7c !important;
+}
+
+.addIcon {
+  font-size: 48px;
+  color: #ffffff;
+}
+
+.addText {
+  font-size: 18px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardNumber {
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.cardBadge {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.cardTitle {
+  font-size: 54px;
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  color: #ffffff;
+  margin: 20px 0 0;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.cardFooter {
+  margin-top: auto;
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cardOwner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ownerAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.ownerName {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardProgressTrack {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.24);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cardProgressFill {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}

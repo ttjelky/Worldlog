@@ -4,6 +4,7 @@ import { useAuth } from './auth'
 import Landing from './features/landing/Landing'
 import { Login, Register } from './features/auth/Auth'
 import Dashboard from './features/dashboard/Dashboard'
+import MyWorlds from './features/myworlds/MyWorlds'
 import WorldDetail from './features/world/WorldDetail'
 
 function PrivateRoute({ children }) {
@@ -43,6 +44,7 @@ export default function App() {
         }
       >
         <Route index element={<Dashboard />} />
+        <Route path="worlds" element={<MyWorlds />} />
         <Route path="worlds/:worldId" element={<WorldDetail onBack={back} />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
