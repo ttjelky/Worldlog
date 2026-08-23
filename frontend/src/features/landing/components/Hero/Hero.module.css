@@ -21,7 +21,7 @@
   margin: 0 auto;
   border-radius: 24px;
   overflow: hidden;
-  background: #85837a;
+  background: #434343;
 }
 
 .heroContent {
@@ -76,7 +76,7 @@
   font-weight: 900;
   font-size: 52px;
   line-height: 0.98;
-  color: #1a1815;
+  color: #ffffff;
   letter-spacing: -0.04em;
   margin-bottom: 20px;
 }
@@ -91,7 +91,7 @@
 .heroSubtitle {
   font-size: 17px;
   line-height: 1.6;
-  color: rgba(26, 24, 21, 0.65);
+  color: rgba(255, 255, 255, 0.55);
   margin-bottom: 32px;
   max-width: 380px;
 }
@@ -127,13 +127,13 @@
   font-size: 15px !important;
   font-weight: 700 !important;
   background: transparent !important;
-  color: #1a1815 !important;
-  border: 1px solid rgba(26, 24, 21, 0.25) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(214, 123, 91, 0.40) !important;
 }
 
 .heroButtonSecondary:hover {
-  background: rgba(26, 24, 21, 0.06) !important;
-  border-color: rgba(26, 24, 21, 0.45) !important;
+  background: rgba(214, 123, 91, 0.12) !important;
+  border-color: rgba(214, 123, 91, 0.65) !important;
 }
 
 .heroVisual {
@@ -159,7 +159,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 18px 32px 22px;
-  border-top: 1px solid rgba(26, 24, 21, 0.12);
+  border-top: 1px solid rgba(214, 123, 91, 0.12);
 }
 
 @media (min-width: 900px) {
@@ -174,7 +174,7 @@
 .heroNavLabel {
   font-weight: 700;
   font-size: 11px;
-  color: rgba(26, 24, 21, 0.35);
+  color: rgba(255, 255, 255, 0.30);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   white-space: nowrap;
@@ -192,9 +192,9 @@
   gap: 5px;
   padding: 6px 12px;
   border-radius: 10px;
-  background: rgba(26, 24, 21, 0.06);
-  border: 1px solid rgba(26, 24, 21, 0.12);
-  color: rgba(26, 24, 21, 0.70);
+  background: rgba(214, 123, 91, 0.10);
+  border: 1px solid rgba(214, 123, 91, 0.15);
+  color: rgba(255, 255, 255, 0.70);
   font-weight: 600;
   font-size: 12px;
   cursor: pointer;
@@ -202,9 +202,9 @@
 }
 
 .heroNavPill:hover {
-  background: rgba(26, 24, 21, 0.10);
-  border-color: rgba(26, 24, 21, 0.25);
-  color: #1a1815;
+  background: rgba(214, 123, 91, 0.22);
+  border-color: rgba(214, 123, 91, 0.45);
+  color: #ffffff;
 }
 
 .heroNavPillIcon {
