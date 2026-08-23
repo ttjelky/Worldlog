@@ -61,8 +61,8 @@
   align-self: flex-start;
   padding: 5px 12px;
   border-radius: 8px;
-  background: rgba(214, 123, 91, 0.18);
-  color: #d67b5b;
+  background: rgba(89, 178, 146, 0.18);
+  color: #59b292;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -111,12 +111,12 @@
   padding: 14px 32px !important;
   font-size: 15px !important;
   font-weight: 700 !important;
-  background: #d67b5b !important;
+  background: #59b292 !important;
   color: #ffffff !important;
 }
 
 .heroButtonPrimary:hover {
-  background: #c46a4b !important;
+  background: #4a9a7e !important;
 }
 
 .heroButtonSecondary {
@@ -126,11 +126,12 @@
   font-weight: 700 !important;
   background: transparent !important;
   color: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(89, 178, 146, 0.35) !important;
 }
 
 .heroButtonSecondary:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(89, 178, 146, 0.12) !important;
+  border-color: rgba(89, 178, 146, 0.55) !important;
 }
 
 .heroVisual {
@@ -189,8 +190,8 @@
   gap: 5px;
   padding: 6px 12px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(89, 178, 146, 0.08);
+  border: 1px solid rgba(89, 178, 146, 0.12);
   color: rgba(255, 255, 255, 0.65);
   font-weight: 600;
   font-size: 12px;
@@ -199,8 +200,8 @@
 }
 
 .heroNavPill:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(89, 178, 146, 0.18);
+  border-color: rgba(89, 178, 146, 0.35);
   color: #ffffff;
 }
 
@@ -262,7 +263,7 @@
 .mockupHeaderLabel {
   font-weight: 700;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.50);
+  color: #59b292;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -307,7 +308,7 @@
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #d67b5b;
+  color: #59b292;
 }
 
 .mockupAvatar {

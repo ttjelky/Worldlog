@@ -12,11 +12,11 @@ const features = [
     text: 'Нікнейми, ролі, аватари та статус кожного учасника. Знай, хто онлайн, хто власник, а хто новенький.',
     Icon: GroupsOutlinedIcon,
     biome: 'dripstone',
-    accent: '#A63C39',
+    accent: '#B8473A',
     items: [
-      { name: 'Steve', role: 'Власник', color: '#A63C39' },
-      { name: 'Alex', role: 'Будівельник', color: '#247A57' },
-      { name: 'Notch', role: 'Дослідник', color: '#9166c8' },
+      { name: 'Steve', role: 'Власник', color: '#B8473A' },
+      { name: 'Alex', role: 'Будівельник', color: '#2D9060' },
+      { name: 'Notch', role: 'Дослідник', color: '#7B4FC4' },
     ],
   },
   {
@@ -26,7 +26,7 @@ const features = [
     text: 'Бази, ферми, шахти та споруди з точними координатами X/Y/Z, категоріями та скріншотами.',
     Icon: PlaceOutlinedIcon,
     biome: 'lush',
-    accent: '#247A57',
+    accent: '#2D9060',
     items: [
       { name: "Дерев'яна база", coords: 'X: 120 Y: 64 Z: -340' },
       { name: 'Залізна шахта', coords: 'X: -55 Y: 32 Z: 780' },
@@ -40,7 +40,7 @@ const features = [
     text: 'Задачі з пріоритетами, дедлайнами та станом виконання. Ніколи не забудеш про важливе.',
     Icon: CheckCircleOutlineOutlinedIcon,
     biome: 'cherry',
-    accent: '#c44d6e',
+    accent: '#D04568',
     items: [
       { text: 'Побудувати млин', done: true },
       { text: 'Знайти алмази', done: true },
@@ -54,7 +54,7 @@ const features = [
     text: 'Важливі події світу впорядковані за датою на часовій шкалі. Кожна перемога — в записах.',
     Icon: TimelineOutlinedIcon,
     biome: 'deepdark',
-    accent: '#5b4a8a',
+    accent: '#5A3D9E',
     items: [
       { date: '12 бер', title: 'Заснування бази' },
       { date: '15 бер', title: 'Перший рейд' },

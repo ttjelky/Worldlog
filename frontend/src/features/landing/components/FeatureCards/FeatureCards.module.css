@@ -91,24 +91,24 @@
   }
 }
 
-/* Dripstone Caves — warm browns */
+/* Dripstone Caves — copper/brown */
 .biome-dripstone {
-  background: #faf3ef;
+  background: #eddccf;
 }
 
-/* Lush Caves — greens */
+/* Lush Caves — green */
 .biome-lush {
-  background: #f0f7f2;
+  background: #c3e8ce;
 }
 
-/* Cherry Grove — pinks */
+/* Cherry Grove — pink */
 .biome-cherry {
-  background: #fdf2f5;
+  background: #f4cdd8;
 }
 
-/* Deep Dark — cool purples */
+/* Deep Dark — purple */
 .biome-deepdark {
-  background: #f2f0f8;
+  background: #d5cef0;
 }
 
 .featureText {

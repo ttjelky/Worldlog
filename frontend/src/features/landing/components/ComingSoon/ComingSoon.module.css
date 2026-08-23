@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────
    ComingSoon – Nether Wastes biome
-   Colors from WorldDetail: #F4FBC3, #A63C39
+   Sulfur #F4FBC3 → more vivid #E8F09A
    ───────────────────────────────────────── */
 
 .section {
@@ -15,7 +15,7 @@
 
 .card {
   border-radius: 24px;
-  background: #F4FBC3;
+  background: #E8F09A;
   overflow: hidden;
 }
 
@@ -30,7 +30,7 @@
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: rgba(166, 60, 57, 0.12);
+  background: rgba(166, 60, 57, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,7 +39,7 @@
 
 .icon {
   font-size: 26px !important;
-  color: #A63C39;
+  color: #B8473A;
 }
 
 .title {
@@ -61,18 +61,18 @@
 .description {
   font-size: 16px;
   line-height: 1.65;
-  color: rgba(29, 26, 34, 0.60);
+  color: rgba(29, 26, 34, 0.65);
   margin-bottom: 32px;
 }
 
 .ctaBtn {
   border-radius: 14px !important;
-  background: #A63C39 !important;
+  background: #B8473A !important;
   color: #ffffff !important;
   font-weight: 700 !important;
   padding: 14px 32px !important;
 }
 
 .ctaBtn:hover {
-  background: #8c3230 !important;
+  background: #9a3a30 !important;
 }
