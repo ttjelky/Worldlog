@@ -6,7 +6,7 @@
 
 .heroSection {
   padding: 88px 24px 0;
-  background: #f8f6f3;
+  background: linear-gradient(180deg, #3a2e28 0%, #f8f6f3 100%);
 }
 
 @media (min-width: 900px) {
