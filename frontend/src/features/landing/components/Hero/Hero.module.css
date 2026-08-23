@@ -148,18 +148,15 @@
 @media (min-width: 900px) {
   .heroVisual {
     display: block;
-    flex: 1;
+    flex: 0 0 52%;
     position: relative;
-    min-height: 440px;
   }
 }
 
 .heroCollage {
-  position: absolute;
-  top: -20px;
-  right: 0;
-  bottom: 40px;
-  left: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .heroNav {
@@ -232,33 +229,33 @@
 }
 
 .collagePlayers {
-  width: 340px;
-  top: -30px;
+  width: clamp(240px, 28vw, 380px);
+  top: 5%;
   left: 5%;
   z-index: 3;
   transform: rotate(-2deg);
 }
 
-.collageLocations {
-  width: 400px;
-  bottom: -50px;
-  left: -10%;
-  z-index: 4;
-  transform: rotate(1.5deg);
-}
-
 .collageTodos {
-  width: 260px;
-  top: 0;
-  right: -10%;
+  width: clamp(200px, 24vw, 320px);
+  top: 12%;
+  right: 3%;
   z-index: 2;
   transform: rotate(3deg);
 }
 
+.collageLocations {
+  width: clamp(300px, 36vw, 500px);
+  top: 55%;
+  left: 0;
+  z-index: 4;
+  transform: rotate(1.5deg);
+}
+
 .collageTimeline {
-  width: 250px;
-  bottom: 10px;
-  right: -5%;
+  width: clamp(220px, 26vw, 340px);
+  top: 56%;
+  right: 0;
   z-index: 5;
   transform: rotate(-2.5deg);
 }
@@ -401,10 +398,22 @@
     display: none;
   }
 
-  .collagePlayers,
-  .collageLocations,
-  .collageTodos,
-  .collageTimeline {
-    display: none;
+  .heroVisual {
+    display: block;
+    flex: none;
+    width: 100%;
+  }
+
+  .heroCollage {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px 24px 0;
+  }
+
+  .collageCard {
+    position: static;
+    width: 100% !important;
+    transform: none !important;
   }
 }
