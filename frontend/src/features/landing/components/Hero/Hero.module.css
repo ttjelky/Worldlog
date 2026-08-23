@@ -5,8 +5,20 @@
    ───────────────────────────────────────── */
 
 .heroSection {
-  padding: 88px 24px 0;
-  background: linear-gradient(180deg, #3a2e28 0%, #f8f6f3 100%);
+  padding: 88px 24px 80px;
+  background: #85837a;
+  position: relative;
+}
+
+.heroSection::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(180deg, transparent, #f8f6f3);
+  pointer-events: none;
 }
 
 @media (min-width: 900px) {
