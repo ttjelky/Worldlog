@@ -36,6 +36,12 @@ export default function ExpandableCard({
   const modalRef = useRef(null)
   const [expanded, setExpanded] = useState(false)
   const [closing, setClosing] = useState(false)
+  // Друга (коротка) фаза закриття: стартує лише ПІСЛЯ того, як анімація
+  // стиснення (closing) повністю завершилась і картка вже стоїть на своєму
+  // фінальному місці нерухомо. Лише тоді відбувається швидкий crossfade
+  // між детальним контентом модалки та справжньою маленькою карткою —
+  // так рух і розчинення ніколи не накладаються одне на одне.
+  const [fading, setFading] = useState(false)
   const [rect, setRect] = useState(null)
   const prevFocusRef = useRef(null)
 
@@ -45,12 +51,14 @@ export default function ExpandableCard({
     prevFocusRef.current = document.activeElement
     setRect(el.getBoundingClientRect())
     setClosing(false)
+    setFading(false)
     setExpanded(true)
     document.body.style.overflow = 'hidden'
   }, [])
 
   const close = useCallback(() => {
     setClosing(true)
+    setFading(false)
     document.body.style.overflow = ''
   }, [])
 
@@ -83,10 +91,21 @@ export default function ExpandableCard({
     return () => document.removeEventListener('keydown', onKey)
   }, [expanded, close])
 
-  const onModalAnimEnd = () => {
-    if (closing) {
+  const onModalAnimEnd = (e) => {
+    // Кінець CSS-анімації (стиснення форми) — фаза 1 завершена, картка вже
+    // нерухомо стоїть на фінальному місці. Тепер вмикаємо короткий фейд.
+    if (e.target !== modalRef.current) return
+    if (closing && !fading) setFading(true)
+  }
+
+  const onModalTransitionEnd = (e) => {
+    // Кінець CSS-переходу opacity (фаза 2, короткий crossfade) — можна
+    // прибирати portal.
+    if (e.target !== modalRef.current || e.propertyName !== 'opacity') return
+    if (fading) {
       setExpanded(false)
       setClosing(false)
+      setFading(false)
       setRect(null)
       prevFocusRef.current?.focus()
     }
@@ -102,7 +121,9 @@ export default function ExpandableCard({
       <ExpandableCardContext.Provider value={collapsedCtx}>
         <div
           ref={cardRef}
-          className={`${styles.wrapper} ${expanded ? styles.isExpanded : ''} ${className}`}
+          className={`${styles.wrapper} ${
+            fading ? styles.isClosing : expanded ? styles.isExpanded : ''
+          } ${className}`}
           onClick={clickOpens ? open : undefined}
           style={clickOpens ? { cursor: 'pointer' } : undefined}
         >
@@ -137,7 +158,7 @@ export default function ExpandableCard({
               tabIndex={-1}
               className={`${styles.modal} ${wide ? styles.modalWide : ''} ${
                 closing ? styles.modalClosing : ''
-              }`}
+              } ${fading ? styles.modalFadingOut : ''}`}
               style={{
                 '--origin-x': `${rect.left}px`,
                 '--origin-y': `${rect.top}px`,
@@ -145,6 +166,7 @@ export default function ExpandableCard({
                 '--origin-h': `${rect.height}px`,
               }}
               onAnimationEnd={onModalAnimEnd}
+              onTransitionEnd={onModalTransitionEnd}
             >
               <div className={styles.modalContent}>
                 {typeof expandedContent === 'function'

@@ -9,6 +9,21 @@
   visibility: hidden;
 }
 
+/* Ця крос-фейд анімація вмикається лише в короткій "fading"-фазі — ПІСЛЯ
+   того, як модалка вже повністю стиснулась і завмерла на своєму місці
+   (.modalClosing нижче завершився). До того картка лишається прихованою
+   через visibility:hidden вище, тому рух і розчинення ніколи не
+   накладаються одне на одне — немає ефекту "телепорту". */
+.wrapper.isClosing {
+  visibility: visible;
+  animation: wrapperFadeIn 0.16s ease-out forwards;
+}
+
+@keyframes wrapperFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ---------- Expand icon ---------- */
 
 .expandBtn {
@@ -93,6 +108,16 @@
   animation: modalCollapse 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+/* Фаза 2: короткий crossfade, вмикається лише коли форма вже завмерла на
+   фінальному місці (.modalClosing лишається застосованим, щоб заморожений
+   forwards-стан розміру/позиції/border-radius не "відпускався"). Тут
+   анімується лише opacity — через transition, а не keyframes, щоб не
+   конкурувати з уже застосованою анімацією форми за ту саму властивість. */
+.modalFadingOut {
+  opacity: 0;
+  transition: opacity 0.16s ease-out;
+}
+
 /* ---------- Modal content ---------- */
 
 .modalContent {
@@ -149,7 +174,6 @@
     left: 50%;
     transform: translate(-50%, -50%);
     border-radius: 32px;
-    opacity: 1;
   }
   to {
     width: var(--origin-w);
@@ -158,7 +182,6 @@
     left: var(--origin-x);
     transform: none;
     border-radius: 32px;
-    opacity: 1;
   }
 }
 
