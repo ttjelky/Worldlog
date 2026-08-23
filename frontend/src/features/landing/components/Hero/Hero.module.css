@@ -156,10 +156,10 @@
 
 .heroCollage {
   position: absolute;
-  top: -40px;
-  right: -60px;
-  bottom: 60px;
-  left: -20px;
+  top: -20px;
+  right: 0;
+  bottom: 40px;
+  left: 0;
 }
 
 .heroNav {
@@ -232,35 +232,35 @@
 }
 
 .collagePlayers {
-  width: 320px;
-  top: -20px;
-  right: 40px;
+  width: 340px;
+  top: -30px;
+  left: 5%;
   z-index: 3;
-  transform: rotate(-3deg);
+  transform: rotate(-2deg);
 }
 
 .collageLocations {
-  width: 380px;
-  bottom: -60px;
-  left: -40px;
+  width: 400px;
+  bottom: -50px;
+  left: -10%;
   z-index: 4;
-  transform: rotate(2deg);
+  transform: rotate(1.5deg);
 }
 
 .collageTodos {
-  width: 280px;
-  top: 20px;
-  right: -40px;
+  width: 260px;
+  top: 0;
+  right: -10%;
   z-index: 2;
-  transform: rotate(4deg);
+  transform: rotate(3deg);
 }
 
 .collageTimeline {
-  width: 300px;
-  bottom: -30px;
-  right: -30px;
+  width: 250px;
+  bottom: 10px;
+  right: -5%;
   z-index: 5;
-  transform: rotate(-2deg);
+  transform: rotate(-2.5deg);
 }
 
 .mockupHeader {
