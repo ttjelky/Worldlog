@@ -6,12 +6,15 @@
 
 .todoItem {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
   padding: 10px 12px;
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.12);
-  transition: background 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-radius 0.25s ease-out;
+  cursor: pointer;
 }
 
 .todoItem:hover {
@@ -19,7 +22,12 @@
 }
 
 .todoItemDone {
-  background: rgba(255, 255, 255, 0.22);
+  border-radius: 26px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.todoItemDone:hover {
+  background: rgba(0, 0, 0, 0.38);
 }
 
 .todoItemDone .todoTitle {
@@ -28,7 +36,6 @@
 }
 
 .todoCheckbox {
-  margin-top: -4px;
   flex-shrink: 0;
 }
 
@@ -43,12 +50,18 @@
 .todoText {
   flex: 1;
   min-width: 0;
-  padding-top: 8px;
+}
+
+.todoTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .todoTitle {
   font-family: inherit;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
   color: #ffffff;
 }
@@ -59,15 +72,6 @@
   margin-top: 2px;
 }
 
-.todoMeta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex-shrink: 0;
-  padding-top: 6px;
-}
-
 .priorityChip {
   display: inline-flex;
   align-items: center;
@@ -75,11 +79,10 @@
   padding: 3px 9px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.16);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 500;
   color: #ffffff;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: -0.03em;
   white-space: nowrap;
 }
 
@@ -100,6 +103,7 @@
 .rowActions {
   display: flex;
   gap: 0;
+  flex-shrink: 0;
 }
 
 .rowActions :global(.MuiIconButton-root) {

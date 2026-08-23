@@ -46,7 +46,17 @@ export default function TodosSection({ worldId, accent }) {
   const toggle = useMutation({
     mutationFn: (todo) =>
       api.patch(`/worlds/${worldId}/todos/${todo.id}/`, { is_done: !todo.is_done }),
-    onSuccess: () => qc.invalidateQueries(['todos', String(worldId)]),
+    // Оптимістично перемикаємо одразу, щоб анімація була миттєвою
+    onMutate: async (todo) => {
+      await qc.cancelQueries(['todos', String(worldId)])
+      const prev = qc.getQueryData(['todos', String(worldId)])
+      qc.setQueryData(['todos', String(worldId)], (old) =>
+        old.map((x) => (x.id === todo.id ? { ...x, is_done: !todo.is_done } : x)),
+      )
+      return { prev }
+    },
+    onError: (_err, _todo, ctx) => qc.setQueryData(['todos', String(worldId)], ctx.prev),
+    onSettled: () => qc.invalidateQueries(['todos', String(worldId)]),
   })
   const remove = useMutation({
     mutationFn: (id) => api.delete(`/worlds/${worldId}/todos/${id}/`),
@@ -94,30 +104,44 @@ export default function TodosSection({ worldId, accent }) {
             <div
               key={t.id}
               className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''}`}
+              onClick={() => toggle.mutate(t)}
             >
               <Checkbox
                 className={styles.todoCheckbox}
                 checked={t.is_done}
+                onClick={(e) => e.stopPropagation()}
                 onChange={() => toggle.mutate(t)}
                 size="small"
               />
               <div className={styles.todoText}>
-                <div className={styles.todoTitle}>{t.title}</div>
+                <div className={styles.todoTitleRow}>
+                  <div className={styles.todoTitle}>{t.title}</div>
+                  <span className={styles.priorityChip}>
+                    <span className={styles.priorityDot} style={{ background: dot }} />
+                    {label}
+                  </span>
+                </div>
                 {t.description && <div className={styles.todoDesc}>{t.description}</div>}
               </div>
-              <div className={styles.todoMeta}>
-                <span className={styles.priorityChip}>
-                  <span className={styles.priorityDot} style={{ background: dot }} />
-                  {label}
-                </span>
-                <div className={styles.rowActions}>
-                  <IconButton size="small" onClick={() => openEdit(t)}>
-                    <EditOutlinedIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => remove.mutate(t.id)}>
-                    <DeleteOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </div>
+              <div className={styles.rowActions}>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openEdit(t)
+                  }}
+                >
+                  <EditOutlinedIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    remove.mutate(t.id)
+                  }}
+                >
+                  <DeleteOutlinedIcon fontSize="small" />
+                </IconButton>
               </div>
             </div>
           )
