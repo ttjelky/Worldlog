@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────
-   Hero – End City biome (Дворец Іспитань)
-   Colors: dark purpur, chorus purple, end stone
+   Hero – Trial Chambers biome
+   Copper #d67b5b · Oxidized #59b292 · Tuff #85837a
    ───────────────────────────────────────── */
 
 .heroSection {
@@ -61,8 +61,8 @@
   align-self: flex-start;
   padding: 5px 12px;
   border-radius: 8px;
-  background: rgba(189, 76, 196, 0.18);
-  color: #BD4CC4;
+  background: rgba(214, 123, 91, 0.18);
+  color: #d67b5b;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -111,12 +111,12 @@
   padding: 14px 32px !important;
   font-size: 15px !important;
   font-weight: 700 !important;
-  background: #BD4CC4 !important;
+  background: #d67b5b !important;
   color: #ffffff !important;
 }
 
 .heroButtonPrimary:hover {
-  background: #a53eac !important;
+  background: #c46a4b !important;
 }
 
 .heroButtonSecondary {
@@ -307,7 +307,7 @@
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #BD4CC4;
+  color: #d67b5b;
 }
 
 .mockupAvatar {
@@ -349,7 +349,7 @@
   width: 8px;
   height: 8px;
   border-radius: 4px;
-  background: #DBD6A4;
+  background: #59b292;
   flex-shrink: 0;
 }
 
