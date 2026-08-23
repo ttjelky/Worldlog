@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────
-   Hero – Coral + Teal biome
-   Colors from MyWorlds: #434343, #d57c6a, #54ac98
+   Hero – End City biome (Дворец Іспитань)
+   Colors: dark purpur, chorus purple, end stone
    ───────────────────────────────────────── */
 
 .heroSection {
@@ -61,8 +61,8 @@
   align-self: flex-start;
   padding: 5px 12px;
   border-radius: 8px;
-  background: rgba(213, 124, 106, 0.18);
-  color: #d57c6a;
+  background: rgba(189, 76, 196, 0.18);
+  color: #BD4CC4;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -111,12 +111,12 @@
   padding: 14px 32px !important;
   font-size: 15px !important;
   font-weight: 700 !important;
-  background: #d57c6a !important;
+  background: #BD4CC4 !important;
   color: #ffffff !important;
 }
 
 .heroButtonPrimary:hover {
-  background: #c06a58 !important;
+  background: #a53eac !important;
 }
 
 .heroButtonSecondary {
@@ -307,7 +307,7 @@
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #d57c6a;
+  color: #BD4CC4;
 }
 
 .mockupAvatar {
@@ -349,7 +349,7 @@
   width: 8px;
   height: 8px;
   border-radius: 4px;
-  background: #54ac98;
+  background: #DBD6A4;
   flex-shrink: 0;
 }
 
