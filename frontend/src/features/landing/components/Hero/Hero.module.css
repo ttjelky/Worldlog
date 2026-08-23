@@ -1,10 +1,12 @@
 /* ─────────────────────────────────────────
    Hero – Trial Chambers biome
-   Copper #d67b5b · Oxidized #59b292 · Tuff #85837a
+   Dominant: Copper #d67b5b · Oxidized #59b292
+   Background: warm dark copper
    ───────────────────────────────────────── */
 
 .heroSection {
   padding: 88px 24px 0;
+  background: linear-gradient(180deg, #3a2e28 0%, #f8f6f3 100%);
 }
 
 @media (min-width: 900px) {
@@ -19,7 +21,7 @@
   margin: 0 auto;
   border-radius: 24px;
   overflow: hidden;
-  background: #434343;
+  background: #3a2e28;
 }
 
 .heroContent {
@@ -61,8 +63,8 @@
   align-self: flex-start;
   padding: 5px 12px;
   border-radius: 8px;
-  background: rgba(89, 178, 146, 0.18);
-  color: #59b292;
+  background: rgba(214, 123, 91, 0.22);
+  color: #d67b5b;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -89,7 +91,7 @@
 .heroSubtitle {
   font-size: 17px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(214, 123, 91, 0.70);
   margin-bottom: 32px;
   max-width: 380px;
 }
@@ -111,12 +113,12 @@
   padding: 14px 32px !important;
   font-size: 15px !important;
   font-weight: 700 !important;
-  background: #59b292 !important;
+  background: #d67b5b !important;
   color: #ffffff !important;
 }
 
 .heroButtonPrimary:hover {
-  background: #4a9a7e !important;
+  background: #c46a4b !important;
 }
 
 .heroButtonSecondary {
@@ -126,12 +128,12 @@
   font-weight: 700 !important;
   background: transparent !important;
   color: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(89, 178, 146, 0.35) !important;
+  border: 1px solid rgba(214, 123, 91, 0.40) !important;
 }
 
 .heroButtonSecondary:hover {
-  background: rgba(89, 178, 146, 0.12) !important;
-  border-color: rgba(89, 178, 146, 0.55) !important;
+  background: rgba(214, 123, 91, 0.12) !important;
+  border-color: rgba(214, 123, 91, 0.65) !important;
 }
 
 .heroVisual {
@@ -157,7 +159,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 18px 32px 22px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(214, 123, 91, 0.12);
 }
 
 @media (min-width: 900px) {
@@ -190,9 +192,9 @@
   gap: 5px;
   padding: 6px 12px;
   border-radius: 10px;
-  background: rgba(89, 178, 146, 0.08);
-  border: 1px solid rgba(89, 178, 146, 0.12);
-  color: rgba(255, 255, 255, 0.65);
+  background: rgba(214, 123, 91, 0.10);
+  border: 1px solid rgba(214, 123, 91, 0.15);
+  color: rgba(255, 255, 255, 0.70);
   font-weight: 600;
   font-size: 12px;
   cursor: pointer;
@@ -200,8 +202,8 @@
 }
 
 .heroNavPill:hover {
-  background: rgba(89, 178, 146, 0.18);
-  border-color: rgba(89, 178, 146, 0.35);
+  background: rgba(214, 123, 91, 0.22);
+  border-color: rgba(214, 123, 91, 0.45);
   color: #ffffff;
 }
 
@@ -215,10 +217,10 @@
 
 .collageCard {
   position: absolute;
-  background: #2a2a2a;
+  background: #2e2420;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(214, 123, 91, 0.15);
 }
 
 .collagePlayers {
@@ -254,7 +256,7 @@
 }
 
 .mockupHeader {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(214, 123, 91, 0.10);
   padding: 8px 12px;
   display: flex;
   align-items: center;
@@ -263,7 +265,7 @@
 .mockupHeaderLabel {
   font-weight: 700;
   font-size: 10px;
-  color: #59b292;
+  color: #d67b5b;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -280,7 +282,7 @@
 }
 
 .mockupRow + .mockupRow {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(214, 123, 91, 0.10);
 }
 
 .mockupRowText {
@@ -308,7 +310,7 @@
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #59b292;
+  color: #d67b5b;
 }
 
 .mockupAvatar {
@@ -329,7 +331,7 @@
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  border: 2px solid rgba(255, 255, 255, 0.30);
+  border: 2px solid rgba(214, 123, 91, 0.40);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -350,7 +352,7 @@
   width: 8px;
   height: 8px;
   border-radius: 4px;
-  background: #59b292;
+  background: #d67b5b;
   flex-shrink: 0;
 }
 

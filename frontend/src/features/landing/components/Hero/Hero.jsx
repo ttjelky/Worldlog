@@ -31,7 +31,7 @@ function MockupPlayers() {
             <div
               className={styles.mockupAvatar}
               style={{
-                background: i === 0 ? '#59b292' : i === 1 ? '#d67b5b' : '#59b292',
+                background: i === 0 ? '#d67b5b' : i === 1 ? '#59b292' : '#d67b5b',
               }}
             />
             <div className={styles.mockupRowText}>
@@ -53,9 +53,9 @@ function MockupLocations() {
       </div>
       <div className={styles.mockupBody}>
         {[
-          { name: "Дерев'яна база", coords: 'X: 120  Y: 64  Z: -340', color: '#59b292' },
-          { name: 'Залізна шахта', coords: 'X: -55  Y: 32  Z: 780', color: '#d67b5b' },
-          { name: 'Вежа мага', coords: 'X: 310  Y: 88  Z: 15', color: '#59b292' },
+          { name: "Дерев'яна база", coords: 'X: 120  Y: 64  Z: -340', color: '#d67b5b' },
+          { name: 'Залізна шахта', coords: 'X: -55  Y: 32  Z: 780', color: '#59b292' },
+          { name: 'Вежа мага', coords: 'X: 310  Y: 88  Z: 15', color: '#d67b5b' },
         ].map((loc) => (
           <div key={loc.name} className={styles.mockupRow}>
             <div className={styles.mockupLocDot} style={{ background: loc.color }} />
@@ -85,7 +85,7 @@ function MockupTodos() {
           <div key={i} className={styles.mockupRow}>
             <div
               className={styles.mockupCheckbox}
-              style={t.done ? { background: '#59b292', borderColor: '#59b292' } : {}}
+              style={t.done ? { background: '#d67b5b', borderColor: '#d67b5b' } : {}}
             >
               {t.done && (
                 <svg viewBox="0 0 16 16" fill="none" className={styles.mockupCheckSvg}>
