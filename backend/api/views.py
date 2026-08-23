@@ -114,7 +114,11 @@ class LocationScreenshotViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(location_id=self.kwargs['location_id'])
+        # У локації може бути лише одне фото — нове завантаження
+        # замінює попереднє
+        location_id = self.kwargs['location_id']
+        LocationScreenshot.objects.filter(location_id=location_id).delete()
+        serializer.save(location_id=location_id)
 
 
 class TodoViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):

@@ -269,7 +269,11 @@ const CARD_CONTENT = {
   info: (props) => <InfoCard world={props.world} />,
   cover: (props) => <CoverImageCard world={props.world} worldId={props.worldId} />,
   players: (props) => <ExpandableCard><PlayersSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
-  locations: (props) => <ExpandableCard><LocationsSection worldId={props.worldId} accent={RED} /></ExpandableCard>,
+  locations: (props) => (
+    <ExpandableCard wide>
+      <LocationsSection worldId={props.worldId} accent={RED} />
+    </ExpandableCard>
+  ),
   todos: (props) => <ExpandableCard><TodosSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
   history: (props) => <ExpandableCard><HistorySection worldId={props.worldId} accent={RED} /></ExpandableCard>,
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
@@ -7,44 +7,163 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  ImageList,
-  ImageListItem,
   MenuItem,
   TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined'
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
+import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import styles from './LocationsSection.module.css'
 
 const categories = [
-  ['base', 'База'],
   ['farm', 'Ферма'],
   ['mine', 'Шахта'],
+  ['town', 'Містечко'],
+  ['base', 'База'],
+  ['structure', 'Структура'],
+  ['biome', 'Біом'],
   ['build', 'Споруда'],
-  ['village', 'Село'],
-  ['temple', 'Храм'],
+  ['poi', 'Точка інтересу'],
   ['other', 'Інше'],
 ]
 const categoryLabels = Object.fromEntries(categories)
+const legacyCategoryLabels = {
+  village: categoryLabels.town,
+  temple: categoryLabels.build,
+}
 const empty = { name: '', description: '', x: 0, y: 0, z: 0, category: 'other' }
+
+function LocationDetails({
+  location,
+  accent,
+  uploading,
+  onClose,
+  onEdit,
+  onDelete,
+  onUpload,
+  onDeleteShot,
+}) {
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef(null)
+  const shots = location.screenshots || []
+  const activeShot = shots[0] || null
+  const category =
+    legacyCategoryLabels[location.category] ||
+    categoryLabels[location.category] ||
+    categoryLabels.other
+
+  const handleUpload = async (file) => {
+    if (!file || isUploading) return
+    setIsUploading(true)
+    try {
+      await onUpload(file)
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  return (
+    <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
+      <IconButton className={styles.detailsClose} aria-label="Закрити" onClick={onClose}>
+        <CloseIcon />
+      </IconButton>
+
+      <div className={styles.detailsHead}>
+        <h3 className={styles.detailsName}>{location.name}</h3>
+        <div className={styles.detailsMeta}>
+          <span className={styles.catPill}>{category}</span>
+          <span className={styles.detailsCoords}>
+            {location.x} {location.y} {location.z}
+          </span>
+        </div>
+      </div>
+
+      {activeShot ? (
+        <img className={styles.detailsMainImg} src={activeShot.image} alt={location.name} />
+      ) : (
+        <div className={styles.detailsPlaceholder}>
+          <PhotoCameraOutlinedIcon />
+          <span>Ще немає фото</span>
+        </div>
+      )}
+
+      {location.description && <p className={styles.detailsDesc}>{location.description}</p>}
+
+      <div className={styles.detailsFooter}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => handleUpload(e.target.files?.[0])}
+        />
+        {activeShot ? (
+          <>
+            <Button
+              variant="contained"
+              size="small"
+              disabled={isUploading || uploading}
+              startIcon={<AddPhotoAlternateOutlinedIcon />}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isUploading || uploading ? 'Завантаження…' : 'Замінити фото'}
+            </Button>
+            <IconButton
+              className={styles.actionBtn}
+              aria-label="Видалити фото"
+              disabled={isUploading || uploading}
+              onClick={() => onDeleteShot(activeShot)}
+            >
+              <DeleteOutlinedIcon fontSize="small" />
+            </IconButton>
+          </>
+        ) : (
+          <Button
+            variant="contained"
+            size="small"
+            disabled={isUploading || uploading}
+            startIcon={<AddPhotoAlternateOutlinedIcon />}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {isUploading || uploading ? 'Завантаження…' : 'Додати фото'}
+          </Button>
+        )}
+        <div className={styles.locSpacer} />
+        <IconButton className={styles.actionBtn} aria-label="Редагувати локацію" onClick={onEdit}>
+          <EditOutlinedIcon fontSize="small" />
+        </IconButton>
+        <IconButton className={styles.actionBtn} aria-label="Видалити локацію" onClick={onDelete}>
+          <DeleteOutlinedIcon fontSize="small" />
+        </IconButton>
+      </div>
+    </div>
+  )
+}
 
 export default function LocationsSection({ worldId, accent }) {
   const qc = useQueryClient()
+  // Прихована копія секції (modal=false) завжди показує лише 2 картки,
+  // щоб не роздувати рядок сторінки; у розгорнутому вигляді — всі
+  // (visibleLocations визначається нижче, після useQuery)
+  const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
-  const [gallery, setGallery] = useState(null)
-  const [photos, setPhotos] = useState([])
+  const [pendingPhoto, setPendingPhoto] = useState(null)
+  const attachInputRef = useRef(null)
 
   const { data: locations = [] } = useQuery({
     queryKey: ['locations', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/locations/`).then((r) => r.data),
   })
+  const visibleLocations = section.modal ? locations : locations.slice(0, 2)
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -75,21 +194,51 @@ export default function LocationsSection({ worldId, accent }) {
     onSuccess: () => qc.invalidateQueries(['locations', String(worldId)]),
   })
 
+  // Відгукуємо object-URL прев'ю при зміні та при розмонтуванні
+  useEffect(() => {
+    return () => {
+      if (pendingPhoto) URL.revokeObjectURL(pendingPhoto.url)
+    }
+  }, [pendingPhoto])
+
   const openNew = () => {
     setEditing(null)
     setForm(empty)
+    setPendingPhoto(null)
     setOpen(true)
   }
   const openEdit = (l) => {
     setEditing(l)
     setForm({ ...l })
+    setPendingPhoto(null)
     setOpen(true)
   }
-  const submit = (e) => {
+  const addPendingPhoto = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPendingPhoto((prev) => {
+      if (prev) URL.revokeObjectURL(prev.url)
+      return { file, url: URL.createObjectURL(file) }
+    })
+    e.target.value = ''
+  }
+  const submit = async (e) => {
     e.preventDefault()
-    mutation
-      .mutateAsync({ ...form, x: Number(form.x), y: Number(form.y), z: Number(form.z) })
-      .then(() => setOpen(false))
+    try {
+      const res = await mutation.mutateAsync({
+        ...form,
+        x: Number(form.x),
+        y: Number(form.y),
+        z: Number(form.z),
+      })
+      const locationId = editing ? editing.id : res.data.id
+      if (pendingPhoto) {
+        await uploadPhotos.mutateAsync({ locationId, files: [pendingPhoto.file] })
+      }
+      setEditing(null)
+      setPendingPhoto(null)
+      setOpen(false)
+    } catch {}
   }
 
   return (
@@ -106,46 +255,86 @@ export default function LocationsSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.locGrid}`}>
-        {locations.map((l) => (
-          <div key={l.id} className={styles.locTile}>
-            <button type="button" className={styles.locThumbBtn} onClick={() => setGallery(l)}>
-              {l.screenshots?.[0] ? (
-                <img className={styles.locThumb} src={l.screenshots[0].image} alt={l.name} />
-              ) : (
-                <div className={styles.locThumbPlaceholder}>
-                  <PhotoCameraOutlinedIcon fontSize="small" />
+      <div className={`${sharedStyles.body} ${styles.locGrid} ${styles.gridFull} ${styles.gridCompact}`}>
+        {visibleLocations.map((l) => (
+          <ExpandableCard
+            key={l.id}
+            clickOpens
+            showExpandBtn={false}
+            expandedContent={({ close }) => (
+              <LocationDetails
+                location={l}
+                accent={accent}
+                uploading={uploadPhotos.isPending}
+                onClose={close}
+                onEdit={() => openEdit(l)}
+                onDelete={() => {
+                  remove.mutate(l.id)
+                  close()
+                }}
+                onUpload={(file) => uploadPhotos.mutateAsync({ locationId: l.id, files: [file] })}
+                onDeleteShot={(shot) => deleteScreenshot.mutate({ location: l, shot })}
+              />
+            )}
+          >
+            <article className={styles.locTile}>
+              <div className={styles.locThumbArea}>
+                {l.screenshots?.[0] ? (
+                  <img className={styles.locThumb} src={l.screenshots[0].image} alt={l.name} />
+                ) : (
+                  <div className={styles.locThumbPlaceholder}>
+                    <PhotoCameraOutlinedIcon />
+                  </div>
+                )}
+              </div>
+              <div className={styles.locBody}>
+                <div className={styles.locTopRow}>
+                  <div className={styles.locName}>{l.name}</div>
+                  <span className={styles.catPill}>
+                    {legacyCategoryLabels[l.category] || categoryLabels[l.category] || categoryLabels.other}
+                  </span>
                 </div>
-              )}
-            </button>
-            <div className={styles.locBody}>
-              <div className={styles.locTopRow}>
-                <div className={styles.locName}>{l.name}</div>
-                <span className={styles.catPill}>{categoryLabels[l.category] || categoryLabels.other}</span>
-              </div>
-              <div className={styles.coords}>
-                X: {l.x} · Y: {l.y} · Z: {l.z}
-              </div>
-              {l.description && <div className={styles.desc}>{l.description}</div>}
-              <div className={styles.locActions}>
-                <span className={styles.photoCountChip} onClick={() => setGallery(l)}>
-                  {l.screenshots?.length || 0} фото
-                </span>
-                <div className={styles.locSpacer} />
-                <div className={styles.rowActions}>
-                  <IconButton size="small" onClick={() => openEdit(l)}>
-                    <EditOutlinedIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => remove.mutate(l.id)}>
-                    <DeleteOutlinedIcon fontSize="small" />
-                  </IconButton>
+                <div className={styles.coords}>
+                  {l.x} {l.y} {l.z}
                 </div>
+                {l.description && <div className={styles.desc}>{l.description}</div>}
               </div>
-            </div>
-          </div>
+              <footer className={styles.locFooter}>
+                <IconButton
+                  className={styles.actionBtn}
+                  aria-label="Редагувати локацію"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openEdit(l)
+                  }}
+                >
+                  <EditOutlinedIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  className={styles.actionBtn}
+                  aria-label="Видалити локацію"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    remove.mutate(l.id)
+                  }}
+                >
+                  <DeleteOutlinedIcon fontSize="small" />
+                </IconButton>
+              </footer>
+            </article>
+          </ExpandableCard>
         ))}
         {locations.length === 0 && (
           <p className={sharedStyles.emptyMsg}>Світ ще не досліджений. Додай першу локацію.</p>
+        )}
+        {!section.modal && locations.length > 2 && (
+          <button
+            type="button"
+            className={styles.showAllBtn}
+            onClick={section.open}
+          >
+            Показати всі локації ({locations.length})
+          </button>
         )}
       </div>
 
@@ -198,6 +387,47 @@ export default function LocationsSection({ worldId, accent }) {
                   </MenuItem>
                 ))}
               </TextField>
+              <div className={styles.attachBlock}>
+                <input
+                  ref={attachInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={addPendingPhoto}
+                />
+                {pendingPhoto ? (
+                  <Button
+                    size="small"
+                    startIcon={<AddPhotoAlternateOutlinedIcon />}
+                    onClick={() => attachInputRef.current?.click()}
+                  >
+                    Замінити фото
+                  </Button>
+                ) : (
+                  <Button
+                    size="small"
+                    startIcon={<AddPhotoAlternateOutlinedIcon />}
+                    onClick={() => attachInputRef.current?.click()}
+                  >
+                    Додати фото
+                  </Button>
+                )}
+                {pendingPhoto && (
+                  <div className={styles.attachPreviews}>
+                    <div className={styles.attachPreview}>
+                      <img src={pendingPhoto.url} alt="" />
+                      <IconButton
+                        size="small"
+                        className={styles.attachRemove}
+                        aria-label="Прибрати фото"
+                        onClick={() => setPendingPhoto(null)}
+                      >
+                        <CloseIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>
@@ -209,64 +439,6 @@ export default function LocationsSection({ worldId, accent }) {
             </Button>
           </DialogActions>
         </form>
-      </Dialog>
-
-      <Dialog open={Boolean(gallery)} onClose={() => setGallery(null)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <div className={styles.galleryHeader}>
-            <div className={styles.galleryInfo}>
-              <div className={styles.galleryTitle}>{gallery?.name}</div>
-              <div className={styles.galleryCoords}>
-                X: {gallery?.x} · Y: {gallery?.y} · Z: {gallery?.z}
-              </div>
-            </div>
-            <div className={styles.galleryActions}>
-              <TextField
-                type="file"
-                size="small"
-                inputProps={{ multiple: true, accept: 'image/*' }}
-                onChange={(e) => setPhotos(Array.from(e.target.files || []))}
-              />
-              {photos.length > 0 && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() =>
-                    uploadPhotos
-                      .mutateAsync({ locationId: gallery.id, files: photos })
-                      .then(() => setPhotos([]))
-                  }
-                >
-                  Завантажити ({photos.length})
-                </Button>
-              )}
-              <IconButton onClick={() => setGallery(null)}>
-                <CloseIcon />
-              </IconButton>
-            </div>
-          </div>
-        </DialogTitle>
-        <DialogContent>
-          <ImageList cols={2} gap={12}>
-            {(gallery?.screenshots || []).map((s, idx) => (
-              <ImageListItem key={s.id} className={styles.screenshotItem}>
-                <img
-                  className={styles.screenshotImg}
-                  src={s.image}
-                  alt={`Скріншот ${idx + 1}`}
-                  loading="lazy"
-                />
-                <IconButton
-                  className={styles.screenshotDelete}
-                  size="small"
-                  onClick={() => deleteScreenshot.mutate({ location: gallery, shot: s })}
-                >
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
-              </ImageListItem>
-            ))}
-          </ImageList>
-        </DialogContent>
       </Dialog>
     </div>
   )

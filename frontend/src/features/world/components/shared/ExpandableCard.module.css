@@ -67,6 +67,9 @@
 /* ---------- Modal ---------- */
 
 .modal {
+  /* Кінцевий розмір розгорнутої модалки; .modalWide перевизначає ширину */
+  --expanded-w: min(720px, calc(100vw - 48px));
+  --expanded-h: min(560px, calc(100vh - 48px));
   position: fixed;
   z-index: 1001;
   border-radius: 32px;
@@ -80,6 +83,10 @@
   left: var(--origin-x);
   max-height: calc(100vh - 48px);
   max-width: calc(100vw - 48px);
+}
+
+.modalWide {
+  --expanded-w: min(1240px, calc(100vw - 48px));
 }
 
 .modalClosing {
@@ -96,7 +103,9 @@
 }
 
 .modalContent > * {
-  height: 100%;
+  /* min-height замість height: високий контент росте й скролиться,
+     а не обрізається; секції зі своїм height:100% працюють як раніше */
+  min-height: 100%;
 }
 
 /* ---------- Keyframes ---------- */
@@ -122,8 +131,8 @@
     opacity: 1;
   }
   to {
-    width: min(720px, calc(100vw - 48px));
-    height: min(560px, calc(100vh - 48px));
+    width: var(--expanded-w);
+    height: var(--expanded-h);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -134,8 +143,8 @@
 
 @keyframes modalCollapse {
   from {
-    width: min(720px, calc(100vw - 48px));
-    height: min(560px, calc(100vh - 48px));
+    width: var(--expanded-w);
+    height: var(--expanded-h);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);

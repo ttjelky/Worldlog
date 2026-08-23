@@ -169,20 +169,26 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
+class AbsoluteURLImageField(serializers.ImageField):
+    """Приймає файл при записі та повертає абсолютний URL при читанні."""
+
+    def to_representation(self, value):
+        if not value:
+            return None
+        try:
+            url = value.url
+        except (ValueError, OSError):
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(url) if request else url
+
+
 class LocationScreenshotSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
+    image = AbsoluteURLImageField()
 
     class Meta:
         model = LocationScreenshot
         fields = ('id', 'image')
-
-    def get_image(self, obj):
-        request = self.context.get('request')
-        try:
-            url = obj.image.url
-        except (ValueError, OSError):
-            return None
-        return request.build_absolute_uri(url) if request else url
 
 
 class LocationSerializer(serializers.ModelSerializer):
@@ -205,22 +211,12 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class PlayerSerializer(serializers.ModelSerializer):
-    avatar = serializers.SerializerMethodField()
+    avatar = AbsoluteURLImageField(required=False, allow_null=True)
 
     class Meta:
         model = Player
         fields = ('id', 'world', 'nickname', 'role_note', 'avatar')
         read_only_fields = ('world',)
-
-    def get_avatar(self, obj):
-        if obj.avatar:
-            request = self.context.get('request')
-            try:
-                url = obj.avatar.url
-            except (ValueError, OSError):
-                return None
-            return request.build_absolute_uri(url) if request else url
-        return None
 
 
 class TodoItemSerializer(serializers.ModelSerializer):

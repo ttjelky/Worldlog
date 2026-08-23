@@ -1,67 +1,158 @@
+/* Сітка: максимум 2 картки в ряд на десктопі, 1 на мобільному */
 .locGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
   align-content: start;
 }
 
+@media (max-width: 640px) {
+  .locGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+}
+
+.locGrid > :global(*) {
+  height: 100%;
+}
+
+/* Знімаємо внутрішній ліміт висоти спільного body:
+   у згорнутому вигляді рендериться рівно 2 картки (без скролу),
+   у розгорнутому контент скролиться модалкою */
+.locGrid.gridFull {
+  max-height: none;
+}
+
+/* Компактні картки локацій: однаковий розмір і в згорнутій секції,
+   і всередині розгорнутого вікна */
+.gridCompact {
+  gap: 10px;
+}
+
+.gridCompact .locThumbArea {
+  aspect-ratio: 5 / 2;
+}
+
+.gridCompact .locThumbPlaceholder :global(svg) {
+  font-size: 26px;
+}
+
+.gridCompact .locBody {
+  padding: 9px 12px;
+  gap: 3px;
+}
+
+.gridCompact .locName {
+  font-size: 15px;
+}
+
+.gridCompact .catPill {
+  font-size: 9px;
+  padding: 2px 8px;
+}
+
+.gridCompact .coords {
+  font-size: 12px;
+}
+
+.gridCompact .desc {
+  font-size: 13px;
+}
+
+.gridCompact .locFooter {
+  padding: 3px 8px;
+}
+
+/* Кнопка показу всіх локацій у згорнутому вигляді */
+.showAllBtn {
+  grid-column: 1 / -1;
+  align-self: center;
+  justify-self: center;
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 10px 20px;
+  transition: background 0.15s ease;
+}
+
+.showAllBtn:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+/* ---------- Картка ---------- */
+
 .locTile {
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.12);
   display: flex;
   flex-direction: column;
-  transition: background 0.15s ease;
+  height: 100%;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .locTile:hover {
   background: rgba(255, 255, 255, 0.18);
 }
 
-.locThumbBtn {
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  background: none;
-  display: block;
+.locThumbArea {
+  position: relative;
   width: 100%;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
 }
 
 .locThumb {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: 88px;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
 
 .locThumbPlaceholder {
-  height: 88px;
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.55);
 }
 
+.locThumbPlaceholder :global(svg) {
+  font-size: 34px;
+}
+
 .locBody {
-  padding: 10px 12px 12px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
+  flex: 1;
 }
 
 .locTopRow {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 6px;
+  gap: 8px;
 }
 
 .locName {
   font-family: inherit;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 17px;
+  line-height: 1.25;
   color: #ffffff;
   min-width: 0;
   overflow: hidden;
@@ -70,9 +161,9 @@
 }
 
 .catPill {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 3px 9px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
@@ -84,53 +175,48 @@
 
 .coords {
   font-family: monospace;
-  font-size: 11px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
 }
 
 .desc {
-  font-size: 12px;
+  font-size: 14px;
+  line-height: 1.35;
   color: rgba(255, 255, 255, 0.7);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.locActions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.photoCountChip {
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-}
-
 .locSpacer {
   flex: 1;
 }
 
-.rowActions {
+/* ---------- Нижня панель дій (футер) ---------- */
+
+.locFooter {
+  margin-top: auto;
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 6px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
 }
 
-.rowActions :global(.MuiIconButton-root) {
-  color: rgba(255, 255, 255, 0.85);
-  padding: 3px;
+.actionBtn {
+  color: rgba(255, 255, 255, 0.85) !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
 }
 
-.rowActions :global(.MuiIconButton-root:hover) {
-  background: rgba(255, 255, 255, 0.16);
+.actionBtn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
 }
 
-/* Форма локації — координати в один ряд */
+/* ---------- Форма: координати X Y Z в один ряд ---------- */
+
 .coordRow {
   display: flex;
   gap: 12px;
@@ -141,18 +227,23 @@
   min-width: 0;
 }
 
-/* ---- Галерея скріншотів (нейтральний світлий діалог) ---- */
-.galleryHeader {
+/* ---------- Форма: прикріплення фото ---------- */
+
+.attachBlock {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.galleryInfo {
-  min-width: 0;
+.attachBlock :global(.MuiButton-root) {
+  align-self: flex-start;
+  border: 1px dashed rgba(29, 26, 34, 0.4);
+  border-radius: 12px;
+  padding: 8px 16px;
+  text-transform: none;
 }
 
+<<<<<<< HEAD
 .galleryTitle {
   font-family: inherit;
   font-weight: 700;
@@ -166,31 +257,166 @@
 }
 
 .galleryActions {
+=======
+.attachPreviews {
+>>>>>>> e24b5f6 (feat: rework location cards — expandable details, single photo per location, new categories)
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.screenshotItem {
-  border-radius: 16px;
-  overflow: hidden;
+.attachPreview {
   position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(29, 26, 34, 0.15);
 }
 
-.screenshotImg {
+.attachPreview img {
   width: 100%;
-  border-radius: 16px;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
-.screenshotDelete {
+.attachRemove {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  background: rgba(13, 13, 15, 0.5);
-  color: #ffffff;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  background: rgba(13, 13, 15, 0.55) !important;
+  color: #ffffff !important;
 }
 
-.screenshotDelete:hover {
-  background: rgba(13, 13, 15, 0.7);
+.attachRemove:hover {
+  background: rgba(13, 13, 15, 0.75) !important;
+}
+
+/* ---------- Розгорнутий вигляд локації ---------- */
+
+.details {
+  gap: 14px;
+}
+
+/* Подвоєний клас для специфічності вище за sharedStyles.card,
+   який жорстко ставить height:100% — інакше високий контент обрізається */
+.details.details {
+  position: relative;
+  height: auto;
+  min-height: 100%;
+}
+
+.detailsClose {
+  position: absolute !important;
+  top: 14px;
+  right: 14px;
+  z-index: 6;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  color: #1d1a22 !important;
+  box-shadow: 0 1px 4px rgba(13, 13, 15, 0.28);
+}
+
+.detailsClose:hover {
+  background: #e9e9e9 !important;
+}
+
+.detailsHead {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 64px;
+}
+
+.detailsName {
+  margin: 0;
+  font-weight: 500;
+  font-size: clamp(24px, 4vw, 36px);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #ffffff;
+  overflow-wrap: anywhere;
+}
+
+.detailsMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.detailsCoords {
+  font-family: monospace;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.detailsMainImg {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 18px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.detailsPlaceholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.detailsPlaceholder :global(svg) {
+  font-size: 44px;
+}
+
+.detailsDesc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: pre-wrap;
+}
+
+.detailsFooter {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.detailsFooter :global(.MuiButton-contained) {
+  background: #ffffff !important;
+  color: var(--accent) !important;
+  border-radius: 999px !important;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+}
+
+.detailsFooter :global(.MuiButton-contained:hover) {
+  background: #cdcdcd !important;
+}
+
+.detailsFooter :global(.MuiButton-contained.Mui-disabled) {
+  background: rgba(255, 255, 255, 0.5) !important;
+  color: var(--accent) !important;
 }

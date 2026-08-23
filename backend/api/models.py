@@ -38,12 +38,14 @@ class Player(models.Model):
 
 class Location(models.Model):
     class Category(models.TextChoices):
-        BASE = 'base', 'Base'
         FARM = 'farm', 'Farm'
         MINE = 'mine', 'Mine'
+        TOWN = 'town', 'Town'
+        BASE = 'base', 'Base'
+        STRUCTURE = 'structure', 'Structure'
+        BIOME = 'biome', 'Biome'
         BUILD = 'build', 'Build'
-        VILLAGE = 'village', 'Village'
-        TEMPLE = 'temple', 'Temple'
+        POI = 'poi', 'Point of interest'
         OTHER = 'other', 'Other'
 
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='locations')

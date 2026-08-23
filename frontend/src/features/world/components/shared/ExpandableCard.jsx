@@ -1,9 +1,37 @@
-import { useRef, useState, useCallback, useEffect } from 'react'
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+} from 'react'
 import { createPortal } from 'react-dom'
 import OpenInFullIcon from '@mui/icons-material/OpenInFull'
 import styles from './ExpandableCard.module.css'
 
-export default function ExpandableCard({ children, className = '' }) {
+// Дозволяє вкладеному контенту знати стан розгортання та відкрити модалку
+export const ExpandableCardContext = createContext({ expanded: false, open: () => {} })
+
+/**
+ * Обгортка з анімацією розгортання картки на весь екран.
+ *
+ * Додаткові пропси (зворотно сумісні — секції світу працюють як раніше):
+ * - clickOpens      — вся картка клікабельна (відкриває розгорнутий вигляд)
+ * - showExpandBtn   — ховати/показувати круглу кнопку-іконку в кутку
+ * - expandedContent — контент модалки; якщо функція, викликається як
+ *                     expandedContent({ close }), де close закриває модалку
+ * - wide            — ширша розгорнута модалка (для секції локацій)
+ */
+export default function ExpandableCard({
+  children,
+  className = '',
+  clickOpens = false,
+  showExpandBtn = true,
+  expandedContent = null,
+  wide = false,
+}) {
   const cardRef = useRef(null)
   const modalRef = useRef(null)
   const [expanded, setExpanded] = useState(false)
@@ -64,28 +92,40 @@ export default function ExpandableCard({ children, className = '' }) {
     }
   }
 
+  // Прихована копія (wrapper) і копія в модалці отримують різний контекст:
+  // modal=true означає «це справжній розгорнутий вигляд»
+  const collapsedCtx = useMemo(() => ({ expanded, open, modal: false }), [expanded, open])
+  const modalCtx = useMemo(() => ({ expanded: true, open, modal: true }), [open])
+
   return (
     <>
-      <div
-        ref={cardRef}
-        className={`${styles.wrapper} ${expanded ? styles.isExpanded : ''} ${className}`}
-      >
-        {children}
-        <button
-          className={styles.expandBtn}
-          onClick={(e) => {
-            e.stopPropagation()
-            open()
-          }}
-          aria-label="Розгорнути картку"
-          tabIndex={-1}
+      <ExpandableCardContext.Provider value={collapsedCtx}>
+        <div
+          ref={cardRef}
+          className={`${styles.wrapper} ${expanded ? styles.isExpanded : ''} ${className}`}
+          onClick={clickOpens ? open : undefined}
+          style={clickOpens ? { cursor: 'pointer' } : undefined}
         >
-          <OpenInFullIcon fontSize="small" />
-        </button>
-      </div>
+          {children}
+          {showExpandBtn && (
+            <button
+              className={styles.expandBtn}
+              onClick={(e) => {
+                e.stopPropagation()
+                open()
+              }}
+              aria-label="Розгорнути картку"
+              tabIndex={-1}
+            >
+              <OpenInFullIcon fontSize="small" />
+            </button>
+          )}
+        </div>
+      </ExpandableCardContext.Provider>
 
       {expanded && rect &&
         createPortal(
+          <ExpandableCardContext.Provider value={modalCtx}>
           <div
             className={`${styles.backdrop} ${closing ? styles.backdropClosing : ''}`}
             onClick={onBackdropClick}
@@ -95,7 +135,9 @@ export default function ExpandableCard({ children, className = '' }) {
             <div
               ref={modalRef}
               tabIndex={-1}
-              className={`${styles.modal} ${closing ? styles.modalClosing : ''}`}
+              className={`${styles.modal} ${wide ? styles.modalWide : ''} ${
+                closing ? styles.modalClosing : ''
+              }`}
               style={{
                 '--origin-x': `${rect.left}px`,
                 '--origin-y': `${rect.top}px`,
@@ -105,13 +147,20 @@ export default function ExpandableCard({ children, className = '' }) {
               onAnimationEnd={onModalAnimEnd}
             >
               <div className={styles.modalContent}>
-                {children}
+                {typeof expandedContent === 'function'
+                  ? expandedContent({ close })
+                  : (expandedContent ?? children)}
               </div>
             </div>
-          </div>,
-          document.body
-        )
+          </div>
+        </ExpandableCardContext.Provider>,
+        document.body
+      )
       }
     </>
   )
+}
+
+export function useExpandableCard() {
+  return useContext(ExpandableCardContext)
 }
