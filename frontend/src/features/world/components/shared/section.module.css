@@ -6,7 +6,7 @@
   color: #ffffff;
   border-radius: 28px;
   padding: 26px 26px 24px;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-family: inherit;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -66,7 +66,7 @@
   background: #ffffff !important;
   color: var(--accent) !important;
   border-radius: 999px !important;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: inherit;
   font-weight: 600 !important;
   font-size: 14px !important;
   letter-spacing: -0.03em !important;
@@ -132,7 +132,7 @@
 }
 
 .dialogPaper :global(.MuiDialogTitle-root) {
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: inherit;
   font-size: 50px !important;
   font-weight: 500 !important;
   letter-spacing: -0.02em !important;
@@ -154,7 +154,7 @@
 /* M3 text button: accent-colored text, shape.full */
 .dialogBtnCancel {
   color: var(--accent, #6f42c6) !important;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: inherit;
   font-weight: 500 !important;
   font-size: 16px !important;
   letter-spacing: 0.01em !important;
@@ -172,7 +172,7 @@
 .dialogBtnSubmit {
   background: var(--accent, #6f42c6) !important;
   color: #ffffff !important;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: inherit;
   font-weight: 500 !important;
   font-size: 16px !important;
   letter-spacing: 0.01em !important;

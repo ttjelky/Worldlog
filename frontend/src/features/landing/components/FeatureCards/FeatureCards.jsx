@@ -11,11 +11,12 @@ const features = [
     subtitle: 'Знайомих не забувають',
     text: 'Нікнейми, ролі, аватари та статус кожного учасника. Знай, хто онлайн, хто власник, а хто новенький.',
     Icon: GroupsOutlinedIcon,
-    color: '#7C83F5',
+    biome: 'dripstone',
+    accent: '#A63C39',
     items: [
-      { name: 'Steve', role: 'Власник', color: '#7C83F5' },
-      { name: 'Alex', role: 'Будівельник', color: '#4CAF7D' },
-      { name: 'Notch', role: 'Дослідник', color: '#E57399' },
+      { name: 'Steve', role: 'Власник', color: '#A63C39' },
+      { name: 'Alex', role: 'Будівельник', color: '#247A57' },
+      { name: 'Notch', role: 'Дослідник', color: '#9166c8' },
     ],
   },
   {
@@ -24,11 +25,12 @@ const features = [
     subtitle: 'Координати під рукою',
     text: 'Бази, ферми, шахти та споруди з точними координатами X/Y/Z, категоріями та скріншотами.',
     Icon: PlaceOutlinedIcon,
-    color: '#4CAF7D',
+    biome: 'lush',
+    accent: '#247A57',
     items: [
-      { name: "Дерев'яна база", coords: 'X: 120 · Y: 64 · Z: -340' },
-      { name: 'Залізна шахта', coords: 'X: -55 · Y: 32 · Z: 780' },
-      { name: 'Вежа мага', coords: 'X: 310 · Y: 88 · Z: 15' },
+      { name: "Дерев'яна база", coords: 'X: 120 Y: 64 Z: -340' },
+      { name: 'Залізна шахта', coords: 'X: -55 Y: 32 Z: 780' },
+      { name: 'Вежа мага', coords: 'X: 310 Y: 88 Z: 15' },
     ],
   },
   {
@@ -37,7 +39,8 @@ const features = [
     subtitle: 'Плани під контролем',
     text: 'Задачі з пріоритетами, дедлайнами та станом виконання. Ніколи не забудеш про важливе.',
     Icon: CheckCircleOutlineOutlinedIcon,
-    color: '#E57399',
+    biome: 'cherry',
+    accent: '#c44d6e',
     items: [
       { text: 'Побудувати млин', done: true },
       { text: 'Знайти алмази', done: true },
@@ -50,28 +53,22 @@ const features = [
     subtitle: 'Хроніка пригод',
     text: 'Важливі події світу впорядковані за датою на часовій шкалі. Кожна перемога — в записах.',
     Icon: TimelineOutlinedIcon,
-    color: '#F5A623',
+    biome: 'deepdark',
+    accent: '#5b4a8a',
     items: [
-      { date: '12 бер', title: 'Заснування бази', color: '#7C83F5' },
-      { date: '15 бер', title: 'Перший рейд', color: '#E57399' },
-      { date: '20 бер', title: 'Ендер-дракон', color: '#4CAF7D' },
+      { date: '12 бер', title: 'Заснування бази' },
+      { date: '15 бер', title: 'Перший рейд' },
+      { date: '20 бер', title: 'Ендер-дракон' },
     ],
   },
 ]
 
 function FeatureDemo({ feature }) {
-  const { id, title, items, color } = feature
+  const { id, items, accent } = feature
 
   if (id === 'feature-players') {
     return (
       <div className={styles.demoCard}>
-        <div className={styles.demoCardHeader}>
-          <div className={styles.demoDots}>
-            <span className={`${styles.dot} ${styles.dotR}`} />
-            <span className={`${styles.dot} ${styles.dotY}`} />
-            <span className={`${styles.dot} ${styles.dotG}`} />
-          </div>
-        </div>
         <div className={styles.demoCardBody}>
           {items.map((p) => (
             <div key={p.name} className={styles.demoRow}>
@@ -82,7 +79,6 @@ function FeatureDemo({ feature }) {
                 <span className={styles.demoRowName}>{p.name}</span>
                 <span className={styles.demoRowSub}>{p.role}</span>
               </div>
-              <span className={styles.demoOnlineDot} />
             </div>
           ))}
         </div>
@@ -93,17 +89,10 @@ function FeatureDemo({ feature }) {
   if (id === 'feature-locations') {
     return (
       <div className={styles.demoCard}>
-        <div className={styles.demoCardHeader}>
-          <div className={styles.demoDots}>
-            <span className={`${styles.dot} ${styles.dotR}`} />
-            <span className={`${styles.dot} ${styles.dotY}`} />
-            <span className={`${styles.dot} ${styles.dotG}`} />
-          </div>
-        </div>
         <div className={styles.demoCardBody}>
           {items.map((loc) => (
             <div key={loc.name} className={styles.demoRow}>
-              <div className={styles.demoLocDot} style={{ background: color }} />
+              <div className={styles.demoLocDot} style={{ background: accent }} />
               <div className={styles.demoRowText}>
                 <span className={styles.demoRowName}>{loc.name}</span>
                 <span className={styles.demoCoords}>{loc.coords}</span>
@@ -118,19 +107,12 @@ function FeatureDemo({ feature }) {
   if (id === 'feature-todos') {
     return (
       <div className={styles.demoCard}>
-        <div className={styles.demoCardHeader}>
-          <div className={styles.demoDots}>
-            <span className={`${styles.dot} ${styles.dotR}`} />
-            <span className={`${styles.dot} ${styles.dotY}`} />
-            <span className={`${styles.dot} ${styles.dotG}`} />
-          </div>
-        </div>
         <div className={styles.demoCardBody}>
           {items.map((t, i) => (
             <div key={i} className={styles.demoRow}>
               <div
                 className={styles.demoCheckbox}
-                style={t.done ? { background: color, borderColor: color } : {}}
+                style={t.done ? { background: accent, borderColor: accent } : {}}
               >
                 {t.done && (
                   <svg viewBox="0 0 16 16" fill="none" className={styles.demoCheckSvg}>
@@ -149,19 +131,12 @@ function FeatureDemo({ feature }) {
   if (id === 'feature-history') {
     return (
       <div className={styles.demoCard}>
-        <div className={styles.demoCardHeader}>
-          <div className={styles.demoDots}>
-            <span className={`${styles.dot} ${styles.dotR}`} />
-            <span className={`${styles.dot} ${styles.dotY}`} />
-            <span className={`${styles.dot} ${styles.dotG}`} />
-          </div>
-        </div>
         <div className={styles.demoCardBody}>
           {items.map((e, i) => (
             <div key={i} className={styles.demoRow}>
-              <div className={styles.demoTimelineDot} style={{ background: e.color }} />
+              <div className={styles.demoTimelineDot} style={{ background: accent }} />
               <div className={styles.demoRowText}>
-                <span className={styles.demoRowDate} style={{ color: e.color }}>{e.date}</span>
+                <span className={styles.demoRowDate} style={{ color: accent }}>{e.date}</span>
                 <span className={styles.demoRowName}>{e.title}</span>
               </div>
             </div>
@@ -178,10 +153,9 @@ export default function FeatureCards() {
   return (
     <section className={styles.section} id="features">
       <div className={styles.sectionInner}>
-        <span className={styles.sectionBadge}>Можливості</span>
         <h2 className={styles.sectionTitle}>Все для твого світу</h2>
         <p className={styles.sectionSubtitle}>
-          Чотири розділи, що перетворюють хаос на структуру. Кожен — зі зручним інтерфейсом.
+          Чотири розділи, що перетворюють хаос на структуру.
         </p>
 
         <div className={styles.featuresList}>
@@ -189,11 +163,11 @@ export default function FeatureCards() {
             <div
               key={f.id}
               id={f.id}
-              className={`${styles.featureRow} ${i % 2 !== 0 ? styles.featureRowReversed : ''}`}
+              className={`${styles.featureRow} ${styles[`biome-${f.biome}`]} ${i % 2 !== 0 ? styles.featureRowReversed : ''}`}
             >
               <div className={styles.featureText}>
-                <div className={styles.featureIconWrap} style={{ background: f.color + '14' }}>
-                  <f.Icon className={styles.featureIcon} style={{ color: f.color }} />
+                <div className={styles.featureIconWrap} style={{ background: f.accent + '18' }}>
+                  <f.Icon className={styles.featureIcon} style={{ color: f.accent }} />
                 </div>
                 <h3 className={styles.featureTitle}>{f.title}</h3>
                 <p className={styles.featureSubtitle}>{f.subtitle}</p>

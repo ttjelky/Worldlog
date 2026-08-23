@@ -5,7 +5,7 @@
   justify-content: center;
   background: #dfcefd;
   padding: 16px;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-family: inherit;
 }
 
 .paper {

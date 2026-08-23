@@ -33,7 +33,7 @@ const palette = {
 
 const theme = createTheme({
   palette,
-  shape: { borderRadius: 18 },
+  shape: { borderRadius: 14 },
   typography: {
     fontFamily,
     h1: {
@@ -65,7 +65,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           fontFamily,
-          borderRadius: 999,
+          borderRadius: 14,
           padding: '12px 26px',
           fontSize: 15,
           fontWeight: 700,
@@ -84,7 +84,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           fontFamily,
-          borderRadius: 22,
+          borderRadius: 20,
           boxShadow: '0 1px 2px rgba(13,13,15,.05), 0 8px 24px rgba(13,13,15,.08)',
         },
       },

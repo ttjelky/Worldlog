@@ -4,7 +4,7 @@
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: inherit !important;
   font-weight: 600 !important;
   font-size: 15px !important;
   color: rgba(13, 13, 15, 0.9) !important;

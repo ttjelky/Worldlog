@@ -88,7 +88,7 @@
 }
 
 .eventTitle {
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-family: inherit;
   font-weight: 700;
   font-size: 15px;
   color: #ffffff;

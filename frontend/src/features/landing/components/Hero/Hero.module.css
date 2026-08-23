@@ -1,5 +1,6 @@
 /* ─────────────────────────────────────────
-   Hero – Material 3 card + big typography
+   Hero – Amethyst Geode biome
+   Colors: #2d1f4e → #4a2d7a → #9166c8
    ───────────────────────────────────────── */
 
 .heroSection {
@@ -12,48 +13,20 @@
   }
 }
 
-/* ── Main card ── */
 .heroCard {
   position: relative;
   max-width: 1340px;
   margin: 0 auto;
-  border-radius: 28px;
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow:
-    0 1px 3px rgba(13, 13, 15, 0.06),
-    0 8px 24px rgba(13, 13, 15, 0.10);
+  background: #2d1f4e;
 }
 
-/* ── Background ── */
-.heroBg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.heroGradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #1a1b2e 0%, #2a2d4a 35%, #3d2855 65%, #1a2840 100%);
-}
-
-.heroGrain {
-  position: absolute;
-  inset: 0;
-  opacity: 0.35;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(124, 131, 245, 0.25) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(76, 175, 125, 0.20) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(229, 115, 153, 0.15) 0%, transparent 60%);
-}
-
-/* ── Content wrapper ── */
 .heroContent {
   position: relative;
   z-index: 1;
 }
 
-/* ── Top row: text + visual ── */
 .heroTop {
   display: flex;
   flex-direction: column;
@@ -64,11 +37,10 @@
   .heroTop {
     flex-direction: row;
     align-items: stretch;
-    min-height: 460px;
+    min-height: 440px;
   }
 }
 
-/* ── Left: text — BIG typography ── */
 .heroText {
   display: flex;
   flex-direction: column;
@@ -82,22 +54,6 @@
     max-width: 560px;
     padding: 56px 52px;
   }
-}
-
-.heroBadge {
-  display: inline-block;
-  align-self: flex-start;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.80);
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-bottom: 28px;
 }
 
 .heroTitle {
@@ -119,7 +75,7 @@
 .heroSubtitle {
   font-size: 17px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.55);
   margin-bottom: 32px;
   max-width: 380px;
 }
@@ -137,33 +93,32 @@
 }
 
 .heroButtonPrimary {
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   padding: 14px 32px !important;
   font-size: 15px !important;
   font-weight: 700 !important;
-  background: #7C83F5 !important;
+  background: #9166c8 !important;
   color: #ffffff !important;
 }
 
 .heroButtonPrimary:hover {
-  background: #5C63E0 !important;
+  background: #7a52b0 !important;
 }
 
 .heroButtonSecondary {
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   padding: 14px 28px !important;
   font-size: 15px !important;
   font-weight: 700 !important;
-  background: rgba(255, 255, 255, 0.10) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 .heroButtonSecondary:hover {
-  background: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
 }
 
-/* ── Right: visual collage ── */
 .heroVisual {
   display: none;
 }
@@ -173,7 +128,7 @@
     display: block;
     flex: 1;
     position: relative;
-    min-height: 400px;
+    min-height: 380px;
   }
 }
 
@@ -182,13 +137,12 @@
   inset: 20px;
 }
 
-/* ── Bottom nav bar ── */
 .heroNav {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 18px 32px 22px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 @media (min-width: 900px) {
@@ -203,7 +157,7 @@
 .heroNavLabel {
   font-weight: 700;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.30);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   white-space: nowrap;
@@ -220,21 +174,20 @@
   align-items: center;
   gap: 5px;
   padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.65);
   font-weight: 600;
   font-size: 12px;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .heroNavPill:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  transform: translateY(-1px);
 }
 
 .heroNavPillIcon {
@@ -242,7 +195,7 @@
 }
 
 /* ─────────────────────────────────────────
-   Mockup cards inside hero
+   Mockup cards — no traffic light dots
    ───────────────────────────────────────── */
 
 .collageCard {
@@ -250,9 +203,7 @@
   background: #ffffff;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.12),
-    0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
 }
 
 .collagePlayers {
@@ -287,42 +238,23 @@
   transform: rotate(-2deg);
 }
 
-/* ── Shared mockup card chrome ── */
 .mockupHeader {
-  background: #f9f9fc;
+  background: #f3f0f7;
   padding: 8px 12px;
   display: flex;
   align-items: center;
 }
 
-.mockupHeaderDots {
-  display: flex;
-  gap: 5px;
+.mockupHeaderLabel {
+  font-weight: 700;
+  font-size: 10px;
+  color: #9166c8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
-
-.dotRed,
-.dotYellow,
-.dotGreen {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.dotRed { background: #f87171; }
-.dotYellow { background: #fbbf24; }
-.dotGreen { background: #4ade80; }
 
 .mockupBody {
   padding: 10px 12px 12px;
-}
-
-.mockupCardTitle {
-  font-weight: 700;
-  font-size: 10px;
-  color: rgba(13, 13, 15, 0.45);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 6px;
 }
 
 .mockupRow {
@@ -348,13 +280,12 @@
 
 .mockupRowSub {
   font-size: 10px;
-  color: rgba(13, 13, 15, 0.50);
+  color: rgba(13, 13, 15, 0.45);
 }
 
 .mockupRowCoords {
-  font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
   font-size: 9px;
-  color: rgba(13, 13, 15, 0.50);
+  color: rgba(13, 13, 15, 0.45);
 }
 
 .mockupRowDate {
@@ -362,19 +293,20 @@
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: #9166c8;
 }
 
 .mockupAvatar {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 8px;
   flex-shrink: 0;
 }
 
 .mockupLocDot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
@@ -382,7 +314,7 @@
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  border: 2px solid rgba(13, 13, 15, 0.40);
+  border: 2px solid rgba(13, 13, 15, 0.35);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -396,26 +328,24 @@
 
 .mockupTodoDone {
   text-decoration: line-through;
-  color: rgba(13, 13, 15, 0.45);
+  color: rgba(13, 13, 15, 0.40);
 }
 
 .mockupTimelineNode {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: #9166c8;
   flex-shrink: 0;
 }
 
-/* ─────────────────────────────────────────
-   Mobile
-   ───────────────────────────────────────── */
 @media (max-width: 899px) {
   .heroSection {
     padding: 80px 16px 0;
   }
 
   .heroCard {
-    border-radius: 20px;
+    border-radius: 18px;
   }
 
   .heroText {

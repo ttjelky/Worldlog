@@ -11,16 +11,14 @@ export default function ComingSoon({ onStart }) {
             <div className={styles.iconWrap}>
               <GroupsOutlinedIcon className={styles.icon} />
             </div>
-            <span className={styles.badge}>В розробці</span>
             <h2 className={styles.title}>Скоро: спільні світи</h2>
             <p className={styles.description}>
               Запрошуй друзів у світ, давай ролі редактора чи глядача і документуйте історію разом.
             </p>
-            <Button variant="contained" color="secondary" onClick={onStart}>
+            <Button variant="contained" onClick={onStart} className={styles.ctaBtn}>
               Взяти участь
             </Button>
           </div>
-          <div className={styles.cardBg} />
         </div>
       </div>
     </section>

@@ -59,7 +59,7 @@
 }
 
 .locName {
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-family: inherit;
   font-weight: 700;
   font-size: 14px;
   color: #ffffff;
@@ -154,7 +154,7 @@
 }
 
 .galleryTitle {
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-family: inherit;
   font-weight: 700;
   font-size: 20px;
   color: #0d0d0f;

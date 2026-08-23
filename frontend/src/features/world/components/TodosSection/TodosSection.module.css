@@ -47,7 +47,7 @@
 }
 
 .todoTitle {
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-family: inherit;
   font-size: 15px;
   font-weight: 600;
   color: #ffffff;
