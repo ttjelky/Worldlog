@@ -1,0 +1,98 @@
+.relationships {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
+}
+
+.addBtn {
+  margin-left: auto !important;
+  font-size: 12px !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-transform: none !important;
+}
+
+.addBtn:hover {
+  color: #ffffff !important;
+}
+
+.relList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.relItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.15s ease;
+}
+
+.relItem:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.relDirection {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.relInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.relType {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.relName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.relLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+.relDelete {
+  color: rgba(255, 255, 255, 0.6) !important;
+  padding: 4px !important;
+}
+
+.relDelete:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+}

@@ -8,12 +8,19 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import (
+    Bookmark,
     HistoryEvent,
+    Idea,
+    InspirationImage,
     Location,
     LocationScreenshot,
     Membership,
+    Note,
     Player,
+    Project,
+    Relationship,
     TodoItem,
+    WikiPage,
     World,
 )
 
@@ -225,6 +232,7 @@ class TodoItemSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'world',
+            'project',
             'title',
             'description',
             'is_done',
@@ -295,3 +303,81 @@ class MembershipSerializer(serializers.ModelSerializer):
         model = Membership
         fields = ('id', 'world', 'world_name', 'user', 'username', 'role', 'status')
         read_only_fields = ('world', 'user')
+
+
+class NoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Note
+        fields = ('id', 'world', 'title', 'content', 'tags', 'created_at')
+        read_only_fields = ('world',)
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    progress = serializers.IntegerField(read_only=True)
+    todos_count = serializers.IntegerField(source='todos.count', read_only=True)
+    todos_done = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = ('id', 'world', 'title', 'description', 'status', 'progress', 'todos_count', 'todos_done', 'created_at')
+        read_only_fields = ('world',)
+
+    def get_todos_done(self, obj):
+        return obj.todos.filter(is_done=True).count()
+
+
+class BookmarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookmark
+        fields = ('id', 'world', 'title', 'url', 'description', 'created_at')
+        read_only_fields = ('world',)
+
+
+class IdeaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Idea
+        fields = ('id', 'world', 'title', 'content', 'created_at')
+        read_only_fields = ('world',)
+
+
+class InspirationImageSerializer(serializers.ModelSerializer):
+    image = AbsoluteURLImageField()
+
+    class Meta:
+        model = InspirationImage
+        fields = ('id', 'world', 'image', 'caption', 'created_at')
+        read_only_fields = ('world',)
+
+
+class WikiPageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WikiPage
+        fields = ('id', 'world', 'title', 'page_type', 'content', 'created_at', 'updated_at')
+        read_only_fields = ('world',)
+
+
+class RelationshipSerializer(serializers.ModelSerializer):
+    target_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Relationship
+        fields = ('id', 'world', 'source_type', 'source_id', 'target_type', 'target_id', 'label', 'target_name', 'created_at')
+        read_only_fields = ('world',)
+
+    def get_target_name(self, obj):
+        model_map = {
+            'location': Location,
+            'wiki_page': WikiPage,
+            'project': Project,
+            'todo': TodoItem,
+            'event': HistoryEvent,
+            'note': Note,
+        }
+        model = model_map.get(obj.target_type)
+        if not model:
+            return None
+        try:
+            instance = model.objects.get(pk=obj.target_id)
+            return str(instance)
+        except model.DoesNotExist:
+            return None

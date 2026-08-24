@@ -19,6 +19,7 @@ import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
+import RelationshipList from '../shared/RelationshipList'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './LocationsSection.module.css'
 
@@ -41,6 +42,7 @@ const legacyCategoryLabels = {
 const empty = { name: '', description: '', x: 0, y: 0, z: 0, category: 'other' }
 
 function LocationDetails({
+  worldId,
   location,
   accent,
   uploading,
@@ -96,6 +98,8 @@ function LocationDetails({
       )}
 
       {location.description && <p className={styles.detailsDesc}>{location.description}</p>}
+
+      <RelationshipList worldId={worldId} sourceType="location" sourceId={location.id} />
 
       <div className={styles.detailsFooter}>
         <input
@@ -269,6 +273,7 @@ export default function LocationsSection({ worldId, accent }) {
             showExpandBtn={false}
             expandedContent={({ close }) => (
               <LocationDetails
+                worldId={worldId}
                 location={l}
                 accent={accent}
                 uploading={uploadPhotos.isPending}

@@ -119,6 +119,14 @@
 .slotTypeLocations { flex: 2; }
 .slotTypeTodos     { flex: 1; }
 .slotTypeHistory   { flex: 1; }
+.slotTypeNotes     { flex: 1; }
+.slotTypeProjects  { flex: 2; }
+.slotTypePlanner   { flex: 1; }
+.slotTypeBookmarks { flex: 1; }
+.slotTypeIdeas     { flex: 1; }
+.slotTypeInspiration { flex: 2; }
+.slotTypeWiki      { flex: 2; }
+.slotTypeProgress  { flex: 1; }
 
 .resizing .slot {
   transition: none !important;

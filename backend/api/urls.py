@@ -3,15 +3,22 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .views import (
+    BookmarkViewSet,
     HistoryEventViewSet,
+    IdeaViewSet,
+    InspirationImageViewSet,
     LocationScreenshotViewSet,
     LocationViewSet,
     LogoutView,
     MembershipViewSet,
+    NoteViewSet,
     PlayerViewSet,
+    ProjectViewSet,
     RegisterView,
+    RelationshipViewSet,
     TodoViewSet,
     UserDetailView,
+    WikiPageViewSet,
     WorldViewSet,
 )
 
@@ -38,6 +45,27 @@ router.register(
 )
 router.register(
     r'worlds/(?P<world_id>\d+)/memberships', MembershipViewSet, basename='world-membership'
+)
+router.register(
+    r'worlds/(?P<world_id>\d+)/notes', NoteViewSet, basename='world-note'
+)
+router.register(
+    r'worlds/(?P<world_id>\d+)/projects', ProjectViewSet, basename='world-project'
+)
+router.register(
+    r'worlds/(?P<world_id>\d+)/bookmarks', BookmarkViewSet, basename='world-bookmark'
+)
+router.register(
+    r'worlds/(?P<world_id>\d+)/ideas', IdeaViewSet, basename='world-idea'
+)
+router.register(
+    r'worlds/(?P<world_id>\d+)/inspiration', InspirationImageViewSet, basename='world-inspiration'
+)
+router.register(
+    r'worlds/(?P<world_id>\d+)/wiki', WikiPageViewSet, basename='world-wiki'
+)
+router.register(
+    r'worlds/(?P<world_id>\d+)/relationships', RelationshipViewSet, basename='world-relationship'
 )
 
 urlpatterns = [

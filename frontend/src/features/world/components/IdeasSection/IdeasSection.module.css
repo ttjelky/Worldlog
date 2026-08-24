@@ -1,0 +1,67 @@
+.ideaList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ideaItem {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.15s ease;
+}
+
+.ideaItem:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ideaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.ideaTitle {
+  font-weight: 700;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.ideaDesc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+  margin-top: 2px;
+}
+
+.convertBtn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.15s ease;
+}
+
+.convertBtn:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.rowActions {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.rowActions :global(.MuiIconButton-root) {
+  color: rgba(255, 255, 255, 0.85);
+  padding: 4px;
+}
+
+.rowActions :global(.MuiIconButton-root:hover) {
+  background: rgba(255, 255, 255, 0.16);
+}

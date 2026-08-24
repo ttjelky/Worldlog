@@ -74,6 +74,36 @@ class LocationScreenshot(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class Project(models.Model):
+    class Status(models.TextChoices):
+        PLANNING = 'planning', 'Planning'
+        ACTIVE = 'active', 'Active'
+        COMPLETED = 'completed', 'Completed'
+        ON_HOLD = 'on_hold', 'On Hold'
+
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='projects')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.PLANNING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def progress(self):
+        todos = self.todos.all()
+        if not todos:
+            return 0
+        done = todos.filter(is_done=True).count()
+        return round(done / todos.count() * 100)
+
+
 class TodoItem(models.Model):
     class Priority(models.TextChoices):
         LOW = 'low', 'Low'
@@ -82,6 +112,9 @@ class TodoItem(models.Model):
         URGENT = 'urgent', 'Urgent'
 
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='todos')
+    project = models.ForeignKey(
+        Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='todos'
+    )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     is_done = models.BooleanField(default=False)
@@ -118,6 +151,111 @@ class HistoryEvent(models.Model):
 
     class Meta:
         ordering = ['date', 'created_at']
+
+
+class Note(models.Model):
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='notes')
+    title = models.CharField(max_length=200)
+    content = models.TextField(blank=True)
+    tags = models.CharField(max_length=500, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class Bookmark(models.Model):
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='bookmarks')
+    title = models.CharField(max_length=200)
+    url = models.URLField(max_length=500)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class Idea(models.Model):
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='ideas')
+    title = models.CharField(max_length=200)
+    content = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class InspirationImage(models.Model):
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='inspiration_images')
+    image = models.ImageField(upload_to='inspiration/')
+    caption = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class WikiPage(models.Model):
+    class PageType(models.TextChoices):
+        LOCATION = 'location', 'Location'
+        CHARACTER = 'character', 'Character'
+        FACTION = 'faction', 'Faction'
+        KINGDOM = 'kingdom', 'Kingdom'
+        REGION = 'region', 'Region'
+        ITEM = 'item', 'Item'
+        EVENT = 'event', 'Event'
+        WAR = 'war', 'War'
+        CUSTOM = 'custom', 'Custom'
+
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='wiki_pages')
+    title = models.CharField(max_length=200)
+    page_type = models.CharField(
+        max_length=20, choices=PageType.choices, default=PageType.CUSTOM
+    )
+    content = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['title']
+        unique_together = ('world', 'title')
+
+    def __str__(self):
+        return self.title
+
+
+class Relationship(models.Model):
+    class SourceType(models.TextChoices):
+        LOCATION = 'location', 'Location'
+        WIKI_PAGE = 'wiki_page', 'Wiki Page'
+        PROJECT = 'project', 'Project'
+        TODO = 'todo', 'Todo'
+        EVENT = 'event', 'Event'
+        NOTE = 'note', 'Note'
+
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='relationships')
+    source_type = models.CharField(max_length=20, choices=SourceType.choices)
+    source_id = models.PositiveIntegerField()
+    target_type = models.CharField(max_length=20, choices=SourceType.choices)
+    target_id = models.PositiveIntegerField()
+    label = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('world', 'source_type', 'source_id', 'target_type', 'target_id')
+
+    def __str__(self):
+        return f'{self.source_type}:{self.source_id} -> {self.target_type}:{self.target_id}'
 
 
 class Membership(models.Model):

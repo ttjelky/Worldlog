@@ -1,0 +1,87 @@
+.plannerList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plannerItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+
+.plannerItem:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.plannerItemDone {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.plannerItemDone:hover {
+  background: rgba(0, 0, 0, 0.38);
+}
+
+.plannerItemDone .plannerTitle {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.plannerItemOverdue {
+  border-left: 3px solid rgba(255, 138, 128, 0.8);
+}
+
+.dateChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.dateChipOverdue {
+  background: rgba(255, 138, 128, 0.3);
+}
+
+.plannerTitle {
+  font-weight: 600;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.plannerMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.priorityDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.rowActions {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.rowActions :global(.MuiIconButton-root) {
+  color: rgba(255, 255, 255, 0.85);
+  padding: 4px;
+}
+
+.rowActions :global(.MuiIconButton-root:hover) {
+  background: rgba(255, 255, 255, 0.16);
+}

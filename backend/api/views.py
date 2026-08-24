@@ -5,24 +5,38 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import (
+    Bookmark,
     HistoryEvent,
+    Idea,
+    InspirationImage,
     Location,
     LocationScreenshot,
     Membership,
+    Note,
     Player,
+    Project,
+    Relationship,
     TodoItem,
+    WikiPage,
     World,
 )
 from .permissions import IsOwnerOrMember
 from .serializers import (
+    BookmarkSerializer,
     HistoryEventSerializer,
+    IdeaSerializer,
+    InspirationImageSerializer,
     LocationScreenshotSerializer,
     LocationSerializer,
     MembershipSerializer,
+    NoteSerializer,
     PlayerSerializer,
+    ProjectSerializer,
+    RelationshipSerializer,
     TodoItemSerializer,
     UserSerializer,
     UserUpdateSerializer,
+    WikiPageSerializer,
     WorldSerializer,
 )
 
@@ -134,3 +148,39 @@ class HistoryEventViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 class MembershipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializer
+
+
+class NoteViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Note.objects.all()
+    serializer_class = NoteSerializer
+
+
+class ProjectViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+
+
+class BookmarkViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Bookmark.objects.all()
+    serializer_class = BookmarkSerializer
+
+
+class IdeaViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Idea.objects.all()
+    serializer_class = IdeaSerializer
+
+
+class InspirationImageViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
+    queryset = InspirationImage.objects.all()
+    serializer_class = InspirationImageSerializer
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+
+class WikiPageViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
+    queryset = WikiPage.objects.all()
+    serializer_class = WikiPageSerializer
+
+
+class RelationshipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Relationship.objects.all()
+    serializer_class = RelationshipSerializer

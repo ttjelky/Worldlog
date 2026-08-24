@@ -1,0 +1,62 @@
+.noteList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.noteItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.15s ease;
+}
+
+.noteItem:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.noteTitle {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.noteDesc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+  margin-top: 2px;
+}
+
+.noteTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.noteTag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.rowActions {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.rowActions :global(.MuiIconButton-root) {
+  color: rgba(255, 255, 255, 0.85);
+  padding: 4px;
+}
+
+.rowActions :global(.MuiIconButton-root:hover) {
+  background: rgba(255, 255, 255, 0.16);
+}
