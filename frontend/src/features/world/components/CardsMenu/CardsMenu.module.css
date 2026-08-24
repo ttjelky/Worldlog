@@ -47,7 +47,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
@@ -58,453 +58,24 @@
   flex-direction: column;
   border-radius: 20px;
   overflow: hidden;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(13, 13, 15, 0.06), 0 4px 12px rgba(13, 13, 15, 0.06);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
 }
 
-.cell:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(13, 13, 15, 0.1), 0 8px 24px rgba(13, 13, 15, 0.1);
-}
-
-.cellHidden {
+.cellAdded .preview {
   opacity: 0.45;
-}
-
-.cellHidden:hover {
-  opacity: 0.7;
 }
 
 /* ---------- Card preview ---------- */
 
 .preview {
-  background: var(--accent, #A63C39);
-  padding: 16px;
-  min-height: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   overflow: hidden;
-}
-
-.previewHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.previewTitle {
-  font-family: inherit;
-  font-weight: 500;
-  font-size: 20px;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-}
-
-.previewBody {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  min-height: 0;
 }
 
-/* ---------- Stub shared ---------- */
-
-.stubTitle {
-  font-weight: 600;
-  font-size: 18px;
-  color: #ffffff;
-  line-height: 1.2;
-}
-
-.stubDesc {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.35;
-}
-
-.stubName {
-  font-weight: 600;
-  font-size: 14px;
-  color: #ffffff;
-}
-
-.stubRole {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.stubCoords {
-  font-family: monospace;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.stubChips {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-
-.stubChip {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  font-size: 11px;
-  font-weight: 500;
-  color: #ffffff;
-}
-
-/* ---------- Stub: Info stats ---------- */
-
-.stubStats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin-top: auto;
-  padding-top: 8px;
-}
-
-.stubStat {
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: 10px;
-  padding: 8px;
-  text-align: center;
-}
-
-.stubStatVal {
-  display: block;
-  font-weight: 500;
-  font-size: 18px;
-  color: #ffffff;
-  line-height: 1.1;
-}
-
-.stubStatLbl {
-  display: block;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.65);
-  margin-top: 2px;
-}
-
-/* ---------- Stub: Cover ---------- */
-
-.stubCover {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 2px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 14px;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.stubCoverText {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-/* ---------- Stub: Players ---------- */
-
-.stubRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stubAvatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 12px;
-  color: #ffffff;
-  flex-shrink: 0;
-}
-
-/* ---------- Stub: Locations ---------- */
-
-.stubLocTile {
-  display: flex;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stubLocImg {
-  width: 48px;
-  height: 36px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  flex-shrink: 0;
-}
-
-.stubLocBody {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  justify-content: center;
-}
-
-/* ---------- Stub: Todos ---------- */
-
-.stubTodoItem {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stubTodoDone {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.stubTodoCheck {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  flex-shrink: 0;
-}
-
-.stubTodoCheckDone {
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(255, 255, 255, 0.7);
-}
-
-.stubTodoText {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.stubTodoDone .stubTodoText {
-  opacity: 0.5;
-  text-decoration: line-through;
-}
-
-.stubPriority {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  color: #1d1a22;
-}
-
-/* ---------- Stub: History timeline ---------- */
-
-.stubTimelineItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.stubNode {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #ffffff;
-  color: #1d1a22;
-  font-weight: 800;
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.stubEvent {
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-  flex: 1;
-}
-
-.stubEventDate {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* ---------- Stub: Wiki ---------- */
-
-.stubWikiPage {
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stubWikiType {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-}
-
-/* ---------- Stub: Notes ---------- */
-
-.stubNote {
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stubTags {
-  display: flex;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.stubTag {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-}
-
-/* ---------- Stub: Projects ---------- */
-
-.stubProject {
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stubProgressBar {
-  width: 100%;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  margin: 6px 0 4px;
-  overflow: hidden;
-}
-
-.stubProgressFill {
+.previewInner {
   height: 100%;
-  border-radius: 999px;
-  background: #ffffff;
-  transition: width 0.3s ease;
-}
-
-/* ---------- Stub: Planner ---------- */
-
-.stubPlannerItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stubPlannerOverdue {
-  border-left: 3px solid rgba(255, 138, 128, 0.8);
-}
-
-.stubDateChip {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-  flex-shrink: 0;
-}
-
-.stubDateChipOverdue {
-  background: rgba(255, 138, 128, 0.3);
-}
-
-/* ---------- Stub: Bookmarks ---------- */
-
-.stubBookmark {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stubBookmarkIcon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.stubUrl {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* ---------- Stub: Ideas ---------- */
-
-.stubIdea {
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stubConvertBtn {
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 4px;
-}
-
-/* ---------- Stub: Inspiration grid ---------- */
-
-.stubInspGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-
-.stubInspTile {
-  aspect-ratio: 1;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* ---------- Stub: Progress stats grid ---------- */
-
-.stubStatsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.stubStatTile {
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: 10px;
-  padding: 8px;
-  text-align: center;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 /* ---------- Cell info ---------- */
@@ -514,10 +85,11 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: transparent;
 }
 
 .cellDesc {
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.4;
   color: rgba(29, 26, 34, 0.6);
 }
@@ -529,15 +101,15 @@
   align-items: center;
   gap: 5px;
   align-self: flex-start;
-  padding: 7px 16px;
+  padding: 10px 16px;
   border-radius: 999px;
   border: none;
   font-family: inherit;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 16px;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(28, 28, 28, 0.06);
   color: #1d1a22;
 }
 
@@ -546,7 +118,7 @@
 }
 
 .addBtnActive {
-  background: #1d1a22;
+  background: #3c3c3c;
   color: #ffffff;
 }
 
