@@ -16,6 +16,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import TuneIcon from '@mui/icons-material/Tune'
+import ViewListIcon from '@mui/icons-material/ViewList'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api'
 import backBtnStyles from '../../shared/styles/backButton.module.css'
@@ -32,6 +33,7 @@ import IdeasSection from './components/IdeasSection/IdeasSection'
 import InspirationSection from './components/InspirationSection/InspirationSection'
 import ProgressSection from './components/ProgressSection/ProgressSection'
 import WikiSection from './components/WikiSection/WikiSection'
+import CardsMenu from './components/CardsMenu/CardsMenu'
 import sharedStyles from './components/shared/section.module.css'
 import ExpandableCard from './components/shared/ExpandableCard'
 import styles from './WorldDetail.module.css'
@@ -73,6 +75,19 @@ const DEFAULT_CARDS = [
   { id: 'wiki', row: 6 },
   { id: 'progress', row: 6 },
 ]
+
+function mergeWithDefaults(saved) {
+  if (!saved?.cards) return null
+  const merged = DEFAULT_CARDS.map((def) => {
+    const savedCard = saved.cards.find((c) => c.id === def.id)
+    return {
+      ...def,
+      ...savedCard,
+      hidden: savedCard?.hidden ?? false,
+    }
+  })
+  return { cards: merged, flexes: saved.flexes || {} }
+}
 
 function loadLayout(worldId) {
   try {
@@ -318,9 +333,10 @@ export default function WorldDetail({ onBack }) {
 
   const [editMode, setEditMode] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [cardsMenuOpen, setCardsMenuOpen] = useState(false)
   const [layout, setLayout] = useState(() => {
     const saved = loadLayout(worldId)
-    return saved || { cards: DEFAULT_CARDS, flexes: {} }
+    return mergeWithDefaults(saved) || { cards: DEFAULT_CARDS.map((c) => ({ ...c, hidden: false })), flexes: {} }
   })
   const [drag, setDrag] = useState(null)
   const [resize, setResize] = useState(null)
@@ -334,7 +350,19 @@ export default function WorldDetail({ onBack }) {
   }, [layout, worldId])
 
   const { cards, flexes } = layout
-  const getRowCards = useCallback((row) => cards.filter((c) => c.row === row), [cards])
+  const getRowCards = useCallback(
+    (row) => cards.filter((c) => c.row === row && !c.hidden),
+    [cards],
+  )
+
+  const onToggleCard = (cardId) => {
+    setLayout((prev) => ({
+      ...prev,
+      cards: prev.cards.map((c) =>
+        c.id === cardId ? { ...c, hidden: !c.hidden } : c,
+      ),
+    }))
+  }
 
   const onDragStart = (e, cardId) => {
     if (!editMode) return
@@ -587,6 +615,13 @@ export default function WorldDetail({ onBack }) {
           )}
           <Button
             className={styles.worldEditBtn}
+            onClick={() => setCardsMenuOpen(true)}
+            startIcon={<ViewListIcon />}
+          >
+            Картки
+          </Button>
+          <Button
+            className={styles.worldEditBtn}
             onClick={() => setEditDialogOpen(true)}
             startIcon={<EditOutlinedIcon />}
           >
@@ -631,6 +666,12 @@ export default function WorldDetail({ onBack }) {
         onClose={() => setEditDialogOpen(false)}
         world={world}
         worldId={worldId}
+      />
+      <CardsMenu
+        open={cardsMenuOpen}
+        onClose={() => setCardsMenuOpen(false)}
+        layout={layout}
+        onToggle={onToggleCard}
       />
     </div>
   )
