@@ -101,7 +101,7 @@
 }
 
 .modalWide {
-  --expanded-w: min(1240px, calc(100vw - 48px));
+  --expanded-w: min(860px, calc(100vw - 48px));
 }
 
 .modalClosing {
