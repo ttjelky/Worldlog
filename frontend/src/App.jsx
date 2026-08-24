@@ -6,6 +6,7 @@ import { Login, Register } from './features/auth/Auth'
 import Dashboard from './features/dashboard/Dashboard'
 import MyWorlds from './features/myworlds/MyWorlds'
 import WorldDetail from './features/world/WorldDetail'
+import UndoProvider from './shared/undo/UndoProvider'
 
 function PrivateRoute({ children }) {
   const location = useLocation()
@@ -19,7 +20,11 @@ function PrivateRoute({ children }) {
 }
 
 function AppLayout() {
-  return <Outlet />
+  return (
+    <UndoProvider>
+      <Outlet />
+    </UndoProvider>
+  )
 }
 
 export default function App() {

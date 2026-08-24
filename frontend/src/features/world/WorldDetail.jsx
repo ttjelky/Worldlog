@@ -19,6 +19,7 @@ import TuneIcon from '@mui/icons-material/Tune'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api'
 import backBtnStyles from '../../shared/styles/backButton.module.css'
+import { useUndo } from '../../shared/undo/UndoProvider'
 import PlayersSection from './components/PlayersSection/PlayersSection'
 import LocationsSection from './components/LocationsSection/LocationsSection'
 import TodosSection from './components/TodosSection/TodosSection'
@@ -187,13 +188,7 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
     },
   })
 
-  const deleteMutation = useMutation({
-    mutationFn: () => api.delete(`/worlds/${worldId}/`),
-    onSuccess: () => {
-      qc.invalidateQueries(['worlds'])
-      navigate('/app')
-    },
-  })
+  const { deleteWorld } = useUndo()
 
   const submit = (e) => {
     e.preventDefault()
@@ -243,8 +238,12 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
         <DialogActions className={sharedStyles.dialogActions}>
           <Button
             onClick={() => {
-              if (window.confirm('Ви впевнені, що хочете видалити цей світ? Це незворотно.')) {
-                deleteMutation.mutate()
+              if (window.confirm('Ви впевнені, що хочете видалити цей світ?')) {
+                // Реальне видалення відкладене: тост у AppLayout дає 6 секунд
+                // натиснути «Скасувати» і повернутися на сторінку світу
+                onClose()
+                deleteWorld({ id: worldId, name: world?.name })
+                navigate('/app')
               }
             }}
             startIcon={<DeleteOutlinedIcon />}

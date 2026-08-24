@@ -15,6 +15,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
+import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './PlayersSection.module.css'
 
 export default function PlayersSection({ worldId, accent }) {
@@ -34,10 +35,15 @@ export default function PlayersSection({ worldId, accent }) {
         : api.post(`/worlds/${worldId}/players/`, payload),
     onSuccess: () => qc.invalidateQueries(['players', String(worldId)]),
   })
-  const remove = useMutation({
-    mutationFn: (id) => api.delete(`/worlds/${worldId}/players/${id}/`),
-    onSuccess: () => qc.invalidateQueries(['players', String(worldId)]),
-  })
+  const undo = useUndo()
+  const deletePlayer = (p) =>
+    undo.deleteItem({
+      id: p.id,
+      url: `/worlds/${worldId}/players/${p.id}/`,
+      queryKeys: [['players', String(worldId)], ['world', String(worldId)]],
+      message: `Гравця «${p.nickname}» видалено`,
+      nouns: ['гравець', 'гравці', 'гравців'],
+    })
 
   const openNew = () => {
     setEditing(null)
@@ -86,7 +92,7 @@ export default function PlayersSection({ worldId, accent }) {
               <IconButton size="small" onClick={() => openEdit(p)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
-              <IconButton size="small" onClick={() => remove.mutate(p.id)}>
+              <IconButton size="small" onClick={() => deletePlayer(p)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
             </div>

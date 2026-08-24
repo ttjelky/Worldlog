@@ -17,6 +17,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
+import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './TodosSection.module.css'
 
 const priorities = {
@@ -62,10 +63,15 @@ export default function TodosSection({ worldId, accent }) {
     onError: (_err, _todo, ctx) => qc.setQueryData(['todos', String(worldId)], ctx.prev),
     onSettled: () => qc.invalidateQueries(['todos', String(worldId)]),
   })
-  const remove = useMutation({
-    mutationFn: (id) => api.delete(`/worlds/${worldId}/todos/${id}/`),
-    onSuccess: () => qc.invalidateQueries(['todos', String(worldId)]),
-  })
+  const undo = useUndo()
+  const deleteTodo = (t) =>
+    undo.deleteItem({
+      id: t.id,
+      url: `/worlds/${worldId}/todos/${t.id}/`,
+      queryKeys: [['todos', String(worldId)], ['world', String(worldId)]],
+      message: `Завдання «${t.title}» видалено`,
+      nouns: ['завдання', 'завдання', 'завдань'],
+    })
 
   const openNew = () => {
     setEditing(null)
@@ -145,7 +151,7 @@ export default function TodosSection({ worldId, accent }) {
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation()
-                    remove.mutate(t.id)
+                    deleteTodo(t)
                   }}
                 >
                   <DeleteOutlinedIcon fontSize="small" />

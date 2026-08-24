@@ -19,6 +19,7 @@ import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
+import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './LocationsSection.module.css'
 
 const categories = [
@@ -78,7 +79,7 @@ function LocationDetails({
       <div className={styles.detailsHead}>
         <h3 className={styles.detailsName}>{location.name}</h3>
         <div className={styles.detailsMeta}>
-          <span className={styles.catPill}>{category}</span>
+          <span className={`${styles.catPill} ${styles.detailsPill}`}>{category}</span>
           <span className={styles.detailsCoords}>
             {location.x} {location.y} {location.z}
           </span>
@@ -171,10 +172,15 @@ export default function LocationsSection({ worldId, accent }) {
         : api.post(`/worlds/${worldId}/locations/`, payload),
     onSuccess: () => qc.invalidateQueries(['locations', String(worldId)]),
   })
-  const remove = useMutation({
-    mutationFn: (id) => api.delete(`/worlds/${worldId}/locations/${id}/`),
-    onSuccess: () => qc.invalidateQueries(['locations', String(worldId)]),
-  })
+  const undo = useUndo()
+  const deleteLocation = (l) =>
+    undo.deleteItem({
+      id: l.id,
+      url: `/worlds/${worldId}/locations/${l.id}/`,
+      queryKeys: [['locations', String(worldId)], ['world', String(worldId)]],
+      message: `Локацію «${l.name}» видалено`,
+      nouns: ['локація', 'локації', 'локацій'],
+    })
   const uploadPhotos = useMutation({
     mutationFn: ({ locationId, files }) =>
       Promise.all(
@@ -255,7 +261,7 @@ export default function LocationsSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.locGrid} ${styles.gridFull} ${styles.gridCompact}`}>
+      <div className={`${sharedStyles.body} ${styles.locGrid} ${styles.gridFull}`}>
         {visibleLocations.map((l) => (
           <ExpandableCard
             key={l.id}
@@ -269,7 +275,7 @@ export default function LocationsSection({ worldId, accent }) {
                 onClose={close}
                 onEdit={() => openEdit(l)}
                 onDelete={() => {
-                  remove.mutate(l.id)
+                  deleteLocation(l)
                   close()
                 }}
                 onUpload={(file) => uploadPhotos.mutateAsync({ locationId: l.id, files: [file] })}
@@ -315,7 +321,7 @@ export default function LocationsSection({ worldId, accent }) {
                   aria-label="Видалити локацію"
                   onClick={(e) => {
                     e.stopPropagation()
-                    remove.mutate(l.id)
+                    deleteLocation(l)
                   }}
                 >
                   <DeleteOutlinedIcon fontSize="small" />

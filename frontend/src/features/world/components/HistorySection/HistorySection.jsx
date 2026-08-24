@@ -15,6 +15,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
+import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './HistorySection.module.css'
 
 const categories = [
@@ -45,10 +46,15 @@ export default function HistorySection({ worldId, accent }) {
         : api.post(`/worlds/${worldId}/history/`, payload),
     onSuccess: () => qc.invalidateQueries(['history', String(worldId)]),
   })
-  const remove = useMutation({
-    mutationFn: (id) => api.delete(`/worlds/${worldId}/history/${id}/`),
-    onSuccess: () => qc.invalidateQueries(['history', String(worldId)]),
-  })
+  const undo = useUndo()
+  const deleteEvent = (h) =>
+    undo.deleteItem({
+      id: h.id,
+      url: `/worlds/${worldId}/history/${h.id}/`,
+      queryKeys: [['history', String(worldId)], ['world', String(worldId)]],
+      message: `Подію «${h.title}» видалено`,
+      nouns: ['подія', 'події', 'подій'],
+    })
 
   const openNew = () => {
     setEditing(null)
@@ -106,7 +112,7 @@ export default function HistorySection({ worldId, accent }) {
                     <IconButton size="small" onClick={() => openEdit(h)}>
                       <EditOutlinedIcon fontSize="small" />
                     </IconButton>
-                    <IconButton size="small" onClick={() => remove.mutate(h.id)}>
+                    <IconButton size="small" onClick={() => deleteEvent(h)}>
                       <DeleteOutlinedIcon fontSize="small" />
                     </IconButton>
                   </div>
