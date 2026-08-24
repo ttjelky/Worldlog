@@ -5,7 +5,8 @@
   background: var(--accent);
   color: #ffffff;
   border-radius: 28px;
-  padding: 26px 26px 24px;
+  /* Без нижнього відступу: контент може сягати самого низу картки */
+  padding: 26px 26px 0;
   font-family: inherit;
   display: flex;
   flex-direction: column;
@@ -39,13 +40,16 @@
   padding: 4px 2px;
 }
 
-/* Блок вмісту картки — росте за контентом, скролиться тільки коли не влазить. */
+/* Блок вмісту картки — росте за контентом, скролиться тільки коли не влазить.
+   Нижній паддінг — «пусте місце», яке скролиться разом зі списком,
+   тому останній елемент не притиснутий до нижнього краю картки. */
 .body {
   flex: 1;
   overflow-y: auto;
   max-height: 320px;
   padding-right: 4px;
   margin-right: -4px;
+  padding-bottom: 24px;
 }
 
 .body::-webkit-scrollbar {
