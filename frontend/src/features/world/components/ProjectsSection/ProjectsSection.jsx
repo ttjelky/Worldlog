@@ -16,7 +16,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
-import ExpandableCard from '../shared/ExpandableCard'
+import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './ProjectsSection.module.css'
 
@@ -190,6 +190,7 @@ export default function ProjectsSection({ worldId, accent }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const section = useExpandableCard()
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects', String(worldId)],
@@ -248,7 +249,7 @@ export default function ProjectsSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.projectList}`}>
+      <div className={`${sharedStyles.body} ${styles.projectList} ${section.modal ? styles.projectListFull : ''}`}>
         {projects.map((p) => {
           const pStatus = calcStatus(p.todos_count ?? 0, p.todos_done ?? 0)
           return (

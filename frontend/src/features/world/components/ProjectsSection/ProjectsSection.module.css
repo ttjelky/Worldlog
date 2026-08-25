@@ -10,6 +10,10 @@
   flex-direction: column;
 }
 
+.projectListFull {
+  max-height: none;
+}
+
 .projectItem {
   display: flex;
   flex-direction: column;
