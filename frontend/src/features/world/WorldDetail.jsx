@@ -35,7 +35,7 @@ import ProgressSection from './components/ProgressSection/ProgressSection'
 import WikiSection from './components/WikiSection/WikiSection'
 import CardsMenu from './components/CardsMenu/CardsMenu'
 import sharedStyles from './components/shared/section.module.css'
-import ExpandableCard from './components/shared/ExpandableCard'
+import ExpandableCard, { useExpandableCard } from './components/shared/ExpandableCard'
 import styles from './WorldDetail.module.css'
 
 const RED = '#A63C39'
@@ -111,8 +111,29 @@ function InfoCard({ world }) {
     ['Події', world.history_count],
   ]
 
+  // Ця ж картка рендериться двічі: раз у прихованій обгортці (collapsed),
+  // раз у розгорнутій модалці (modal). `modal` розрізняє їх.
+  const { open, modal } = useExpandableCard()
+  const cardRef = useRef(null)
+  const [overflowing, setOverflowing] = useState(false)
+
+  useEffect(() => {
+    if (modal) return
+    const el = cardRef.current
+    if (!el) return
+    const check = () => setOverflowing(el.scrollHeight > el.clientHeight + 1)
+    check()
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [modal, world])
+
   return (
-    <div className={`${sharedStyles.card} ${styles.infoCard}`} style={{ '--accent': RED }}>
+    <div
+      ref={cardRef}
+      className={`${sharedStyles.card} ${styles.infoCard} ${modal ? styles.infoCardExpanded : ''}`}
+      style={{ '--accent': RED }}
+    >
       <h2 className={styles.infoTitle}>{world.name}</h2>
       <p className={styles.infoDesc}>{world.description || 'Немає опису'}</p>
       <div className={styles.metaRow}>
@@ -128,6 +149,20 @@ function InfoCard({ world }) {
           </div>
         ))}
       </div>
+      {!modal && overflowing && (
+        <div className={styles.showMoreFade}>
+          <button
+            type="button"
+            className={styles.showMoreBtn}
+            onClick={(e) => {
+              e.stopPropagation()
+              open()
+            }}
+          >
+            Показати більше
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -304,7 +339,7 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
 }
 
 const CARD_CONTENT = {
-  info: (props) => <InfoCard world={props.world} />,
+  info: (props) => <ExpandableCard><InfoCard world={props.world} /></ExpandableCard>,
   cover: (props) => <CoverImageCard world={props.world} worldId={props.worldId} />,
   players: (props) => <ExpandableCard><PlayersSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
   locations: (props) => (
