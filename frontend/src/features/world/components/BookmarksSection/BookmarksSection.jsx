@@ -80,25 +80,24 @@ export default function BookmarksSection({ worldId, accent }) {
 
       <div className={`${sharedStyles.body} ${styles.bookmarkList}`}>
         {bookmarks.map((b) => (
-          <div key={b.id} className={styles.bookmarkItem}>
+          <div key={b.id} className={styles.bookmarkItem} onClick={() => window.open(b.url, '_blank')} style={{ cursor: 'pointer' }}>
             <div className={styles.bookmarkIcon}>
               <OpenInNewIcon fontSize="small" />
             </div>
             <div className={styles.bookmarkInfo}>
               <div className={styles.bookmarkTitle}>{b.title}</div>
               <div className={styles.bookmarkUrl}>{b.url}</div>
-              {b.description && <div className={styles.bookmarkDesc}>{b.description}</div>}
             </div>
             <div className={styles.rowActions}>
               <IconButton
                 size="small"
-                onClick={() => openEdit(b)}
+                onClick={(e) => { e.stopPropagation(); openEdit(b) }}
               >
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
               <IconButton
                 size="small"
-                onClick={() => deleteBookmark(b)}
+                onClick={(e) => { e.stopPropagation(); deleteBookmark(b) }}
               >
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -134,13 +133,6 @@ export default function BookmarksSection({ worldId, accent }) {
                 onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                 required
                 type="url"
-              />
-              <TextField
-                label="Опис"
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                multiline
-                minRows={2}
               />
             </div>
           </DialogContent>
