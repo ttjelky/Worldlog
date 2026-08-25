@@ -15,7 +15,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
-import ExpandableCard from '../shared/ExpandableCard'
+import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './NotesSection.module.css'
 
@@ -67,6 +67,8 @@ export default function NotesSection({ worldId, accent }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const [activeTag, setActiveTag] = useState(null)
+  const section = useExpandableCard()
 
   const { data: notes = [] } = useQuery({
     queryKey: ['notes', String(worldId)],
@@ -106,6 +108,11 @@ export default function NotesSection({ worldId, accent }) {
     mutation.mutateAsync(form).then(() => setOpen(false))
   }
 
+  const allTags = [...new Set(notes.flatMap((n) => parseTags(n.tags)))]
+  const filteredNotes = activeTag
+    ? notes.filter((n) => parseTags(n.tags).includes(activeTag))
+    : notes
+
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
@@ -122,8 +129,23 @@ export default function NotesSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.noteList}`}>
-        {notes.map((n) => (
+      {allTags.length > 0 && (
+        <div className={styles.tagFilter}>
+          {allTags.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              className={`${styles.tagFilterBtn} ${activeTag === tag ? styles.tagFilterActive : ''}`}
+              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className={`${sharedStyles.body} ${styles.noteList} ${section.modal ? styles.noteListFull : ''}`}>
+        {filteredNotes.map((n) => (
           <ExpandableCard
             key={n.id}
             clickOpens

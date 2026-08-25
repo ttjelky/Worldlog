@@ -4,6 +4,14 @@
   gap: 8px;
 }
 
+.noteList.noteListFull {
+  max-height: none;
+}
+
+.noteList > :global(*) {
+  height: auto !important;
+}
+
 .noteItem {
   display: flex;
   align-items: flex-start;
@@ -68,6 +76,38 @@
 
 .rowActions :global(.MuiIconButton-root:hover) {
   background: rgba(255, 255, 255, 0.16);
+}
+
+/* ---------- Фільтр тегів ---------- */
+
+.tagFilter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tagFilterBtn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.8);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tagFilterBtn:hover {
+  background: rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+}
+
+.tagFilterActive {
+  background: #ffffff !important;
+  color: var(--accent) !important;
 }
 
 /* ---------- Розгорнутий вигляд нотатки ---------- */
