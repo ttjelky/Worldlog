@@ -131,8 +131,10 @@
   border-radius: 32px !important;
   box-shadow: 0 1px 3px rgba(29, 26, 34, 0.15), 0 4px 24px rgba(29, 26, 34, 0.1) !important;
   overflow: hidden;
-  max-height: none !important;
+  max-height: calc(100vh - 48px) !important;
   margin: 24px !important;
+  display: flex;
+  flex-direction: column;
 }
 
 .dialogPaper :global(.MuiDialogTitle-root) {
@@ -147,12 +149,16 @@
 
 .dialogPaper :global(.MuiDialogContent-root) {
   padding: 9px 32px 4px !important;
+  overflow-y: auto !important;
+  flex: 1;
+  min-height: 0;
 }
 
 .dialogActions {
   padding: 20px 24px 24px !important;
   justify-content: flex-end !important;
   gap: 8px !important;
+  flex-shrink: 0;
 }
 
 /* M3 text button: accent-colored text, shape.full */

@@ -10,14 +10,57 @@ import {
   TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
+import ExpandableCard from '../shared/ExpandableCard'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './NotesSection.module.css'
 
 const empty = { title: '', content: '', tags: '' }
+
+const parseTags = (tags) =>
+  tags
+    ? tags.split(',').map((t) => t.trim()).filter(Boolean)
+    : []
+
+function NoteDetails({ note, accent, onClose, onEdit, onDelete }) {
+  const tags = parseTags(note.tags)
+
+  return (
+    <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
+      <IconButton className={styles.detailsClose} aria-label="Закрити" onClick={onClose}>
+        <CloseIcon />
+      </IconButton>
+
+      <div className={styles.detailsHead}>
+        <h3 className={styles.detailsTitle}>{note.title}</h3>
+      </div>
+      {tags.length > 0 && (
+        <div className={styles.detailsTags}>
+          {tags.map((tag) => (
+            <span key={tag} className={styles.detailsTag}>{tag}</span>
+          ))}
+        </div>
+      )}
+
+      {note.content && <p className={styles.detailsContent}>{note.content}</p>}
+
+      <div className={styles.detailsFooter}>
+        <div className={styles.actionBtns}>
+          <IconButton className={styles.actionBtn} aria-label="Редагувати нотатку" onClick={onEdit}>
+            <EditOutlinedIcon fontSize="small" />
+          </IconButton>
+          <IconButton className={styles.actionBtn} aria-label="Видалити нотатку" onClick={onDelete}>
+            <DeleteOutlinedIcon fontSize="small" />
+          </IconButton>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function NotesSection({ worldId, accent }) {
   const qc = useQueryClient()
@@ -63,11 +106,6 @@ export default function NotesSection({ worldId, accent }) {
     mutation.mutateAsync(form).then(() => setOpen(false))
   }
 
-  const parseTags = (tags) =>
-    tags
-      ? tags.split(',').map((t) => t.trim()).filter(Boolean)
-      : []
-
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
@@ -86,33 +124,37 @@ export default function NotesSection({ worldId, accent }) {
 
       <div className={`${sharedStyles.body} ${styles.noteList}`}>
         {notes.map((n) => (
-          <div key={n.id} className={styles.noteItem}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className={styles.noteTitle}>{n.title}</div>
-              {n.content && <div className={styles.noteDesc}>{n.content}</div>}
-              {n.tags && (
-                <div className={styles.noteTags}>
-                  {parseTags(n.tags).map((tag) => (
-                    <span key={tag} className={styles.noteTag}>{tag}</span>
-                  ))}
-                </div>
-              )}
+          <ExpandableCard
+            key={n.id}
+            clickOpens
+            showExpandBtn={false}
+            expandedContent={({ close }) => (
+              <NoteDetails
+                note={n}
+                accent={accent}
+                onClose={close}
+                onEdit={() => openEdit(n)}
+                onDelete={() => {
+                  deleteNote(n)
+                  close()
+                }}
+              />
+            )}
+          >
+            <div className={styles.noteItem}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className={styles.noteTitle}>{n.title}</div>
+                {n.content && <div className={styles.noteDesc}>{n.content}</div>}
+                {n.tags && (
+                  <div className={styles.noteTags}>
+                    {parseTags(n.tags).map((tag) => (
+                      <span key={tag} className={styles.noteTag}>{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className={styles.rowActions}>
-              <IconButton
-                size="small"
-                onClick={() => openEdit(n)}
-              >
-                <EditOutlinedIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => deleteNote(n)}
-              >
-                <DeleteOutlinedIcon fontSize="small" />
-              </IconButton>
-            </div>
-          </div>
+          </ExpandableCard>
         ))}
         {notes.length === 0 && (
           <p className={sharedStyles.emptyMsg}>Нотаток ще немає. Додай першу.</p>
