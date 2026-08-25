@@ -37,10 +37,11 @@ export default function TodosSection({ worldId, accent }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
 
-  const { data: todos = [] } = useQuery({
+  const { data: allTodos = [] } = useQuery({
     queryKey: ['todos', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/todos/`).then((r) => r.data),
   })
+  const todos = allTodos.filter((t) => !t.project)
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing

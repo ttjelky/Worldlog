@@ -142,7 +142,7 @@ export default function NotesSection({ worldId, accent }) {
             )}
           >
             <div className={styles.noteItem}>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className={styles.noteContent}>
                 <div className={styles.noteTitle}>{n.title}</div>
                 {n.content && <div className={styles.noteDesc}>{n.content}</div>}
                 {n.tags && (
@@ -152,6 +152,26 @@ export default function NotesSection({ worldId, accent }) {
                     ))}
                   </div>
                 )}
+              </div>
+              <div className={styles.rowActions}>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openEdit(n)
+                  }}
+                >
+                  <EditOutlinedIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteNote(n)
+                  }}
+                >
+                  <DeleteOutlinedIcon fontSize="small" />
+                </IconButton>
               </div>
             </div>
           </ExpandableCard>

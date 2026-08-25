@@ -1,11 +1,21 @@
 .projectList {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: 1fr;
   gap: 8px;
 }
 
+.projectList > :global(*) {
+  display: flex;
+  flex-direction: column;
+}
+
 .projectItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   padding: 10px 12px;
+  flex: 1;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.12);
   transition: background 0.15s ease;
@@ -15,30 +25,27 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-.projectHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .projectTitle {
+  display: inline;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 22px;
   color: #ffffff;
 }
 
 .statusChip {
   display: inline-flex;
-  font-size: 11px;
+  font-size: 13px;
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
   white-space: nowrap;
+  vertical-align: middle;
+  margin-left: 6px;
 }
 
 .projectDesc {
-  font-size: 13px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.72);
   margin-top: 2px;
 }
@@ -69,6 +76,7 @@
   display: flex;
   gap: 0;
   flex-shrink: 0;
+  margin-top: auto;
 }
 
 .rowActions :global(.MuiIconButton-root) {
@@ -78,4 +86,227 @@
 
 .rowActions :global(.MuiIconButton-root:hover) {
   background: rgba(255, 255, 255, 0.16);
+}
+
+/* ---------- Розгорнутий вигляд проєкту ---------- */
+
+.details {
+  gap: 14px;
+}
+
+.details.details {
+  position: relative;
+  height: auto;
+  min-height: 100%;
+  padding-bottom: 80px;
+}
+
+.detailsClose {
+  position: absolute !important;
+  top: 14px;
+  right: 14px;
+  z-index: 6;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  color: #1d1a22 !important;
+  box-shadow: 0 1px 4px rgba(13, 13, 15, 0.28);
+}
+
+.detailsClose:hover {
+  background: #e9e9e9 !important;
+}
+
+.detailsHead {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 64px;
+}
+
+.detailsTitle {
+  margin: 0;
+  font-weight: 500;
+  font-size: clamp(24px, 4vw, 36px);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #ffffff;
+  overflow-wrap: anywhere;
+}
+
+.detailsTitle .statusChip {
+  font-size: 14px;
+  padding: 3px 10px;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+
+.detailsDesc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: pre-wrap;
+}
+
+.detailsProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detailsProgress .progressBar {
+  margin-top: 0;
+}
+
+.detailsProgress .progressText {
+  margin-top: 0;
+}
+
+.detailsFooter {
+  position: fixed;
+  bottom: 24px;
+  right: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.detailsFooter .actionBtn {
+  color: rgba(255, 255, 255, 0.85) !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 999px !important;
+}
+
+.detailsFooter .actionBtn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* ---------- Завдання ---------- */
+
+.todosSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.todoAdd {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.todoInput {
+  flex: 1;
+}
+
+.todoInput :global(.MuiOutlinedInput-root) {
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+}
+
+.todoInput :global(.MuiOutlinedInput-notchedOutline) {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.todoInput :global(.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline) {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.todoInput :global(.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline) {
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.todoInput :global(.MuiInputBase-input::placeholder) {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.todoAddBtn {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-radius: 12px !important;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.todoAddBtn:hover {
+  background: rgba(255, 255, 255, 0.26) !important;
+}
+
+.todoList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.todoItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  transition:
+    background 0.15s ease,
+    border-radius 0.25s ease-out;
+}
+
+.todoItem:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.todoItemDone {
+  border-radius: 26px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.todoItemDone:hover {
+  background: rgba(0, 0, 0, 0.38);
+}
+
+.todoItemDone .todoTitle {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.todoCheckbox {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.todoCheckbox :global(.Mui-checked .MuiSvgIcon-root) {
+  color: #ffffff !important;
+}
+
+.todoTitle {
+  flex: 1;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  min-width: 0;
+}
+
+.todoDelete {
+  color: rgba(255, 255, 255, 0.6) !important;
+  padding: 4px !important;
+}
+
+.todoDelete:hover {
+  color: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.noTodos {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
 }

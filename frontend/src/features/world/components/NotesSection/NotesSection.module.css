@@ -14,6 +14,11 @@
   transition: background 0.15s ease;
 }
 
+.noteContent {
+  flex: 1;
+  min-width: 0;
+}
+
 .noteItem:hover {
   background: rgba(255, 255, 255, 0.2);
 }
