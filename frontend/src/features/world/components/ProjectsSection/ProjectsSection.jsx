@@ -147,9 +147,12 @@ function ProjectDetails({ project, accent, onClose, onEdit, onDelete }) {
             <div
               key={t.id}
               className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''}`}
+              onClick={() => toggleTodo.mutate({ id: t.id, is_done: t.is_done })}
+              style={{ cursor: 'pointer' }}
             >
               <Checkbox
                 checked={t.is_done}
+                onClick={(e) => e.stopPropagation()}
                 onChange={() => toggleTodo.mutate({ id: t.id, is_done: t.is_done })}
                 size="small"
                 className={styles.todoCheckbox}
@@ -158,7 +161,10 @@ function ProjectDetails({ project, accent, onClose, onEdit, onDelete }) {
               <IconButton
                 size="small"
                 className={styles.todoDelete}
-                onClick={() => deleteTodo.mutate(t.id)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  deleteTodo.mutate(t.id)
+                }}
               >
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
