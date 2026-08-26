@@ -30,7 +30,6 @@ import ProjectsSection from './components/ProjectsSection/ProjectsSection'
 import PlannerSection from './components/PlannerSection/PlannerSection'
 import BookmarksSection from './components/BookmarksSection/BookmarksSection'
 import IdeasSection from './components/IdeasSection/IdeasSection'
-import InspirationSection from './components/InspirationSection/InspirationSection'
 import ProgressSection from './components/ProgressSection/ProgressSection'
 import WikiSection from './components/WikiSection/WikiSection'
 import CardsMenu from './components/CardsMenu/CardsMenu'
@@ -54,7 +53,6 @@ const CARD_META = {
   planner: { row: 4, slotClass: 'slotTypePlanner' },
   bookmarks: { row: 4, slotClass: 'slotTypeBookmarks' },
   ideas: { row: 5, slotClass: 'slotTypeIdeas' },
-  inspiration: { row: 5, slotClass: 'slotTypeInspiration' },
   wiki: { row: 6, slotClass: 'slotTypeWiki' },
   progress: { row: 6, slotClass: 'slotTypeProgress' },
 }
@@ -71,7 +69,6 @@ const DEFAULT_CARDS = [
   { id: 'planner', row: 4 },
   { id: 'bookmarks', row: 4 },
   { id: 'ideas', row: 5 },
-  { id: 'inspiration', row: 5 },
   { id: 'wiki', row: 6 },
   { id: 'progress', row: 6 },
 ]
@@ -417,11 +414,6 @@ const CARD_CONTENT = {
   ideas: (props) => (
     <ExpandableCard>
       <IdeasSection worldId={props.worldId} accent={GREEN} />
-    </ExpandableCard>
-  ),
-  inspiration: (props) => (
-    <ExpandableCard wide>
-      <InspirationSection worldId={props.worldId} accent={RED} />
     </ExpandableCard>
   ),
   wiki: (props) => (

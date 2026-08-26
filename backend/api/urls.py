@@ -6,7 +6,6 @@ from .views import (
     BookmarkViewSet,
     HistoryEventViewSet,
     IdeaViewSet,
-    InspirationImageViewSet,
     LocationScreenshotViewSet,
     LocationViewSet,
     LogoutView,
@@ -57,9 +56,6 @@ router.register(
 )
 router.register(
     r'worlds/(?P<world_id>\d+)/ideas', IdeaViewSet, basename='world-idea'
-)
-router.register(
-    r'worlds/(?P<world_id>\d+)/inspiration', InspirationImageViewSet, basename='world-inspiration'
 )
 router.register(
     r'worlds/(?P<world_id>\d+)/wiki', WikiPageViewSet, basename='world-wiki'

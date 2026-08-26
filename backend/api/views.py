@@ -8,7 +8,6 @@ from .models import (
     Bookmark,
     HistoryEvent,
     Idea,
-    InspirationImage,
     Location,
     LocationScreenshot,
     Membership,
@@ -25,7 +24,6 @@ from .serializers import (
     BookmarkSerializer,
     HistoryEventSerializer,
     IdeaSerializer,
-    InspirationImageSerializer,
     LocationScreenshotSerializer,
     LocationSerializer,
     MembershipSerializer,
@@ -168,12 +166,6 @@ class BookmarkViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 class IdeaViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = Idea.objects.all()
     serializer_class = IdeaSerializer
-
-
-class InspirationImageViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
-    queryset = InspirationImage.objects.all()
-    serializer_class = InspirationImageSerializer
-    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
 
 class WikiPageViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):

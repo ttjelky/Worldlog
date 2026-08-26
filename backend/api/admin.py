@@ -4,7 +4,6 @@ from .models import (
     Bookmark,
     HistoryEvent,
     Idea,
-    InspirationImage,
     Location,
     LocationScreenshot,
     Membership,
@@ -28,6 +27,5 @@ admin.site.register(Note)
 admin.site.register(Project)
 admin.site.register(Bookmark)
 admin.site.register(Idea)
-admin.site.register(InspirationImage)
 admin.site.register(WikiPage)
 admin.site.register(Relationship)

@@ -23,7 +23,6 @@ export default function ProgressSection({ worldId, accent }) {
   const bookmarksCount = useCount(`/worlds/${worldId}/bookmarks/`, worldId, 'bookmarks')
   const ideasCount = useCount(`/worlds/${worldId}/ideas/`, worldId, 'ideas')
   const wikiCount = useCount(`/worlds/${worldId}/wiki/`, worldId, 'wiki')
-  const inspirationCount = useCount(`/worlds/${worldId}/inspiration/`, worldId, 'inspiration')
 
   const players = world?.players_count ?? 0
   const locations = world?.locations_count ?? 0
@@ -41,7 +40,6 @@ export default function ProgressSection({ worldId, accent }) {
     { value: bookmarksCount, label: 'Закладки' },
     { value: ideasCount, label: 'Ідеї' },
     { value: wikiCount, label: 'Wiki-сторінки' },
-    { value: inspirationCount, label: 'Натхнення' },
   ]
 
   return (

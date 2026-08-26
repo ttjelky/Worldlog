@@ -43,19 +43,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='InspirationImage',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', models.ImageField(upload_to='inspiration/')),
-                ('caption', models.CharField(blank=True, max_length=300)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('world', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='inspiration_images', to='api.world')),
-            ],
-            options={
-                'ordering': ['-created_at'],
-            },
-        ),
-        migrations.CreateModel(
             name='Note',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),

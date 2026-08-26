@@ -194,16 +194,6 @@ class Idea(models.Model):
         return self.title
 
 
-class InspirationImage(models.Model):
-    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='inspiration_images')
-    image = models.ImageField(upload_to='inspiration/')
-    caption = models.CharField(max_length=300, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-
 class WikiPage(models.Model):
     class PageType(models.TextChoices):
         LOCATION = 'location', 'Location'

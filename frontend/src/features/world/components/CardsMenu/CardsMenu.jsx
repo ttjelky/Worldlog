@@ -10,7 +10,6 @@ import ProjectsSection from '../ProjectsSection/ProjectsSection'
 import PlannerSection from '../PlannerSection/PlannerSection'
 import BookmarksSection from '../BookmarksSection/BookmarksSection'
 import IdeasSection from '../IdeasSection/IdeasSection'
-import InspirationSection from '../InspirationSection/InspirationSection'
 import ProgressSection from '../ProgressSection/ProgressSection'
 import WikiSection from '../WikiSection/WikiSection'
 import styles from './CardsMenu.module.css'
@@ -89,13 +88,6 @@ const CARD_DEFS = [
     desc: 'Місце для ідей з можливістю перетворити на проєкт',
     accent: GREEN,
     render: (accent) => <IdeasSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'inspiration',
-    name: 'Натхнення',
-    desc: 'Moodboard-картка для зображень-референсів',
-    accent: RED,
-    render: (accent) => <InspirationSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
   },
   {
     id: 'progress',

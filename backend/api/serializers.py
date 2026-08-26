@@ -11,7 +11,6 @@ from .models import (
     Bookmark,
     HistoryEvent,
     Idea,
-    InspirationImage,
     Location,
     LocationScreenshot,
     Membership,
@@ -337,15 +336,6 @@ class IdeaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Idea
         fields = ('id', 'world', 'title', 'content', 'created_at')
-        read_only_fields = ('world',)
-
-
-class InspirationImageSerializer(serializers.ModelSerializer):
-    image = AbsoluteURLImageField()
-
-    class Meta:
-        model = InspirationImage
-        fields = ('id', 'world', 'image', 'caption', 'created_at')
         read_only_fields = ('world',)
 
 
