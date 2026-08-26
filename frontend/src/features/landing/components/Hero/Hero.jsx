@@ -89,7 +89,13 @@ function MockupTodos() {
             >
               {t.done && (
                 <svg viewBox="0 0 16 16" fill="none" className={styles.mockupCheckSvg}>
-                  <path d="M3 8l3.5 3.5L13 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M3 8l3.5 3.5L13 5"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               )}
             </div>
@@ -142,7 +148,8 @@ export default function Hero({ onStart }) {
                 світи
               </h1>
               <p className={styles.heroSubtitle}>
-                Паспорт для твого Minecraft-світу. Гравці, локації, плани та історія — все в одному місці.
+                Паспорт для твого Minecraft-світу. Гравці, локації, плани та історія — все в одному
+                місці.
               </p>
               <div className={styles.heroButtons}>
                 <Button
@@ -181,11 +188,7 @@ export default function Hero({ onStart }) {
             <span className={styles.heroNavLabel}>Перейти до:</span>
             <div className={styles.heroNavPills}>
               {featureLinks.map((f) => (
-                <button
-                  key={f.id}
-                  className={styles.heroNavPill}
-                  onClick={() => scrollTo(f.id)}
-                >
+                <button key={f.id} className={styles.heroNavPill} onClick={() => scrollTo(f.id)}>
                   <f.Icon className={styles.heroNavPillIcon} />
                   <span>{f.label}</span>
                 </button>

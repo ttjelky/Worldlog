@@ -213,7 +213,10 @@ export default function ProjectsSection({ worldId, accent }) {
     undo.deleteItem({
       id: p.id,
       url: `/worlds/${worldId}/projects/${p.id}/`,
-      queryKeys: [['projects', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['projects', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Проєкт «${p.title}» видалено`,
       nouns: ['проєкт', 'проєкти', 'проєктів'],
     })
@@ -236,20 +239,15 @@ export default function ProjectsSection({ worldId, accent }) {
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>
-          Проєкти ({projects.length})
-        </h3>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={openNew}
-        >
+        <h3 className={sharedStyles.sectionTitle}>Проєкти ({projects.length})</h3>
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
           Новий проєкт
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.projectList} ${section.modal ? styles.projectListFull : ''}`}>
+      <div
+        className={`${sharedStyles.body} ${styles.projectList} ${section.modal ? styles.projectListFull : ''}`}
+      >
         {projects.map((p) => {
           const pStatus = calcStatus(p.todos_count ?? 0, p.todos_done ?? 0)
           return (
@@ -275,7 +273,10 @@ export default function ProjectsSection({ worldId, accent }) {
                   {p.title}
                   <span
                     className={styles.statusChip}
-                    style={{ background: statusColors[pStatus] + '33', color: statusColors[pStatus] }}
+                    style={{
+                      background: statusColors[pStatus] + '33',
+                      color: statusColors[pStatus],
+                    }}
                   >
                     {statusLabels[pStatus]}
                   </span>
@@ -284,7 +285,10 @@ export default function ProjectsSection({ worldId, accent }) {
                 {(p.todos_count ?? 0) > 0 ? (
                   <>
                     <div className={styles.progressBar}>
-                      <div className={styles.progressFill} style={{ width: `${p.progress ?? 0}%` }} />
+                      <div
+                        className={styles.progressFill}
+                        style={{ width: `${p.progress ?? 0}%` }}
+                      />
                     </div>
                     <div className={styles.progressText}>
                       {p.todos_done ?? 0} із {p.todos_count ?? 0} завдань ({p.progress ?? 0}%)
@@ -327,7 +331,9 @@ export default function ProjectsSection({ worldId, accent }) {
         onClose={() => !mutation.isPending && setOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати проєкт' : 'Новий проєкт'}</DialogTitle>
@@ -350,10 +356,18 @@ export default function ProjectsSection({ worldId, accent }) {
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>
-            <Button onClick={() => setOpen(false)} className={sharedStyles.dialogBtnCancel} disabled={mutation.isPending}>
+            <Button
+              onClick={() => setOpen(false)}
+              className={sharedStyles.dialogBtnCancel}
+              disabled={mutation.isPending}
+            >
               Скасувати
             </Button>
-            <Button type="submit" className={sharedStyles.dialogBtnSubmit} disabled={mutation.isPending}>
+            <Button
+              type="submit"
+              className={sharedStyles.dialogBtnSubmit}
+              disabled={mutation.isPending}
+            >
               Зберегти
             </Button>
           </DialogActions>

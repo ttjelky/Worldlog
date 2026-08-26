@@ -42,7 +42,10 @@ export default function BookmarksSection({ worldId, accent }) {
     undo.deleteItem({
       id: b.id,
       url: `/worlds/${worldId}/bookmarks/${b.id}/`,
-      queryKeys: [['bookmarks', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['bookmarks', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Закладку «${b.title}» видалено`,
       nouns: ['закладку', 'закладки', 'закладок'],
     })
@@ -65,22 +68,20 @@ export default function BookmarksSection({ worldId, accent }) {
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>
-          Закладки ({bookmarks.length})
-        </h3>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={openNew}
-        >
+        <h3 className={sharedStyles.sectionTitle}>Закладки ({bookmarks.length})</h3>
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
           Нова закладка
         </Button>
       </div>
 
       <div className={`${sharedStyles.body} ${styles.bookmarkList}`}>
         {bookmarks.map((b) => (
-          <div key={b.id} className={styles.bookmarkItem} onClick={() => window.open(b.url, '_blank')} style={{ cursor: 'pointer' }}>
+          <div
+            key={b.id}
+            className={styles.bookmarkItem}
+            onClick={() => window.open(b.url, '_blank')}
+            style={{ cursor: 'pointer' }}
+          >
             <div className={styles.bookmarkIcon}>
               <OpenInNewIcon fontSize="small" />
             </div>
@@ -91,13 +92,19 @@ export default function BookmarksSection({ worldId, accent }) {
             <div className={styles.rowActions}>
               <IconButton
                 size="small"
-                onClick={(e) => { e.stopPropagation(); openEdit(b) }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openEdit(b)
+                }}
               >
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
               <IconButton
                 size="small"
-                onClick={(e) => { e.stopPropagation(); deleteBookmark(b) }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  deleteBookmark(b)
+                }}
               >
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -114,7 +121,9 @@ export default function BookmarksSection({ worldId, accent }) {
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати закладку' : 'Нова закладка'}</DialogTitle>

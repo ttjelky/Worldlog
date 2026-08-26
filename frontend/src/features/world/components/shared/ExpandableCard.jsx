@@ -1,12 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-  useEffect,
-} from 'react'
+import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import OpenInFullIcon from '@mui/icons-material/OpenInFull'
 import styles from './ExpandableCard.module.css'
@@ -72,7 +64,7 @@ export default function ExpandableCard({
       if (e.key === 'Escape') close()
       if (e.key === 'Tab') {
         const focusable = modalRef.current?.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
         )
         if (!focusable?.length) return
         const first = focusable[0]
@@ -144,41 +136,41 @@ export default function ExpandableCard({
         </div>
       </ExpandableCardContext.Provider>
 
-      {expanded && rect &&
+      {expanded &&
+        rect &&
         createPortal(
           <ExpandableCardContext.Provider value={modalCtx}>
-          <div
-            className={`${styles.backdrop} ${closing ? styles.backdropClosing : ''}`}
-            onClick={onBackdropClick}
-            role="dialog"
-            aria-modal="true"
-          >
             <div
-              ref={modalRef}
-              tabIndex={-1}
-              className={`${styles.modal} ${wide ? styles.modalWide : ''} ${
-                closing ? styles.modalClosing : ''
-              } ${fading ? styles.modalFadingOut : ''}`}
-              style={{
-                '--origin-x': `${rect.left}px`,
-                '--origin-y': `${rect.top}px`,
-                '--origin-w': `${rect.width}px`,
-                '--origin-h': `${rect.height}px`,
-              }}
-              onAnimationEnd={onModalAnimEnd}
-              onTransitionEnd={onModalTransitionEnd}
+              className={`${styles.backdrop} ${closing ? styles.backdropClosing : ''}`}
+              onClick={onBackdropClick}
+              role="dialog"
+              aria-modal="true"
             >
-              <div className={styles.modalContent}>
-                {typeof expandedContent === 'function'
-                  ? expandedContent({ close })
-                  : (expandedContent ?? children)}
+              <div
+                ref={modalRef}
+                tabIndex={-1}
+                className={`${styles.modal} ${wide ? styles.modalWide : ''} ${
+                  closing ? styles.modalClosing : ''
+                } ${fading ? styles.modalFadingOut : ''}`}
+                style={{
+                  '--origin-x': `${rect.left}px`,
+                  '--origin-y': `${rect.top}px`,
+                  '--origin-w': `${rect.width}px`,
+                  '--origin-h': `${rect.height}px`,
+                }}
+                onAnimationEnd={onModalAnimEnd}
+                onTransitionEnd={onModalTransitionEnd}
+              >
+                <div className={styles.modalContent}>
+                  {typeof expandedContent === 'function'
+                    ? expandedContent({ close })
+                    : (expandedContent ?? children)}
+                </div>
               </div>
             </div>
-          </div>
-        </ExpandableCardContext.Provider>,
-        document.body
-      )
-      }
+          </ExpandableCardContext.Provider>,
+          document.body,
+        )}
     </>
   )
 }

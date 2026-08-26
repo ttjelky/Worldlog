@@ -136,47 +136,42 @@ export default function CardsMenu({ open, onClose, layout, onToggle }) {
             .sort((a, b) => {
               const aHidden = getHidden(a.id)
               const bHidden = getHidden(b.id)
-              return (aHidden === bHidden) ? 0 : aHidden ? -1 : 1
+              return aHidden === bHidden ? 0 : aHidden ? -1 : 1
             })
             .map((def) => {
-            const hidden = getHidden(def.id)
-            return (
-              <div
-                key={def.id}
-                className={styles.cell + (!hidden ? ' ' + styles.cellAdded : '')}
-              >
-                <div className={styles.preview} style={{ '--accent': def.accent || RED }}>
-                  {def.render ? (
-                    <div className={styles.previewInner}>
-                      {def.render(def.accent)}
-                    </div>
-                  ) : (
-                    def.preview
-                  )}
+              const hidden = getHidden(def.id)
+              return (
+                <div key={def.id} className={styles.cell + (!hidden ? ' ' + styles.cellAdded : '')}>
+                  <div className={styles.preview} style={{ '--accent': def.accent || RED }}>
+                    {def.render ? (
+                      <div className={styles.previewInner}>{def.render(def.accent)}</div>
+                    ) : (
+                      def.preview
+                    )}
+                  </div>
+                  <div className={styles.cellInfo}>
+                    <div className={styles.cellDesc}>{def.desc}</div>
+                    {def.locked ? (
+                      <div className={styles.cellLockedBadge}>Завжди увімкнена</div>
+                    ) : (
+                      <button
+                        className={styles.addBtn + (!hidden ? ' ' + styles.addBtnActive : '')}
+                        onClick={() => onToggle(def.id)}
+                      >
+                        {!hidden ? (
+                          'Прибрати картку'
+                        ) : (
+                          <>
+                            <AddIcon sx={{ fontSize: 16 }} />
+                            Додати картку
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className={styles.cellInfo}>
-                  <div className={styles.cellDesc}>{def.desc}</div>
-                  {def.locked ? (
-                    <div className={styles.cellLockedBadge}>Завжди увімкнена</div>
-                  ) : (
-                    <button
-                      className={styles.addBtn + (!hidden ? ' ' + styles.addBtnActive : '')}
-                      onClick={() => onToggle(def.id)}
-                    >
-                      {!hidden ? (
-                        'Прибрати картку'
-                      ) : (
-                        <>
-                          <AddIcon sx={{ fontSize: 16 }} />
-                          Додати картку
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
         </div>
       </DialogContent>
     </Dialog>

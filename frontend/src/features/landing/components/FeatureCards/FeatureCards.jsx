@@ -116,11 +116,19 @@ function FeatureDemo({ feature }) {
               >
                 {t.done && (
                   <svg viewBox="0 0 16 16" fill="none" className={styles.demoCheckSvg}>
-                    <path d="M3 8l3.5 3.5L13 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M3 8l3.5 3.5L13 5"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </div>
-              <span className={`${styles.demoRowName} ${t.done ? styles.demoDone : ''}`}>{t.text}</span>
+              <span className={`${styles.demoRowName} ${t.done ? styles.demoDone : ''}`}>
+                {t.text}
+              </span>
             </div>
           ))}
         </div>
@@ -136,7 +144,9 @@ function FeatureDemo({ feature }) {
             <div key={i} className={styles.demoRow}>
               <div className={styles.demoTimelineDot} style={{ background: accent }} />
               <div className={styles.demoRowText}>
-                <span className={styles.demoRowDate} style={{ color: accent }}>{e.date}</span>
+                <span className={styles.demoRowDate} style={{ color: accent }}>
+                  {e.date}
+                </span>
                 <span className={styles.demoRowName}>{e.title}</span>
               </div>
             </div>
@@ -154,9 +164,7 @@ export default function FeatureCards() {
     <section className={styles.section} id="features">
       <div className={styles.sectionInner}>
         <h2 className={styles.sectionTitle}>Все для твого світу</h2>
-        <p className={styles.sectionSubtitle}>
-          Чотири розділи, що перетворюють хаос на структуру.
-        </p>
+        <p className={styles.sectionSubtitle}>Чотири розділи, що перетворюють хаос на структуру.</p>
 
         <div className={styles.featuresList}>
           {features.map((f, i) => (

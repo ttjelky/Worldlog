@@ -51,7 +51,10 @@ export default function HistorySection({ worldId, accent }) {
     undo.deleteItem({
       id: h.id,
       url: `/worlds/${worldId}/history/${h.id}/`,
-      queryKeys: [['history', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['history', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Подію «${h.title}» видалено`,
       nouns: ['подія', 'події', 'подій'],
     })
@@ -76,12 +79,7 @@ export default function HistorySection({ worldId, accent }) {
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>Історія світу ({events.length})</h3>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={openNew}
-        >
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
           Нова подія
         </Button>
       </div>
@@ -93,9 +91,7 @@ export default function HistorySection({ worldId, accent }) {
           return (
             <div key={h.id} className={`${styles.event} ${isLast ? styles.eventLast : ''}`}>
               {!isLast && <div className={styles.rail} />}
-              <div className={styles.node}>
-                {i + 1}
-              </div>
+              <div className={styles.node}>{i + 1}</div>
               <div className={styles.eventCard}>
                 <div className={styles.eventHeader}>
                   <div className={styles.eventLeft}>
@@ -131,7 +127,9 @@ export default function HistorySection({ worldId, accent }) {
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати подію' : 'Нова подія'}</DialogTitle>

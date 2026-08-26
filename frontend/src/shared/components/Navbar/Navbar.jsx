@@ -34,7 +34,12 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
   return (
     <nav className={styles.navbar}>
       <div className={styles.navGroup}>
-        <img src={logoSrc} alt="WorldLog" className={styles.logoImg} onClick={() => onNavigate('home')} />
+        <img
+          src={logoSrc}
+          alt="WorldLog"
+          className={styles.logoImg}
+          onClick={() => onNavigate('home')}
+        />
 
         <div className={styles.navLinks} role="tablist" aria-label="Розділи">
           {NAV_ITEMS.map((item) => (

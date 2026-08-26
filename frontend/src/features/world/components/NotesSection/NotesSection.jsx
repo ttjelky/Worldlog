@@ -23,7 +23,10 @@ const empty = { title: '', content: '', tags: '' }
 
 const parseTags = (tags) =>
   tags
-    ? tags.split(',').map((t) => t.trim()).filter(Boolean)
+    ? tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
     : []
 
 function NoteDetails({ note, accent, onClose, onEdit, onDelete }) {
@@ -41,7 +44,9 @@ function NoteDetails({ note, accent, onClose, onEdit, onDelete }) {
       {tags.length > 0 && (
         <div className={styles.detailsTags}>
           {tags.map((tag) => (
-            <span key={tag} className={styles.detailsTag}>{tag}</span>
+            <span key={tag} className={styles.detailsTag}>
+              {tag}
+            </span>
           ))}
         </div>
       )}
@@ -88,7 +93,10 @@ export default function NotesSection({ worldId, accent }) {
     undo.deleteItem({
       id: n.id,
       url: `/worlds/${worldId}/notes/${n.id}/`,
-      queryKeys: [['notes', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['notes', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Нотатку «${n.title}» видалено`,
       nouns: ['нотатку', 'нотатки', 'нотаток'],
     })
@@ -116,15 +124,8 @@ export default function NotesSection({ worldId, accent }) {
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>
-          Нотатки ({notes.length})
-        </h3>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={openNew}
-        >
+        <h3 className={sharedStyles.sectionTitle}>Нотатки ({notes.length})</h3>
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
           Нова нотатка
         </Button>
       </div>
@@ -144,7 +145,9 @@ export default function NotesSection({ worldId, accent }) {
         </div>
       )}
 
-      <div className={`${sharedStyles.body} ${styles.noteList} ${section.modal ? styles.noteListFull : ''}`}>
+      <div
+        className={`${sharedStyles.body} ${styles.noteList} ${section.modal ? styles.noteListFull : ''}`}
+      >
         {filteredNotes.map((n) => (
           <ExpandableCard
             key={n.id}
@@ -170,7 +173,9 @@ export default function NotesSection({ worldId, accent }) {
                 {n.tags && (
                   <div className={styles.noteTags}>
                     {parseTags(n.tags).map((tag) => (
-                      <span key={tag} className={styles.noteTag}>{tag}</span>
+                      <span key={tag} className={styles.noteTag}>
+                        {tag}
+                      </span>
                     ))}
                   </div>
                 )}
@@ -208,7 +213,9 @@ export default function NotesSection({ worldId, accent }) {
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати нотатку' : 'Нова нотатка'}</DialogTitle>

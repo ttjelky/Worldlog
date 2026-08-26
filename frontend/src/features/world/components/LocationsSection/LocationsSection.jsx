@@ -181,7 +181,10 @@ export default function LocationsSection({ worldId, accent }) {
     undo.deleteItem({
       id: l.id,
       url: `/worlds/${worldId}/locations/${l.id}/`,
-      queryKeys: [['locations', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['locations', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Локацію «${l.name}» видалено`,
       nouns: ['локація', 'локації', 'локацій'],
     })
@@ -255,12 +258,7 @@ export default function LocationsSection({ worldId, accent }) {
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>Локації ({locations.length})</h3>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={openNew}
-        >
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
           Нова локація
         </Button>
       </div>
@@ -302,7 +300,9 @@ export default function LocationsSection({ worldId, accent }) {
                 <div className={styles.locTopRow}>
                   <div className={styles.locName}>{l.name}</div>
                   <span className={styles.catPill}>
-                    {legacyCategoryLabels[l.category] || categoryLabels[l.category] || categoryLabels.other}
+                    {legacyCategoryLabels[l.category] ||
+                      categoryLabels[l.category] ||
+                      categoryLabels.other}
                   </span>
                 </div>
                 <div className={styles.coords}>
@@ -339,11 +339,7 @@ export default function LocationsSection({ worldId, accent }) {
           <p className={sharedStyles.emptyMsg}>Світ ще не досліджений. Додай першу локацію.</p>
         )}
         {!section.modal && locations.length > 2 && (
-          <button
-            type="button"
-            className={styles.showAllBtn}
-            onClick={section.open}
-          >
+          <button type="button" className={styles.showAllBtn} onClick={section.open}>
             Показати всі локації ({locations.length})
           </button>
         )}
@@ -354,7 +350,9 @@ export default function LocationsSection({ worldId, accent }) {
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати локацію' : 'Нова локація'}</DialogTitle>

@@ -134,94 +134,94 @@ export default function MyWorlds() {
         ) : (
           <>
             <section className={styles.hero}>
-          <p className={styles.heroGreeting}>Керуйте світами</p>
-          <h1 className={styles.heroTitle}>Мої світи</h1>
-        </section>
+              <p className={styles.heroGreeting}>Керуйте світами</p>
+              <h1 className={styles.heroTitle}>Мої світи</h1>
+            </section>
 
-        <div className={styles.toolbar}>
-          <TextField
-            className={styles.searchField}
-            label="Пошук"
-            placeholder="Назва, опис або сід…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon className={styles.controlIcon} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <FormControl className={styles.control}>
-            <TextField
-              select
-              label="Сортування"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              {SORT_OPTIONS.map((o) => (
-                <MenuItem key={o.value} value={o.value}>
-                  {o.label}
-                </MenuItem>
-              ))}
-            </TextField>
-          </FormControl>
-          <FormControl className={styles.control}>
-            <TextField
-              select
-              label="Фільтр"
-              value={filterBy}
-              onChange={(e) => setFilterBy(e.target.value)}
-            >
-              {FILTER_OPTIONS.map((o) => (
-                <MenuItem key={o.value} value={o.value}>
-                  {o.label}
-                </MenuItem>
-              ))}
-            </TextField>
-          </FormControl>
-        </div>
-
-        <div className={styles.statsBar}>
-          <span className={styles.statsText}>
-            {filtered.length}{' '}
-            {filtered.length === 1 ? 'світ' : filtered.length < 5 ? 'світи' : 'світів'}
-          </span>
-          <div className={styles.statsRight}>
-            <span className={styles.statsText}>{totalProgress}% задач виконано</span>
-            <div className={styles.progressTrack}>
-              <div className={styles.progressFill} style={{ width: `${totalProgress}%` }} />
+            <div className={styles.toolbar}>
+              <TextField
+                className={styles.searchField}
+                label="Пошук"
+                placeholder="Назва, опис або сід…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon className={styles.controlIcon} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+              <FormControl className={styles.control}>
+                <TextField
+                  select
+                  label="Сортування"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <MenuItem key={o.value} value={o.value}>
+                      {o.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </FormControl>
+              <FormControl className={styles.control}>
+                <TextField
+                  select
+                  label="Фільтр"
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value)}
+                >
+                  {FILTER_OPTIONS.map((o) => (
+                    <MenuItem key={o.value} value={o.value}>
+                      {o.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </FormControl>
             </div>
-          </div>
-        </div>
 
-        {isLoading && <LinearProgress className={styles.loader} />}
+            <div className={styles.statsBar}>
+              <span className={styles.statsText}>
+                {filtered.length}{' '}
+                {filtered.length === 1 ? 'світ' : filtered.length < 5 ? 'світи' : 'світів'}
+              </span>
+              <div className={styles.statsRight}>
+                <span className={styles.statsText}>{totalProgress}% задач виконано</span>
+                <div className={styles.progressTrack}>
+                  <div className={styles.progressFill} style={{ width: `${totalProgress}%` }} />
+                </div>
+              </div>
+            </div>
 
-        {!isLoading && filtered.length === 0 && (
-          <p className={styles.emptyMsg}>
-            {worlds.length === 0
-              ? 'Ще немає жодного світу. Створи перший!'
-              : 'Нічого не знайдено. Спробуй змінити пошук або фільтр.'}
-          </p>
-        )}
+            {isLoading && <LinearProgress className={styles.loader} />}
 
-        <div className={styles.grid}>
-          {filtered.map((w, i) => (
-            <WorldCard key={w.id} world={w} index={i} />
-          ))}
+            {!isLoading && filtered.length === 0 && (
+              <p className={styles.emptyMsg}>
+                {worlds.length === 0
+                  ? 'Ще немає жодного світу. Створи перший!'
+                  : 'Нічого не знайдено. Спробуй змінити пошук або фільтр.'}
+              </p>
+            )}
 
-          <Button
-            className={`${styles.worldCard} ${styles.addCard}`}
-            onClick={() => setOpen(true)}
-            sx={{ '& .MuiTouchRipple-ripple': { color: 'rgba(255, 255, 255, 0.3)' } }}
-          >
-            <AddIcon className={styles.addIcon} />
-            <span className={styles.addText}>Новий світ</span>
-          </Button>
-        </div>
+            <div className={styles.grid}>
+              {filtered.map((w, i) => (
+                <WorldCard key={w.id} world={w} index={i} />
+              ))}
+
+              <Button
+                className={`${styles.worldCard} ${styles.addCard}`}
+                onClick={() => setOpen(true)}
+                sx={{ '& .MuiTouchRipple-ripple': { color: 'rgba(255, 255, 255, 0.3)' } }}
+              >
+                <AddIcon className={styles.addIcon} />
+                <span className={styles.addText}>Новий світ</span>
+              </Button>
+            </div>
           </>
         )}
       </div>

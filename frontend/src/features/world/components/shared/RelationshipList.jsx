@@ -118,16 +118,12 @@ export default function RelationshipList({ worldId, sourceType, sourceId }) {
       <div className={styles.relList}>
         {allRelationships.map((rel) => (
           <div key={rel.id} className={styles.relItem}>
-            <span className={styles.relDirection}>
-              {rel.direction === 'outgoing' ? '→' : '←'}
-            </span>
+            <span className={styles.relDirection}>{rel.direction === 'outgoing' ? '→' : '←'}</span>
             <div className={styles.relInfo}>
               <span className={styles.relType}>
                 {targetTypeLabels[rel.target_type] || rel.target_type}
               </span>
-              <span className={styles.relName}>
-                {rel.target_name || `#${rel.target_id}`}
-              </span>
+              <span className={styles.relName}>{rel.target_name || `#${rel.target_id}`}</span>
               {rel.label && <span className={styles.relLabel}>{rel.label}</span>}
             </div>
             <IconButton

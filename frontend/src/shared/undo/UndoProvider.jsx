@@ -32,9 +32,7 @@ function buildToastText(entries) {
     group.count += 1
     groups.set(key, group)
   })
-  const parts = [...groups.values()].map(
-    (g) => `x${g.count} ${plural(g.count, g.nouns)}`,
-  )
+  const parts = [...groups.values()].map((g) => `x${g.count} ${plural(g.count, g.nouns)}`)
   return `${parts.join(', ')} видалено`
 }
 

@@ -43,20 +43,20 @@ const GREEN = '#247A57'
 const MIN_SLOT_WIDTH = 340
 
 const CARD_META = {
-  info:        { row: 0, slotClass: 'slotTypeInfo' },
-  cover:       { row: 0, slotClass: 'slotTypeCover' },
-  players:     { row: 1, slotClass: 'slotTypePlayers' },
-  locations:   { row: 1, slotClass: 'slotTypeLocations' },
-  todos:       { row: 2, slotClass: 'slotTypeTodos' },
-  history:     { row: 2, slotClass: 'slotTypeHistory' },
-  notes:       { row: 3, slotClass: 'slotTypeNotes' },
-  projects:    { row: 3, slotClass: 'slotTypeProjects' },
-  planner:     { row: 4, slotClass: 'slotTypePlanner' },
-  bookmarks:   { row: 4, slotClass: 'slotTypeBookmarks' },
-  ideas:       { row: 5, slotClass: 'slotTypeIdeas' },
+  info: { row: 0, slotClass: 'slotTypeInfo' },
+  cover: { row: 0, slotClass: 'slotTypeCover' },
+  players: { row: 1, slotClass: 'slotTypePlayers' },
+  locations: { row: 1, slotClass: 'slotTypeLocations' },
+  todos: { row: 2, slotClass: 'slotTypeTodos' },
+  history: { row: 2, slotClass: 'slotTypeHistory' },
+  notes: { row: 3, slotClass: 'slotTypeNotes' },
+  projects: { row: 3, slotClass: 'slotTypeProjects' },
+  planner: { row: 4, slotClass: 'slotTypePlanner' },
+  bookmarks: { row: 4, slotClass: 'slotTypeBookmarks' },
+  ideas: { row: 5, slotClass: 'slotTypeIdeas' },
   inspiration: { row: 5, slotClass: 'slotTypeInspiration' },
-  wiki:        { row: 6, slotClass: 'slotTypeWiki' },
-  progress:    { row: 6, slotClass: 'slotTypeProgress' },
+  wiki: { row: 6, slotClass: 'slotTypeWiki' },
+  progress: { row: 6, slotClass: 'slotTypeProgress' },
 }
 
 const DEFAULT_CARDS = [
@@ -184,9 +184,13 @@ function CoverImageCard({ world, worldId }) {
 
   const deleteCover = useMutation({
     mutationFn: () =>
-      api.patch(`/worlds/${worldId}/`, { cover_image: '' }, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }),
+      api.patch(
+        `/worlds/${worldId}/`,
+        { cover_image: '' },
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        },
+      ),
     onSuccess: () => qc.invalidateQueries(['world', String(worldId)]),
   })
 
@@ -199,21 +203,46 @@ function CoverImageCard({ world, worldId }) {
     <div className={`${sharedStyles.card} ${styles.coverCard}`} style={{ '--accent': '#6b7280' }}>
       {world.cover_image_url ? (
         <>
-          <input ref={inputRef} type="file" accept="image/*" className={styles.coverFileInput} onChange={handleFile} />
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className={styles.coverFileInput}
+            onChange={handleFile}
+          />
           <img className={styles.coverImgFull} src={world.cover_image_url} alt={world.name} />
           <div className={styles.coverOverlay}>
-            <IconButton className={styles.coverAction} onClick={() => inputRef.current?.click()} disabled={uploadCover.isPending}>
+            <IconButton
+              className={styles.coverAction}
+              onClick={() => inputRef.current?.click()}
+              disabled={uploadCover.isPending}
+            >
               <EditOutlinedIcon fontSize="small" />
             </IconButton>
-            <IconButton className={styles.coverAction} onClick={() => deleteCover.mutate()} disabled={deleteCover.isPending}>
+            <IconButton
+              className={styles.coverAction}
+              onClick={() => deleteCover.mutate()}
+              disabled={deleteCover.isPending}
+            >
               <DeleteOutlinedIcon fontSize="small" />
             </IconButton>
           </div>
         </>
       ) : (
         <>
-          <input ref={inputRef} type="file" accept="image/*" className={styles.coverFileInput} onChange={handleFile} />
-          <button type="button" className={styles.coverPlaceholder} onClick={() => inputRef.current?.click()} disabled={uploadCover.isPending}>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className={styles.coverFileInput}
+            onChange={handleFile}
+          />
+          <button
+            type="button"
+            className={styles.coverPlaceholder}
+            onClick={() => inputRef.current?.click()}
+            disabled={uploadCover.isPending}
+          >
             {uploadCover.isPending ? (
               <LinearProgress className={styles.coverProgress} />
             ) : (
@@ -339,24 +368,72 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
 }
 
 const CARD_CONTENT = {
-  info: (props) => <ExpandableCard><InfoCard world={props.world} /></ExpandableCard>,
+  info: (props) => (
+    <ExpandableCard>
+      <InfoCard world={props.world} />
+    </ExpandableCard>
+  ),
   cover: (props) => <CoverImageCard world={props.world} worldId={props.worldId} />,
-  players: (props) => <ExpandableCard><PlayersSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
+  players: (props) => (
+    <ExpandableCard>
+      <PlayersSection worldId={props.worldId} accent={GREEN} />
+    </ExpandableCard>
+  ),
   locations: (props) => (
     <ExpandableCard wide>
       <LocationsSection worldId={props.worldId} accent={RED} />
     </ExpandableCard>
   ),
-  todos: (props) => <ExpandableCard><TodosSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
-  history: (props) => <ExpandableCard><HistorySection worldId={props.worldId} accent={RED} /></ExpandableCard>,
-  notes: (props) => <ExpandableCard><NotesSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
-  projects: (props) => <ExpandableCard><ProjectsSection worldId={props.worldId} accent={RED} /></ExpandableCard>,
-  planner: (props) => <ExpandableCard><PlannerSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
-  bookmarks: (props) => <ExpandableCard><BookmarksSection worldId={props.worldId} accent={RED} /></ExpandableCard>,
-  ideas: (props) => <ExpandableCard><IdeasSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
-  inspiration: (props) => <ExpandableCard wide><InspirationSection worldId={props.worldId} accent={RED} /></ExpandableCard>,
-  wiki: (props) => <ExpandableCard wide><WikiSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
-  progress: (props) => <ExpandableCard><ProgressSection worldId={props.worldId} accent={GREEN} /></ExpandableCard>,
+  todos: (props) => (
+    <ExpandableCard>
+      <TodosSection worldId={props.worldId} accent={GREEN} />
+    </ExpandableCard>
+  ),
+  history: (props) => (
+    <ExpandableCard>
+      <HistorySection worldId={props.worldId} accent={RED} />
+    </ExpandableCard>
+  ),
+  notes: (props) => (
+    <ExpandableCard>
+      <NotesSection worldId={props.worldId} accent={GREEN} />
+    </ExpandableCard>
+  ),
+  projects: (props) => (
+    <ExpandableCard>
+      <ProjectsSection worldId={props.worldId} accent={RED} />
+    </ExpandableCard>
+  ),
+  planner: (props) => (
+    <ExpandableCard>
+      <PlannerSection worldId={props.worldId} accent={GREEN} />
+    </ExpandableCard>
+  ),
+  bookmarks: (props) => (
+    <ExpandableCard>
+      <BookmarksSection worldId={props.worldId} accent={RED} />
+    </ExpandableCard>
+  ),
+  ideas: (props) => (
+    <ExpandableCard>
+      <IdeasSection worldId={props.worldId} accent={GREEN} />
+    </ExpandableCard>
+  ),
+  inspiration: (props) => (
+    <ExpandableCard wide>
+      <InspirationSection worldId={props.worldId} accent={RED} />
+    </ExpandableCard>
+  ),
+  wiki: (props) => (
+    <ExpandableCard wide>
+      <WikiSection worldId={props.worldId} accent={GREEN} />
+    </ExpandableCard>
+  ),
+  progress: (props) => (
+    <ExpandableCard>
+      <ProgressSection worldId={props.worldId} accent={GREEN} />
+    </ExpandableCard>
+  ),
 }
 
 export default function WorldDetail({ onBack }) {
@@ -371,7 +448,12 @@ export default function WorldDetail({ onBack }) {
   const [cardsMenuOpen, setCardsMenuOpen] = useState(false)
   const [layout, setLayout] = useState(() => {
     const saved = loadLayout(worldId)
-    return mergeWithDefaults(saved) || { cards: DEFAULT_CARDS.map((c) => ({ ...c, hidden: false })), flexes: {} }
+    return (
+      mergeWithDefaults(saved) || {
+        cards: DEFAULT_CARDS.map((c) => ({ ...c, hidden: false })),
+        flexes: {},
+      }
+    )
   })
   const [drag, setDrag] = useState(null)
   const [resize, setResize] = useState(null)
@@ -385,17 +467,12 @@ export default function WorldDetail({ onBack }) {
   }, [layout, worldId])
 
   const { cards, flexes } = layout
-  const getRowCards = useCallback(
-    (row) => cards.filter((c) => c.row === row && !c.hidden),
-    [cards],
-  )
+  const getRowCards = useCallback((row) => cards.filter((c) => c.row === row && !c.hidden), [cards])
 
   const onToggleCard = (cardId) => {
     setLayout((prev) => ({
       ...prev,
-      cards: prev.cards.map((c) =>
-        c.id === cardId ? { ...c, hidden: !c.hidden } : c,
-      ),
+      cards: prev.cards.map((c) => (c.id === cardId ? { ...c, hidden: !c.hidden } : c)),
     }))
   }
 
@@ -636,7 +713,9 @@ export default function WorldDetail({ onBack }) {
   }
 
   return (
-    <div className={`${styles.page} ${editMode ? styles.editMode : ''} ${resize ? styles.resizing : ''}`}>
+    <div
+      className={`${styles.page} ${editMode ? styles.editMode : ''} ${resize ? styles.resizing : ''}`}
+    >
       <div className={styles.topBar}>
         <Button className={backBtnStyles.backBtn} onClick={onBack}>
           <ArrowBackIcon fontSize="small" />
@@ -673,27 +752,13 @@ export default function WorldDetail({ onBack }) {
       </div>
 
       <div className={styles.board}>
-        <div className={`${styles.row} ${styles.rowTop}`}>
-          {renderRow(getRowCards(0))}
-        </div>
-        <div className={`${styles.row} ${styles.rowBottom}`}>
-          {renderRow(getRowCards(1))}
-        </div>
-        <div className={styles.row}>
-          {renderRow(getRowCards(2))}
-        </div>
-        <div className={styles.row}>
-          {renderRow(getRowCards(3))}
-        </div>
-        <div className={styles.row}>
-          {renderRow(getRowCards(4))}
-        </div>
-        <div className={styles.row}>
-          {renderRow(getRowCards(5))}
-        </div>
-        <div className={styles.row}>
-          {renderRow(getRowCards(6))}
-        </div>
+        <div className={`${styles.row} ${styles.rowTop}`}>{renderRow(getRowCards(0))}</div>
+        <div className={`${styles.row} ${styles.rowBottom}`}>{renderRow(getRowCards(1))}</div>
+        <div className={styles.row}>{renderRow(getRowCards(2))}</div>
+        <div className={styles.row}>{renderRow(getRowCards(3))}</div>
+        <div className={styles.row}>{renderRow(getRowCards(4))}</div>
+        <div className={styles.row}>{renderRow(getRowCards(5))}</div>
+        <div className={styles.row}>{renderRow(getRowCards(6))}</div>
       </div>
 
       <WorldEditDialog

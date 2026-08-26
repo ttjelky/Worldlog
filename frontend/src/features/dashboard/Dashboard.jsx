@@ -19,13 +19,20 @@ import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
 import styles from './Dashboard.module.css'
 
-export const emptyWorld = { name: '', description: '', seed: '', start_date: '', cover_image: null, is_public: false }
+export const emptyWorld = {
+  name: '',
+  description: '',
+  seed: '',
+  start_date: '',
+  cover_image: null,
+  is_public: false,
+}
 
 export const PLACEHOLDER_COPY = {
-  overview: 'Тут з\'явиться загальна статистика по всіх твоїх світах.',
-  worlds: 'Тут з\'явиться повний перелік світів з фільтрами та сортуванням.',
-  friends: 'Тут з\'являться світи та профілі твоїх друзів.',
-  search: 'Тут з\'явиться пошук по світах, персонажах і подіях.',
+  overview: "Тут з'явиться загальна статистика по всіх твоїх світах.",
+  worlds: "Тут з'явиться повний перелік світів з фільтрами та сортуванням.",
+  friends: "Тут з'являться світи та профілі твоїх друзів.",
+  search: "Тут з'явиться пошук по світах, персонажах і подіях.",
 }
 
 function useWorldForm(initial) {
@@ -183,16 +190,12 @@ function WorldCard({ world, index }) {
     >
       <div className={styles.cardTop}>
         <span className={styles.cardNumber}>{String(index + 1).padStart(2, '0')}</span>
-        <span className={styles.cardBadge}>
-          {world.is_public ? 'Публічний' : 'Приватний'}
-        </span>
+        <span className={styles.cardBadge}>{world.is_public ? 'Публічний' : 'Приватний'}</span>
       </div>
       <h3 className={styles.cardTitle}>{world.name}</h3>
       <div className={styles.cardFooter}>
         <div className={styles.cardOwner}>
-          <div className={styles.ownerAvatar}>
-            {(world.owner_username || '?')[0].toUpperCase()}
-          </div>
+          <div className={styles.ownerAvatar}>{(world.owner_username || '?')[0].toUpperCase()}</div>
           <span className={styles.ownerName}>{world.owner_username}</span>
         </div>
         <div className={styles.cardProgressTrack}>
@@ -289,7 +292,8 @@ export default function Dashboard() {
 
             <div className={styles.statsBar}>
               <span className={styles.statsText}>
-                {worlds.length} {worlds.length === 1 ? 'світ' : worlds.length < 5 ? 'світи' : 'світів'}
+                {worlds.length}{' '}
+                {worlds.length === 1 ? 'світ' : worlds.length < 5 ? 'світи' : 'світів'}
               </span>
               <div className={styles.statsRight}>
                 <span className={styles.statsText}>{totalProgress}% задач виконано</span>

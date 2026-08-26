@@ -40,7 +40,10 @@ export default function PlayersSection({ worldId, accent }) {
     undo.deleteItem({
       id: p.id,
       url: `/worlds/${worldId}/players/${p.id}/`,
-      queryKeys: [['players', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['players', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Гравця «${p.nickname}» видалено`,
       nouns: ['гравець', 'гравці', 'гравців'],
     })
@@ -68,12 +71,7 @@ export default function PlayersSection({ worldId, accent }) {
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>Гравці ({players.length})</h3>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={openNew}
-        >
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
           Додати
         </Button>
       </div>
@@ -110,7 +108,9 @@ export default function PlayersSection({ worldId, accent }) {
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати гравця' : 'Новий гравець'}</DialogTitle>

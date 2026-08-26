@@ -27,8 +27,7 @@ export default function InspirationSection({ worldId, accent }) {
 
   const { data: images = [] } = useQuery({
     queryKey: ['inspiration', String(worldId)],
-    queryFn: () =>
-      api.get(`/worlds/${worldId}/inspiration/`).then((r) => r.data),
+    queryFn: () => api.get(`/worlds/${worldId}/inspiration/`).then((r) => r.data),
   })
 
   const uploadMutation = useMutation({
@@ -87,9 +86,7 @@ export default function InspirationSection({ worldId, accent }) {
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>
-          Натхнення ({images.length})
-        </h3>
+        <h3 className={sharedStyles.sectionTitle}>Натхнення ({images.length})</h3>
         <Button
           variant="contained"
           size="small"
@@ -100,13 +97,7 @@ export default function InspirationSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={handleFileSelect}
-      />
+      <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleFileSelect} />
 
       <div className={`${sharedStyles.body} ${styles.grid}`}>
         {images.map((img) => (
@@ -137,7 +128,9 @@ export default function InspirationSection({ worldId, accent }) {
         onClose={handleDialogClose}
         maxWidth="xs"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <DialogTitle>Нове зображення</DialogTitle>
         <DialogContent>

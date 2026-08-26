@@ -42,7 +42,10 @@ export default function IdeasSection({ worldId, accent }) {
     undo.deleteItem({
       id: t.id,
       url: `/worlds/${worldId}/ideas/${t.id}/`,
-      queryKeys: [['ideas', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['ideas', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Ідею «${t.title}» видалено`,
       nouns: ['ідея', 'ідеї', 'ідей'],
     })
@@ -81,15 +84,8 @@ export default function IdeasSection({ worldId, accent }) {
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>
-          Ідеї ({ideas.length})
-        </h3>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={openNew}
-        >
+        <h3 className={sharedStyles.sectionTitle}>Ідеї ({ideas.length})</h3>
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
           Нова ідея
         </Button>
       </div>
@@ -111,10 +107,7 @@ export default function IdeasSection({ worldId, accent }) {
                 </IconButton>
               </div>
             </div>
-            <button
-              className={styles.convertBtn}
-              onClick={() => convertMutation.mutate(t)}
-            >
+            <button className={styles.convertBtn} onClick={() => convertMutation.mutate(t)}>
               <AutoAwesomeIcon sx={{ fontSize: 14, mr: 0.5 }} />
               Перетворити на проєкт
             </button>
@@ -130,7 +123,9 @@ export default function IdeasSection({ worldId, accent }) {
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати ідею' : 'Нова ідея'}</DialogTitle>

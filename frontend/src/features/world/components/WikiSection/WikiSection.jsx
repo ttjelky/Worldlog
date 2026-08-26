@@ -107,7 +107,10 @@ export default function WikiSection({ worldId, accent }) {
     undo.deleteItem({
       id: p.id,
       url: `/worlds/${worldId}/wiki/${p.id}/`,
-      queryKeys: [['wiki', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['wiki', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Сторінку «${p.title}» видалено`,
       nouns: ['сторінку', 'сторінки', 'сторінок'],
     })
@@ -121,8 +124,7 @@ export default function WikiSection({ worldId, accent }) {
       const q = search.toLowerCase()
       result = result.filter(
         (p) =>
-          p.title.toLowerCase().includes(q) ||
-          (p.content && p.content.toLowerCase().includes(q)),
+          p.title.toLowerCase().includes(q) || (p.content && p.content.toLowerCase().includes(q)),
       )
     }
     return result
@@ -192,9 +194,7 @@ export default function WikiSection({ worldId, accent }) {
               </span>
             )}
           </div>
-          <div className={styles.pageDetailContent}>
-            {renderContent(selectedPage.content)}
-          </div>
+          <div className={styles.pageDetailContent}>{renderContent(selectedPage.content)}</div>
           <RelationshipList worldId={worldId} sourceType="wiki_page" sourceId={selectedPage.id} />
         </div>
 
@@ -208,9 +208,7 @@ export default function WikiSection({ worldId, accent }) {
           }}
         >
           <form onSubmit={submit}>
-            <DialogTitle>
-              {editingPage ? 'Редагувати сторінку' : 'Нова сторінка'}
-            </DialogTitle>
+            <DialogTitle>{editingPage ? 'Редагувати сторінку' : 'Нова сторінка'}</DialogTitle>
             <DialogContent>
               <div className={sharedStyles.formFields}>
                 <TextField
@@ -242,10 +240,7 @@ export default function WikiSection({ worldId, accent }) {
               </div>
             </DialogContent>
             <DialogActions className={sharedStyles.dialogActions}>
-              <Button
-                onClick={() => setDialogOpen(false)}
-                className={sharedStyles.dialogBtnCancel}
-              >
+              <Button onClick={() => setDialogOpen(false)} className={sharedStyles.dialogBtnCancel}>
                 Скасувати
               </Button>
               <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
@@ -307,9 +302,7 @@ export default function WikiSection({ worldId, accent }) {
                 </span>
               )}
             </div>
-            <div className={styles.pageDetailContent}>
-              {renderContent(selectedPage.content)}
-            </div>
+            <div className={styles.pageDetailContent}>{renderContent(selectedPage.content)}</div>
             <RelationshipList worldId={worldId} sourceType="wiki_page" sourceId={selectedPage.id} />
           </div>
         ) : (
@@ -348,18 +341,12 @@ export default function WikiSection({ worldId, accent }) {
 
             <div className={styles.pagesGrid}>
               {visiblePages.map((page) => (
-                <div
-                  key={page.id}
-                  className={styles.pageCard}
-                  onClick={() => openPage(page)}
-                >
+                <div key={page.id} className={styles.pageCard} onClick={() => openPage(page)}>
                   <div className={styles.pageCardTitle}>{page.title}</div>
                   <span className={styles.pageCardType}>
                     {PAGE_TYPE_LABELS[page.page_type] || page.page_type}
                   </span>
-                  {page.content && (
-                    <div className={styles.pageCardSnippet}>{page.content}</div>
-                  )}
+                  {page.content && <div className={styles.pageCardSnippet}>{page.content}</div>}
                 </div>
               ))}
               {filteredPages.length === 0 && (
@@ -390,9 +377,7 @@ export default function WikiSection({ worldId, accent }) {
         }}
       >
         <form onSubmit={submit}>
-          <DialogTitle>
-            {editingPage ? 'Редагувати сторінку' : 'Нова сторінка'}
-          </DialogTitle>
+          <DialogTitle>{editingPage ? 'Редагувати сторінку' : 'Нова сторінка'}</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
               <TextField
@@ -424,10 +409,7 @@ export default function WikiSection({ worldId, accent }) {
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>
-            <Button
-              onClick={() => setDialogOpen(false)}
-              className={sharedStyles.dialogBtnCancel}
-            >
+            <Button onClick={() => setDialogOpen(false)} className={sharedStyles.dialogBtnCancel}>
               Скасувати
             </Button>
             <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
