@@ -11,6 +11,8 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import api from '../../../../api'
@@ -25,14 +27,22 @@ const priorities = {
   high: ['#FFB199', 'Високий'],
   urgent: ['#FF8A80', 'Терміновий'],
 }
-const empty = { title: '', description: '', priority: 'medium' }
+const toDateStr = (d) => d.toISOString().slice(0, 10)
+const todayStr = () => toDateStr(new Date())
+const tomorrowStr = () => {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return toDateStr(d)
+}
+const empty = () => ({ title: '', description: '', priority: 'medium', due_date: todayStr() })
 
 export default function PlannerSection({ worldId, accent }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState(empty)
+  const [form, setForm] = useState(empty())
+  const [filter, setFilter] = useState(null)
 
   const { data: todos = [] } = useQuery({
     queryKey: ['todos', String(worldId)],
@@ -40,12 +50,13 @@ export default function PlannerSection({ worldId, accent }) {
   })
 
   const planned = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return todos
-      .filter((t) => t.due_date && !t.is_done)
+    const items = todos
+      .filter((t) => t.due_date)
       .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
-  }, [todos])
+    if (filter === 'today') return items.filter((t) => t.due_date === todayStr())
+    if (filter === 'tomorrow') return items.filter((t) => t.due_date === tomorrowStr())
+    return items
+  }, [todos, filter])
 
   const overdue = (t) => {
     if (!t.due_date || t.is_done) return false
@@ -80,14 +91,21 @@ export default function PlannerSection({ worldId, accent }) {
     undo.deleteItem({
       id: t.id,
       url: `/worlds/${worldId}/todos/${t.id}/`,
-      queryKeys: [['todos', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['todos', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Завдання «${t.title}» видалено`,
       nouns: ['завдання', 'завдання', 'завдань'],
     })
 
+  const deleteDone = () => {
+    planned.filter((t) => t.is_done).forEach(deleteTodo)
+  }
+
   const openNew = () => {
     setEditing(null)
-    setForm(empty)
+    setForm(empty())
     setOpen(true)
   }
 
@@ -104,24 +122,48 @@ export default function PlannerSection({ worldId, accent }) {
     mutation.mutateAsync(payload).then(() => setOpen(false))
   }
 
+  const done = planned.filter((t) => t.is_done).length
+
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>
-          Планер ({planned.length})
+          Планер ({done}/{planned.length})
         </h3>
-        <Button
-          variant="contained"
-          size="small"
-          onClick={openNew}
-        >
-          + Додати
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
+          Нове завдання
         </Button>
       </div>
 
+      <div className={styles.filters}>
+        {[
+          [null, 'Усі'],
+          ['today', 'Сьогодні'],
+          ['tomorrow', 'Завтра'],
+        ].map(([value, label]) => (
+          <button
+            key={label}
+            type="button"
+            className={`${styles.filterBtn} ${filter === value ? styles.filterBtnActive : ''}`}
+            onClick={() => setFilter(value)}
+          >
+            {label}
+          </button>
+        ))}
+        {done > 0 && (
+          <button
+            type="button"
+            className={styles.filterBtnDeleteDone}
+            onClick={deleteDone}
+          >
+            Видалити виконані
+          </button>
+        )}
+      </div>
+
       <div
-        className={`${sharedStyles.body} ${styles.plannerList} ${
-          section.modal ? 'todoListFull' : ''
+        className={`${sharedStyles.body} ${styles.todoList} ${
+          section.modal ? styles.todoListFull : ''
         }`}
       >
         {planned.map((t) => {
@@ -130,35 +172,30 @@ export default function PlannerSection({ worldId, accent }) {
           return (
             <div
               key={t.id}
-              className={`${styles.plannerItem} ${t.is_done ? styles.plannerItemDone : ''} ${isOverdue ? styles.plannerItemOverdue : ''}`}
+              className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''} ${isOverdue ? styles.todoItemOverdue : ''}`}
               onClick={() => toggle.mutate(t)}
             >
               <Checkbox
+                className={styles.todoCheckbox}
                 checked={t.is_done}
                 onClick={(e) => e.stopPropagation()}
                 onChange={() => toggle.mutate(t)}
                 size="small"
-                sx={{ color: 'rgba(255,255,255,0.7)', '&.Mui-checked': { color: '#fff' }, flexShrink: 0 }}
               />
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className={styles.plannerMeta}>
-                  <span className={styles.plannerTitle}>{t.title}</span>
-                  <span className={styles.priorityDot} style={{ background: dot }} />
-                  <span style={{ fontSize: 12, fontWeight: 500, color: '#fff' }}>{label}</span>
+              <div className={styles.todoText}>
+                <div className={styles.todoTitleRow}>
+                  <div className={styles.todoTitle}>{t.title}</div>
+                  <span className={styles.priorityChip}>
+                    <span className={styles.priorityDot} style={{ background: dot }} />
+                    {label}
+                  </span>
                 </div>
-                {t.description && (
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)', marginTop: 2 }}>
-                    {t.description}
-                  </div>
-                )}
+                {t.description && <div className={styles.todoDesc}>{t.description}</div>}
               </div>
-
-              <span className={`${styles.dateChip} ${isOverdue ? styles.dateChipOverdue : ''}`}>
+              <span className={`${styles.dueChip} ${isOverdue ? styles.dueChipOverdue : ''}`}>
                 <CalendarTodayIcon sx={{ fontSize: 13 }} />
                 {t.due_date}
               </span>
-
               <div className={styles.rowActions}>
                 <IconButton
                   size="small"
@@ -169,12 +206,21 @@ export default function PlannerSection({ worldId, accent }) {
                 >
                   <EditOutlinedIcon fontSize="small" />
                 </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteTodo(t)
+                  }}
+                >
+                  <DeleteOutlinedIcon fontSize="small" />
+                </IconButton>
               </div>
             </div>
           )
         })}
         {planned.length === 0 && (
-          <p className={sharedStyles.emptyMsg}>Немає запланованих завдань з датою.</p>
+          <p className={sharedStyles.emptyMsg}>Плани ще не складені. Додай перше завдання.</p>
         )}
       </div>
 
@@ -183,7 +229,9 @@ export default function PlannerSection({ worldId, accent }) {
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати завдання' : 'Нове завдання'}</DialogTitle>
@@ -221,6 +269,7 @@ export default function PlannerSection({ worldId, accent }) {
                 value={form.due_date || ''}
                 onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value || null }))}
                 InputLabelProps={{ shrink: true }}
+                required
               />
             </div>
           </DialogContent>

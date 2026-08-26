@@ -69,10 +69,17 @@ export default function TodosSection({ worldId, accent }) {
     undo.deleteItem({
       id: t.id,
       url: `/worlds/${worldId}/todos/${t.id}/`,
-      queryKeys: [['todos', String(worldId)], ['world', String(worldId)]],
+      queryKeys: [
+        ['todos', String(worldId)],
+        ['world', String(worldId)],
+      ],
       message: `Завдання «${t.title}» видалено`,
       nouns: ['завдання', 'завдання', 'завдань'],
     })
+
+  const deleteDone = () => {
+    todos.filter((t) => t.is_done).forEach(deleteTodo)
+  }
 
   const openNew = () => {
     setEditing(null)
@@ -98,15 +105,22 @@ export default function TodosSection({ worldId, accent }) {
         <h3 className={sharedStyles.sectionTitle}>
           Todo-лист ({done}/{todos.length})
         </h3>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={openNew}
-        >
+        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
           Нове завдання
         </Button>
       </div>
+
+      {done > 0 && (
+        <div className={styles.filters}>
+          <button
+            type="button"
+            className={styles.filterBtnDeleteDone}
+            onClick={deleteDone}
+          >
+            Видалити виконані
+          </button>
+        </div>
+      )}
 
       <div
         className={`${sharedStyles.body} ${styles.todoList} ${
@@ -171,7 +185,9 @@ export default function TodosSection({ worldId, accent }) {
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={submit}>
           <DialogTitle>{editing ? 'Редагувати завдання' : 'Нове завдання'}</DialogTitle>

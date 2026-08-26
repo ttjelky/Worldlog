@@ -1,42 +1,107 @@
-.plannerList {
+.todoList {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.plannerItem {
+.todoList.todoListFull {
+  max-height: none;
+}
+
+.todoItem {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 10px 12px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.12);
-  transition: background 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-radius 0.25s ease-out;
   cursor: pointer;
 }
 
-.plannerItem:hover {
+.todoItem:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.plannerItemDone {
+.todoItemDone {
+  border-radius: 26px;
   background: rgba(0, 0, 0, 0.28);
 }
 
-.plannerItemDone:hover {
+.todoItemDone:hover {
   background: rgba(0, 0, 0, 0.38);
 }
 
-.plannerItemDone .plannerTitle {
+.todoItemDone .todoTitle {
   opacity: 0.6;
   text-decoration: line-through;
 }
 
-.plannerItemOverdue {
+.todoItemOverdue {
   border-left: 3px solid rgba(255, 138, 128, 0.8);
 }
 
-.dateChip {
+.todoCheckbox {
+  flex-shrink: 0;
+}
+
+.todoCheckbox :global(.MuiSvgIcon-root) {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.todoCheckbox :global(.Mui-checked .MuiSvgIcon-root) {
+  color: #ffffff;
+}
+
+.todoText {
+  flex: 1;
+  min-width: 0;
+}
+
+.todoTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.todoTitle {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.todoDesc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+  margin-top: 2px;
+}
+
+.priorityChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.priorityDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dueChip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -49,26 +114,8 @@
   white-space: nowrap;
 }
 
-.dateChipOverdue {
+.dueChipOverdue {
   background: rgba(255, 138, 128, 0.3);
-}
-
-.plannerTitle {
-  font-weight: 600;
-  font-size: 15px;
-  color: #ffffff;
-}
-
-.plannerMeta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.priorityDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
 }
 
 .rowActions {
@@ -84,4 +131,52 @@
 
 .rowActions :global(.MuiIconButton-root:hover) {
   background: rgba(255, 255, 255, 0.16);
+}
+
+.filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.filterBtn {
+  border: none;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.filterBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.filterBtnActive {
+  background: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+.filterBtnDeleteDone {
+  margin-left: auto;
+  border: none;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ff8a80;
+  background: rgba(255, 138, 128, 0.25);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.filterBtnDeleteDone:hover {
+  background: rgba(255, 138, 128, 0.45);
+  color: #ffffff;
 }

@@ -120,3 +120,28 @@
 .rowActions :global(.MuiIconButton-root:hover) {
   background: rgba(255, 255, 255, 0.16);
 }
+
+.filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.filterBtnDeleteDone {
+  margin-left: auto;
+  border: none;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ff8a80;
+  background: rgba(255, 138, 128, 0.25);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.filterBtnDeleteDone:hover {
+  background: rgba(255, 138, 128, 0.45);
+  color: #ffffff;
+}
