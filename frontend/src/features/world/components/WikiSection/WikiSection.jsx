@@ -262,7 +262,11 @@ export default function WikiSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.wikiContent}`}>
+      <div
+        className={`${sharedStyles.body} ${styles.wikiContent} ${
+          section.modal ? styles.wikiContentFull : ''
+        }`}
+      >
         {selectedPage ? (
           <div className={styles.pageDetail}>
             <button className={styles.backBtn} onClick={goBack}>

@@ -4,6 +4,10 @@
   gap: 8px;
 }
 
+.playerListFull {
+  max-height: none;
+}
+
 .playerRow {
   display: flex;
   align-items: center;

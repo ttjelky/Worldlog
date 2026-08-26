@@ -14,12 +14,14 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
+import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './PlayersSection.module.css'
 
 export default function PlayersSection({ worldId, accent }) {
   const qc = useQueryClient()
+  const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ nickname: '', role_note: '', avatar: null })
@@ -76,7 +78,11 @@ export default function PlayersSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.playerList}`}>
+      <div
+        className={`${sharedStyles.body} ${styles.playerList} ${
+          section.modal ? styles.playerListFull : ''
+        }`}
+      >
         {players.map((p) => (
           <div key={p.id} className={styles.playerRow}>
             <Avatar src={p.avatar || undefined} className={styles.avatar}>

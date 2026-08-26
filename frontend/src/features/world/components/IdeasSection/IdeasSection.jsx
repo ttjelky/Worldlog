@@ -14,6 +14,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import api from '../../../../api'
+import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './IdeasSection.module.css'
@@ -22,6 +23,7 @@ const empty = { title: '', content: '' }
 
 export default function IdeasSection({ worldId, accent }) {
   const qc = useQueryClient()
+  const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
@@ -90,7 +92,11 @@ export default function IdeasSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.ideaList}`}>
+      <div
+        className={`${sharedStyles.body} ${styles.ideaList} ${
+          section.modal ? styles.ideaListFull : ''
+        }`}
+      >
         {ideas.map((t) => (
           <div key={t.id} className={styles.ideaItem}>
             <div className={styles.ideaHeader}>

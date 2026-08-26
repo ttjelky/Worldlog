@@ -14,6 +14,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import api from '../../../../api'
+import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './BookmarksSection.module.css'
@@ -22,6 +23,7 @@ const empty = { title: '', url: '', description: '' }
 
 export default function BookmarksSection({ worldId, accent }) {
   const qc = useQueryClient()
+  const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
@@ -74,13 +76,16 @@ export default function BookmarksSection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.bookmarkList}`}>
+      <div
+        className={`${sharedStyles.body} ${styles.bookmarkList} ${
+          section.modal ? styles.bookmarkListFull : ''
+        }`}
+      >
         {bookmarks.map((b) => (
           <div
             key={b.id}
             className={styles.bookmarkItem}
             onClick={() => window.open(b.url, '_blank')}
-            style={{ cursor: 'pointer' }}
           >
             <div className={styles.bookmarkIcon}>
               <OpenInNewIcon fontSize="small" />

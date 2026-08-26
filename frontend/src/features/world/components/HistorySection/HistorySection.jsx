@@ -14,6 +14,7 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
+import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './HistorySection.module.css'
@@ -31,6 +32,7 @@ const empty = { title: '', description: '', date: '', category: 'milestone' }
 
 export default function HistorySection({ worldId, accent }) {
   const qc = useQueryClient()
+  const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
@@ -84,7 +86,11 @@ export default function HistorySection({ worldId, accent }) {
         </Button>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.timeline}`}>
+      <div
+        className={`${sharedStyles.body} ${styles.timeline} ${
+          section.modal ? styles.timelineFull : ''
+        }`}
+      >
         {sorted.map((h, i) => {
           const label = categoryLabels[h.category] || categoryLabels.other
           const isLast = i === sorted.length - 1

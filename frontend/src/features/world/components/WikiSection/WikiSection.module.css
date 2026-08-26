@@ -5,6 +5,10 @@
   height: 100%;
 }
 
+.wikiContentFull {
+  max-height: none;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -91,11 +95,13 @@
 }
 
 .pageCard {
-  padding: 14px;
+  padding: 10px 12px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.12);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-radius 0.25s ease-out;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -107,7 +113,7 @@
 
 .pageCardTitle {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 18px;
   color: #ffffff;
 }
 

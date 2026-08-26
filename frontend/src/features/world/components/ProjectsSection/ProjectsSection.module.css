@@ -20,7 +20,10 @@
   flex: 1;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.12);
-  transition: background 0.15s ease;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-radius 0.25s ease-out;
 }
 
 .projectItem:hover {
@@ -29,8 +32,8 @@
 
 .projectTitle {
   display: inline;
-  font-weight: 700;
-  font-size: 22px;
+  font-weight: 600;
+  font-size: 18px;
   color: #ffffff;
 }
 
@@ -47,7 +50,7 @@
 }
 
 .projectDesc {
-  font-size: 14px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.72);
   margin-top: 2px;
 }
