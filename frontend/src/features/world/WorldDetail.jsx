@@ -439,7 +439,15 @@ export default function WorldDetail({ onBack }) {
   const [editMode, setEditMode] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [cardsMenuOpen, setCardsMenuOpen] = useState(false)
-  const [cardsPerRow, setCardsPerRow] = useState(2)
+  const [rowConfigs, setRowConfigs] = useState(() => {
+    const configs = {}
+    DEFAULT_CARDS.forEach((card) => {
+      if (!configs[card.row]) {
+        configs[card.row] = DEFAULT_CARDS.filter((c) => c.row === card.row).length
+      }
+    })
+    return configs
+  })
   const [layout, setLayout] = useState(() => {
     const saved = loadLayout(worldId)
     return (
@@ -453,22 +461,43 @@ export default function WorldDetail({ onBack }) {
   const [resize, setResize] = useState(null)
   const flipSnapshotRef = useRef(null)
 
-  const rearrangeCards = useCallback((newCardsPerRow) => {
+  const rearrangeRow = useCallback((rowIndex, newCount) => {
     setLayout((prev) => {
-      const visibleCards = prev.cards.filter((c) => !c.hidden)
+      const allVisibleCards = prev.cards.filter((c) => !c.hidden)
       const hiddenCards = prev.cards.filter((c) => c.hidden)
-      const nextCards = visibleCards.map((card, index) => ({
-        ...card,
-        row: Math.floor(index / newCardsPerRow),
-      }))
-      return { ...prev, cards: [...nextCards, ...hiddenCards] }
-    })
-  }, [])
 
-  const handleCardsPerRowChange = useCallback((value) => {
-    setCardsPerRow(value)
-    rearrangeCards(value)
-  }, [rearrangeCards])
+      const cardsBeforeRow = allVisibleCards.filter((c) => c.row < rowIndex)
+      const cardsInRow = allVisibleCards.filter((c) => c.row === rowIndex)
+      const cardsAfterRow = allVisibleCards.filter((c) => c.row > rowIndex)
+
+      const excessCards = cardsInRow.slice(newCount)
+      const keptCards = cardsInRow.slice(0, newCount)
+
+      const redistributedAfterRow = excessCards.map((card, i) => ({
+        ...card,
+        row: rowIndex + 1 + Math.floor(i / (rowConfigs[rowIndex + 1] || 2)),
+      }))
+
+      const allCardsAfter = [...cardsAfterRow, ...redistributedAfterRow]
+      const reindexedAfter = allCardsAfter.map((card, i) => ({
+        ...card,
+        row: rowIndex + 1 + Math.floor(i / (rowConfigs[rowIndex + 1] || 2)),
+      }))
+
+      const result = [
+        ...cardsBeforeRow.map((c) => ({ ...c })),
+        ...keptCards.map((c) => ({ ...c })),
+        ...reindexedAfter,
+      ]
+
+      return { ...prev, cards: [...result, ...hiddenCards] }
+    })
+  }, [rowConfigs])
+
+  const handleRowConfigChange = useCallback((rowIndex, newCount) => {
+    setRowConfigs((prev) => ({ ...prev, [rowIndex]: newCount }))
+    rearrangeRow(rowIndex, newCount)
+  }, [rearrangeRow])
 
   const saveTimerRef = useRef(null)
   useEffect(() => {
@@ -734,22 +763,9 @@ export default function WorldDetail({ onBack }) {
         </Button>
         <div className={styles.topActions}>
           {editMode && (
-            <>
-              <ButtonGroup className={styles.cardsPerRowGroup}>
-                {[1, 2, 3].map((value) => (
-                  <Button
-                    key={value}
-                    className={`${styles.cardsPerRowBtn} ${cardsPerRow === value ? styles.cardsPerRowBtnActive : ''}`}
-                    onClick={() => handleCardsPerRowChange(value)}
-                  >
-                    {value}
-                  </Button>
-                ))}
-              </ButtonGroup>
-              <Button className={styles.resetBtn} onClick={resetLayout}>
-                Скинути
-              </Button>
-            </>
+            <Button className={styles.resetBtn} onClick={resetLayout}>
+              Скинути
+            </Button>
           )}
           <Button
             className={styles.worldEditBtn}
@@ -776,13 +792,29 @@ export default function WorldDetail({ onBack }) {
       </div>
 
       <div className={styles.board}>
-        <div className={`${styles.row} ${styles.rowTop}`}>{renderRow(getRowCards(0))}</div>
-        <div className={`${styles.row} ${styles.rowBottom}`}>{renderRow(getRowCards(1))}</div>
-        <div className={styles.row}>{renderRow(getRowCards(2))}</div>
-        <div className={styles.row}>{renderRow(getRowCards(3))}</div>
-        <div className={styles.row}>{renderRow(getRowCards(4))}</div>
-        <div className={styles.row}>{renderRow(getRowCards(5))}</div>
-        <div className={styles.row}>{renderRow(getRowCards(6))}</div>
+        {[0, 1, 2, 3, 4, 5, 6].map((rowIndex) => (
+          <div key={rowIndex} className={styles.rowWrapper}>
+            {editMode && (
+              <div className={styles.rowControls}>
+                <span className={styles.rowLabel}>Ряд {rowIndex + 1}</span>
+                <ButtonGroup className={styles.cardsPerRowGroup}>
+                  {[1, 2, 3].map((value) => (
+                    <Button
+                      key={value}
+                      className={`${styles.cardsPerRowBtn} ${(rowConfigs[rowIndex] || 2) === value ? styles.cardsPerRowBtnActive : ''}`}
+                      onClick={() => handleRowConfigChange(rowIndex, value)}
+                    >
+                      {value}
+                    </Button>
+                  ))}
+                </ButtonGroup>
+              </div>
+            )}
+            <div className={`${styles.row} ${rowIndex === 0 ? styles.rowTop : ''} ${rowIndex === 1 ? styles.rowBottom : ''}`}>
+              {renderRow(getRowCards(rowIndex))}
+            </div>
+          </div>
+        ))}
       </div>
 
       <WorldEditDialog
