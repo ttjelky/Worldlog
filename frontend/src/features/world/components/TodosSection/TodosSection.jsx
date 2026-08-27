@@ -109,22 +109,21 @@ export default function TodosSection({ worldId, accent }) {
         <h3 className={sharedStyles.sectionTitle}>
           Todo-лист ({done}/{todos.length})
         </h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Нове завдання
-        </Button>
-      </div>
-
-      {done > 0 && (
-        <div className={styles.filters}>
-          <button
-            type="button"
-            className={styles.filterBtnDeleteDone}
-            onClick={deleteDone}
-          >
-            Видалити виконані
-          </button>
+        <div className={styles.headerActions}>
+          {done > 0 && (
+            <button
+              type="button"
+              className={styles.filterBtnDeleteDone}
+              onClick={deleteDone}
+            >
+              Видалити виконані
+            </button>
+          )}
+          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
+            Нове завдання
+          </Button>
         </div>
-      )}
+      </div>
 
       <div
         className={`${sharedStyles.body} ${styles.todoList} ${

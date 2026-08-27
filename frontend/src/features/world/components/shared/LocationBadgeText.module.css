@@ -8,9 +8,9 @@
   border: none;
   cursor: pointer;
   font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 500;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.28);
   border-radius: 999px;
@@ -22,7 +22,6 @@
 
 .badge:hover {
   background: rgba(255, 255, 255, 0.42);
-  transform: translateY(-1px);
 }
 
 .badge:focus-visible {
