@@ -11,6 +11,14 @@ const UP = 'ArrowUp'
 const DOWN = 'ArrowDown'
 const ESCAPE = 'Escape'
 
+// Нульовий роздільник — невидима «позиція редагування» навколо бейджа.
+// Дає змогу ставити каретку й друкувати одразу до/після/між бейджами,
+// бо бейдж сам по собі contenteditable=false. Очищається зі значення.
+const ZWS = '\u200B'
+
+const isZWSNode = (node) => node.nodeType === Node.TEXT_NODE && node.data === ZWS
+const plainText = (el) => ((el && el.textContent) || '').replace(new RegExp(ZWS, 'g'), '')
+
 // Ділимо введений текст на сегменти: звичайний текст і локації (бейджі).
 // Назви збігаються регістронезалежно, довші назви мають пріоритет.
 function segmentsOf(value, locList) {
@@ -34,40 +42,156 @@ function segmentsOf(value, locList) {
   return out
 }
 
-// Позиція курсора (в символах плоского тексту) у contenteditable.
+// Walk-фільтр для редагувального вмісту: враховуємо «живі» текстові вузли
+// та бейджі (нередаговані елементи) як атомарні юніти. Нульові роздільники
+// ігноруються (0 юнітів). Текст усередині бейджа не включаємо окремо.
+const EDITABLE_WALK = {
+  acceptNode(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (isZWSNode(node)) return NodeFilter.FILTER_REJECT
+      if (node.parentElement && node.parentElement.isContentEditable === false) return NodeFilter.FILTER_REJECT
+      return NodeFilter.FILTER_ACCEPT
+    }
+    if (node.nodeType === Node.ELEMENT_NODE && node.isContentEditable === false) return NodeFilter.FILTER_ACCEPT
+    return NodeFilter.FILTER_SKIP
+  },
+}
+
+// Кількість юнітів у зоні редагування: кожен символ тексту — 1, кожен бейдж — 1.
+function countUnits(el) {
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, EDITABLE_WALK)
+  let units = 0
+  let node
+  while ((node = walker.nextNode())) units += node.nodeType === Node.TEXT_NODE ? node.textContent.length : 1
+  return units
+}
+
+// Кількість юнітів перед конкретним вузлом (враховуючи текст і бейджі).
+function unitsBefore(el, targetEl) {
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, EDITABLE_WALK)
+  let units = 0
+  let node
+  while ((node = walker.nextNode())) {
+    if (node === targetEl) return units
+    units += node.nodeType === Node.TEXT_NODE ? node.textContent.length : 1
+  }
+  return units
+}
+
+// Бейдж, що стоїть безпосередньо перед кареткою (між ним і кареткою лише
+// нульові роздільники/нічого). Якщо такого немає — null.
+function badgeBeforeCaret(el) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0 || !el.contains(sel.anchorNode)) return null
+  if (!sel.getRangeAt(0).collapsed) return null
+  const anchor = sel.anchorNode
+  if (anchor.nodeType !== Node.TEXT_NODE) return null
+  let node
+  if (anchor.data === ZWS) {
+    node = anchor.previousSibling
+  } else {
+    if (sel.anchorOffset !== 0) return null
+    node = anchor.previousSibling
+  }
+  while (node && node.nodeType === Node.TEXT_NODE && node.data === ZWS) node = node.previousSibling
+  if (node && node.nodeType === Node.ELEMENT_NODE && node.isContentEditable === false) return node
+  return null
+}
+
+// Бейдж, що стоїть безпосередньо після каретки (між ним і кареткою лише
+// нульові роздільники/нічого). Якщо такого немає — null.
+function badgeAfterCaret(el) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0 || !el.contains(sel.anchorNode)) return null
+  if (!sel.getRangeAt(0).collapsed) return null
+  const anchor = sel.anchorNode
+  if (anchor.nodeType !== Node.TEXT_NODE) return null
+  let node
+  if (anchor.data === ZWS) {
+    node = anchor.nextSibling
+  } else {
+    if (sel.anchorOffset !== anchor.data.length) return null
+    node = anchor.nextSibling
+  }
+  while (node && node.nodeType === Node.TEXT_NODE && node.data === ZWS) node = node.nextSibling
+  if (node && node.nodeType === Node.ELEMENT_NODE && node.isContentEditable === false) return node
+  return null
+}
+
+// Позиція курсора в «юнітному» просторі (бейдж = один атом).
+function caretUnit(el) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0 || !el.contains(sel.anchorNode)) return null
+  const anchor = sel.anchorNode
+  const offset = sel.anchorOffset
+  if (anchor === el) return countUnits(el)
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, EDITABLE_WALK)
+  let units = 0
+  let node
+  while ((node = walker.nextNode())) {
+    if (node === anchor) return units + (node.nodeType === Node.TEXT_NODE ? offset : 1)
+    units += node.nodeType === Node.TEXT_NODE ? node.textContent.length : 1
+  }
+  return units
+}
+
+// Позиція курсора (в символах плоского тексту) — для слова/запиту.
+// Нульові роздільники не рахуються.
 function caretPlainIndex(el) {
   const sel = window.getSelection()
   if (!sel || sel.rangeCount === 0 || !el.contains(sel.anchorNode)) return null
-  const range = sel.getRangeAt(0).cloneRange()
-  range.selectNodeContents(el)
-  range.setEnd(sel.anchorNode, sel.anchorOffset)
-  return range.toString().length
+  const anchor = sel.anchorNode
+  const offset = sel.anchorOffset
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+  let count = 0
+  let node
+  while ((node = walker.nextNode())) {
+    if (node === anchor) {
+      if (isZWSNode(node)) return count
+      return count + offset
+    }
+    if (isZWSNode(node)) continue
+    count += node.textContent.length
+  }
+  return count
 }
 
-// Ставимо курсор на позицію `plainIndex` у плоскому тексті ел.
-function placeCaret(el, plainIndex) {
-  let remaining = typeof plainIndex === 'number' ? plainIndex : el.textContent.length
-  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
-  let node
-  let targetNode = null
-  let targetOffset = 0
-  while ((node = walker.nextNode())) {
-    const len = node.textContent.length
-    if (remaining <= len) {
-      targetNode = node
-      targetOffset = remaining
-      break
-    }
-    remaining -= len
-  }
+// Ставимо курсор на юнітну позицію `unitIndex`, ніколи не всередину бейджа.
+// Backspace поруч з бейджем (contentEditable=false) видаляє його атомарно.
+function placeCaret(el, unitIndex) {
+  let remaining = typeof unitIndex === 'number' ? unitIndex : countUnits(el)
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, EDITABLE_WALK)
   const range = document.createRange()
-  if (targetNode) {
-    range.setStart(targetNode, targetOffset)
-  } else {
+  let placed = false
+  let node
+  while ((node = walker.nextNode())) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (remaining <= node.textContent.length) {
+        range.setStart(node, remaining)
+        placed = true
+        break
+      }
+      remaining -= node.textContent.length
+    } else {
+      if (remaining < 1) {
+        range.setStartBefore(node)
+        placed = true
+        break
+      }
+      if (remaining === 1) {
+        range.setStartAfter(node)
+        placed = true
+        break
+      }
+      remaining -= 1
+    }
+  }
+  if (!placed) {
     range.selectNodeContents(el)
     range.collapse(false)
+  } else {
+    range.collapse(true)
   }
-  range.collapse(true)
   const sel = window.getSelection()
   sel.removeAllRanges()
   sel.addRange(range)
@@ -106,8 +230,11 @@ export default function LocationRichTextEditor({
     const segments = segmentsOf(plain, locations)
     for (const seg of segments) {
       if (seg.type === 'text') {
-        el.appendChild(document.createTextNode(seg.value))
+        if (seg.value) el.appendChild(document.createTextNode(seg.value))
       } else if (seg.location) {
+        // Нульовий роздільник до та після бейджа забезпечує редагувану
+        // позицію, щоб каретку можна було ставити/друкувати навколо бейджа.
+        el.appendChild(document.createTextNode(ZWS))
         const b = document.createElement('span')
         b.className = styles.badge
         b.contentEditable = 'false'
@@ -118,10 +245,11 @@ export default function LocationRichTextEditor({
           openLocation(seg.location)
         })
         el.appendChild(b)
+        el.appendChild(document.createTextNode(ZWS))
       }
     }
     if (document.activeElement === el) {
-      placeCaret(el, prevCaret ?? plain.length)
+      placeCaret(el, prevCaret ?? countUnits(el))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, locations])
@@ -140,27 +268,27 @@ export default function LocationRichTextEditor({
   const updateCaretAndQuery = useCallback(() => {
     const el = editableRef.current
     if (!el) return
-    const idx = caretPlainIndex(el)
-    setCaretIdx(idx)
-    if (idx != null) {
-      const text = el.textContent
-      let start = idx
+    setCaretIdx(caretUnit(el))
+    const plainIdx = caretPlainIndex(el)
+    if (plainIdx != null) {
+      const text = plainText(el)
+      let start = plainIdx
       while (start > 0 && !/\s/.test(text[start - 1])) start--
-      setQuery(text.slice(start, idx))
+      setQuery(text.slice(start, plainIdx))
     }
   }, [])
 
   const handleInput = useCallback(() => {
     const el = editableRef.current
     if (!el) return
-    const idx = caretPlainIndex(el)
-    setCaretIdx(idx)
-    onChange?.({ target: { value: el.textContent } })
-    if (idx != null) {
-      const text = el.textContent
-      let start = idx
+    setCaretIdx(caretUnit(el))
+    onChange?.({ target: { value: plainText(el) } })
+    const plainIdx = caretPlainIndex(el)
+    if (plainIdx != null) {
+      const text = plainText(el)
+      let start = plainIdx
       while (start > 0 && !/\s/.test(text[start - 1])) start--
-      setQuery(text.slice(start, idx))
+      setQuery(text.slice(start, plainIdx))
     }
     setHighlight(0)
   }, [onChange])
@@ -169,20 +297,57 @@ export default function LocationRichTextEditor({
     (replacement) => {
       const el = editableRef.current
       if (!el) return
-      const text = el.textContent
-      const idx = caretIdx ?? text.length
-      let start = idx
+      const text = plainText(el)
+      const plainIdx = caretPlainIndex(el) ?? text.length
+      let start = plainIdx
       while (start > 0 && !/\s/.test(text[start - 1])) start--
-      const next = `${text.slice(0, start)}${replacement}${text.slice(idx)}`
-      setCaretIdx(start + replacement.length)
+      const next = `${text.slice(0, start)}${replacement}${text.slice(plainIdx)}`
+      const curUnit = caretUnit(el) ?? countUnits(el)
+      const unitStart = curUnit - (plainIdx - start)
+      setCaretIdx(unitStart + 1)
       setQuery('')
       onChange?.({ target: { value: next } })
     },
-    [caretIdx, onChange],
+    [onChange],
+  )
+
+  const removeBadge = useCallback(
+    (badgeEl, caretUnitPos) => {
+      const el = editableRef.current
+      if (!el) return
+      const prev = badgeEl.previousSibling
+      const next = badgeEl.nextSibling
+      badgeEl.remove()
+      if (prev && isZWSNode(prev)) prev.remove()
+      if (next && isZWSNode(next)) next.remove()
+      setCaretIdx(caretUnitPos)
+      setQuery('')
+      setHighlight(0)
+      onChange?.({ target: { value: plainText(el) } })
+    },
+    [onChange],
   )
 
   const handleKeyDown = useCallback(
     (e) => {
+      const el = editableRef.current
+      if (e.key === 'Backspace') {
+        const badge = badgeBeforeCaret(el)
+        if (badge) {
+          e.preventDefault()
+          const unitPos = unitsBefore(el, badge)
+          removeBadge(badge, unitPos)
+          return
+        }
+      } else if (e.key === 'Delete') {
+        const badge = badgeAfterCaret(el)
+        if (badge) {
+          e.preventDefault()
+          const unitPos = unitsBefore(el, badge)
+          removeBadge(badge, unitPos)
+          return
+        }
+      }
       if (suggestions.length === 0) {
         if (e.key === ESCAPE) setQuery('')
         return
@@ -200,7 +365,7 @@ export default function LocationRichTextEditor({
         setQuery('')
       }
     },
-    [suggestions, highlight, commitToken],
+    [suggestions, highlight, commitToken, removeBadge],
   )
 
   const onFocus = useCallback(() => {
