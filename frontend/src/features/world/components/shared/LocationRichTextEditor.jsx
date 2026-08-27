@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
 import { useLocations, categoryLabel } from './locationData'
 import { useLocationViewer } from './LocationViewer'
@@ -220,6 +221,7 @@ export default function LocationRichTextEditor({
   const [caretIdx, setCaretIdx] = useState(null)
   const [query, setQuery] = useState('')
   const [highlight, setHighlight] = useState(0)
+  const [popupPos, setPopupPos] = useState({ top: 0, left: 0, width: 0 })
   // Рендер сегментів у DOM (баджів) — керований зовнішнім value.
   useEffect(() => {
     const el = editableRef.current
@@ -393,6 +395,35 @@ export default function LocationRichTextEditor({
 
   const showPopup = focused && suggestions.length > 0
 
+  // Позиція попапу — безвідносно до батьківських контейнерів (портал у body).
+  // Використовуємо viewport-координати input, тож попап завжди поверх усього.
+  useEffect(() => {
+    if (!showPopup) return
+    const reposition = () => {
+      const el = editableRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const height = Math.min(240, suggestions.length * 44 + 12)
+      let top = rect.bottom + 6
+      if (top + height > window.innerHeight - 8) {
+        top = rect.top - height - 6
+      }
+      setPopupPos({
+        top,
+        left: rect.left,
+        width: rect.width,
+        maxHeight: Math.min(240, window.innerHeight - 22 - top),
+      })
+    }
+    reposition()
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
+    return () => {
+      window.removeEventListener('scroll', reposition, true)
+      window.removeEventListener('resize', reposition)
+    }
+  }, [showPopup, suggestions.length])
+
   return (
     <div className={`${styles.root} ${focused ? styles.focused : ''}`}>
       <div
@@ -417,25 +448,31 @@ export default function LocationRichTextEditor({
         {required && <span className={styles.required}> *</span>}
       </label>
 
-      {showPopup && (
-        <div className={styles.popup} ref={popupRef}>
-          {suggestions.map((s, i) => (
-            <button
-              key={s}
-              type="button"
-              className={`${styles.option} ${i === highlight ? styles.optionActive : ''}`}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                commitToken(s)
-              }}
-              onMouseEnter={() => setHighlight(i)}
-            >
-              <PlaceOutlinedIcon fontSize="small" />
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
+      {showPopup &&
+        createPortal(
+          <div
+            className={styles.popup}
+            ref={popupRef}
+            style={{ top: popupPos.top, left: popupPos.left, width: popupPos.width, maxHeight: popupPos.maxHeight }}
+          >
+            {suggestions.map((s, i) => (
+              <button
+                key={s}
+                type="button"
+                className={`${styles.option} ${i === highlight ? styles.optionActive : ''}`}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  commitToken(s)
+                }}
+                onMouseEnter={() => setHighlight(i)}
+              >
+                <PlaceOutlinedIcon fontSize="small" />
+                {s}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }
