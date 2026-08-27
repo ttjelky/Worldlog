@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
+  ButtonGroup,
   Dialog,
   DialogActions,
   DialogContent,
@@ -438,6 +439,7 @@ export default function WorldDetail({ onBack }) {
   const [editMode, setEditMode] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [cardsMenuOpen, setCardsMenuOpen] = useState(false)
+  const [cardsPerRow, setCardsPerRow] = useState(2)
   const [layout, setLayout] = useState(() => {
     const saved = loadLayout(worldId)
     return (
@@ -450,6 +452,23 @@ export default function WorldDetail({ onBack }) {
   const [drag, setDrag] = useState(null)
   const [resize, setResize] = useState(null)
   const flipSnapshotRef = useRef(null)
+
+  const rearrangeCards = useCallback((newCardsPerRow) => {
+    setLayout((prev) => {
+      const visibleCards = prev.cards.filter((c) => !c.hidden)
+      const hiddenCards = prev.cards.filter((c) => c.hidden)
+      const nextCards = visibleCards.map((card, index) => ({
+        ...card,
+        row: Math.floor(index / newCardsPerRow),
+      }))
+      return { ...prev, cards: [...nextCards, ...hiddenCards] }
+    })
+  }, [])
+
+  const handleCardsPerRowChange = useCallback((value) => {
+    setCardsPerRow(value)
+    rearrangeCards(value)
+  }, [rearrangeCards])
 
   const saveTimerRef = useRef(null)
   useEffect(() => {
@@ -715,9 +734,22 @@ export default function WorldDetail({ onBack }) {
         </Button>
         <div className={styles.topActions}>
           {editMode && (
-            <Button className={styles.resetBtn} onClick={resetLayout}>
-              Скинути
-            </Button>
+            <>
+              <ButtonGroup className={styles.cardsPerRowGroup}>
+                {[1, 2, 3].map((value) => (
+                  <Button
+                    key={value}
+                    className={`${styles.cardsPerRowBtn} ${cardsPerRow === value ? styles.cardsPerRowBtnActive : ''}`}
+                    onClick={() => handleCardsPerRowChange(value)}
+                  >
+                    {value}
+                  </Button>
+                ))}
+              </ButtonGroup>
+              <Button className={styles.resetBtn} onClick={resetLayout}>
+                Скинути
+              </Button>
+            </>
           )}
           <Button
             className={styles.worldEditBtn}
