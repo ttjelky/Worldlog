@@ -34,12 +34,19 @@
   font-weight: 600;
   font-size: 18px;
   color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .ideaDesc {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.72);
   margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .convertBtn {

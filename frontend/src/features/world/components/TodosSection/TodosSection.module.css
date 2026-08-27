@@ -70,12 +70,20 @@
   font-size: 18px;
   font-weight: 600;
   color: #ffffff;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .todoDesc {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.72);
   margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .priorityChip {
@@ -90,6 +98,7 @@
   color: #ffffff;
   letter-spacing: -0.03em;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .priorityDot {
@@ -104,6 +113,7 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.75);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .rowActions {

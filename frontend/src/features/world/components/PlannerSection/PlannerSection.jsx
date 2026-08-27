@@ -183,19 +183,19 @@ export default function PlannerSection({ worldId, accent }) {
                 size="small"
               />
               <div className={styles.todoText}>
-                <div className={styles.todoTitleRow}>
-                  <div className={styles.todoTitle}>{t.title}</div>
-                  <span className={styles.priorityChip}>
-                    <span className={styles.priorityDot} style={{ background: dot }} />
-                    {label}
-                  </span>
-                </div>
+                <div className={styles.todoTitle}>{t.title}</div>
                 {t.description && <div className={styles.todoDesc}>{t.description}</div>}
               </div>
-              <span className={`${styles.dueChip} ${isOverdue ? styles.dueChipOverdue : ''}`}>
-                <CalendarTodayIcon sx={{ fontSize: 13 }} />
-                {t.due_date}
-              </span>
+              <div className={styles.todoChips}>
+                <span className={styles.priorityChip}>
+                  <span className={styles.priorityDot} style={{ background: dot }} />
+                  {label}
+                </span>
+                <span className={`${styles.dueChip} ${isOverdue ? styles.dueChipOverdue : ''}`}>
+                  <CalendarTodayIcon sx={{ fontSize: 13 }} />
+                  {t.due_date}
+                </span>
+              </div>
               <div className={styles.rowActions}>
                 <IconButton
                   size="small"

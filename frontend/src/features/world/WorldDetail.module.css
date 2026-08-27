@@ -519,6 +519,40 @@
   .rowTop {
     height: 280px;
   }
+
+  .slot {
+    min-width: 280px;
+  }
+}
+
+@media (max-width: 900px) {
+  .row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .rowTop,
+  .rowBottom {
+    height: auto;
+  }
+
+  .slot {
+    min-width: 260px;
+    max-width: 100%;
+    flex: 1 1 260px;
+  }
+
+  .slotSingle {
+    flex: 1 1 100%;
+  }
+
+  .resizeBar {
+    display: none;
+  }
+
+  .rowControls {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 768px) {
@@ -542,6 +576,7 @@
   .slot {
     min-width: 0;
     max-width: 100%;
+    flex: 1 1 100%;
   }
 
   .resizeBar {

@@ -85,6 +85,26 @@
   box-shadow: none !important;
 }
 
+@media (max-width: 900px) {
+  .card {
+    padding: 16px 16px 0;
+    border-radius: 20px;
+  }
+
+  .sectionTitle {
+    font-size: 22px;
+  }
+
+  .sectionHeader :global(.MuiButton-contained) {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+
+  .body {
+    max-height: 240px;
+  }
+}
+
 /* ---- Спільна тема діалогів (світлий попап поверх кольорових карток) ---- */
 .formFields {
   display: flex;
