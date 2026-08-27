@@ -466,29 +466,21 @@ export default function WorldDetail({ onBack }) {
       const allVisibleCards = prev.cards.filter((c) => !c.hidden)
       const hiddenCards = prev.cards.filter((c) => c.hidden)
 
-      const cardsBeforeRow = allVisibleCards.filter((c) => c.row < rowIndex)
-      const cardsInRow = allVisibleCards.filter((c) => c.row === rowIndex)
-      const cardsAfterRow = allVisibleCards.filter((c) => c.row > rowIndex)
+      const newConfigs = { ...rowConfigs, [rowIndex]: newCount }
 
-      const excessCards = cardsInRow.slice(newCount)
-      const keptCards = cardsInRow.slice(0, newCount)
+      const row0Cards = allVisibleCards.filter((c) => c.row === 0)
+      const restCards = allVisibleCards.filter((c) => c.row > 0)
 
-      const redistributedAfterRow = excessCards.map((card, i) => ({
-        ...card,
-        row: rowIndex + 1 + Math.floor(i / (rowConfigs[rowIndex + 1] || 2)),
-      }))
+      const result = row0Cards.map((c) => ({ ...c }))
 
-      const allCardsAfter = [...cardsAfterRow, ...redistributedAfterRow]
-      const reindexedAfter = allCardsAfter.map((card, i) => ({
-        ...card,
-        row: rowIndex + 1 + Math.floor(i / (rowConfigs[rowIndex + 1] || 2)),
-      }))
-
-      const result = [
-        ...cardsBeforeRow.map((c) => ({ ...c })),
-        ...keptCards.map((c) => ({ ...c })),
-        ...reindexedAfter,
-      ]
+      let cardIndex = 0
+      for (let row = 1; cardIndex < restCards.length; row++) {
+        const count = newConfigs[row] || 2
+        for (let i = 0; i < count && cardIndex < restCards.length; i++) {
+          result.push({ ...restCards[cardIndex], row })
+          cardIndex++
+        }
+      }
 
       return { ...prev, cards: [...result, ...hiddenCards] }
     })
@@ -695,7 +687,7 @@ export default function WorldDetail({ onBack }) {
   if (isLoading) return <LinearProgress />
   if (!world) return <p>Світ не знайдено</p>
 
-  const renderCard = (cardId) => {
+  const renderCard = (cardId, isSingle) => {
     const flex = flexes[cardId]
     const style = {}
     if (flex) {
@@ -710,7 +702,7 @@ export default function WorldDetail({ onBack }) {
       <div
         key={cardId}
         id={`slot-${cardId}`}
-        className={`${styles.slot} ${styles[slotClass]} ${isDragging ? styles.dragging : ''} ${isOver ? styles.dragOver : ''} ${isLocked ? styles.locked : ''}`}
+        className={`${styles.slot} ${styles[slotClass]} ${isSingle ? styles.slotSingle : ''} ${isDragging ? styles.dragging : ''} ${isOver ? styles.dragOver : ''} ${isLocked ? styles.locked : ''}`}
         draggable={editMode && !isLocked}
         onDragStart={isLocked ? undefined : (e) => onDragStart(e, cardId)}
         onDragOver={isLocked ? undefined : (e) => onDragOver(e, cardId)}
@@ -729,9 +721,10 @@ export default function WorldDetail({ onBack }) {
   }
 
   const renderRow = (rowCards) => {
+    const isSingle = rowCards.length === 1
     const result = []
     for (let i = 0; i < rowCards.length; i++) {
-      result.push(renderCard(rowCards[i].id))
+      result.push(renderCard(rowCards[i].id, isSingle))
       if (i < rowCards.length - 1) {
         const leftId = rowCards[i].id
         const rightId = rowCards[i + 1].id
@@ -794,7 +787,7 @@ export default function WorldDetail({ onBack }) {
       <div className={styles.board}>
         {[0, 1, 2, 3, 4, 5, 6].map((rowIndex) => (
           <div key={rowIndex} className={styles.rowWrapper}>
-            {editMode && (
+            {editMode && rowIndex > 0 && (
               <div className={styles.rowControls}>
                 <span className={styles.rowLabel}>Ряд {rowIndex + 1}</span>
                 <ButtonGroup className={styles.cardsPerRowGroup}>
