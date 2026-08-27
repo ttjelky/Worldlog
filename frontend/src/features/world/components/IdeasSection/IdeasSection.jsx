@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
@@ -17,6 +16,9 @@ import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
+import LocationRichTextEditor from '../shared/LocationRichTextEditor'
+import LocationBadgeText from '../shared/LocationBadgeText'
+import { useLocations } from '../shared/locationData'
 import styles from './IdeasSection.module.css'
 
 const empty = { title: '', content: '' }
@@ -32,6 +34,7 @@ export default function IdeasSection({ worldId, accent }) {
     queryKey: ['ideas', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/ideas/`).then((r) => r.data),
   })
+  const { data: locations = [] } = useLocations(worldId)
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -100,8 +103,14 @@ export default function IdeasSection({ worldId, accent }) {
         {ideas.map((t) => (
           <div key={t.id} className={styles.ideaItem}>
             <div className={styles.ideaContent}>
-              <div className={styles.ideaTitle}>{t.title}</div>
-              {t.content && <div className={styles.ideaDesc}>{t.content}</div>}
+              <div className={styles.ideaTitle}>
+                <LocationBadgeText text={t.title} worldId={worldId} locations={locations} />
+              </div>
+              {t.content && (
+                <div className={styles.ideaDesc}>
+                  <LocationBadgeText text={t.content} worldId={worldId} locations={locations} />
+                </div>
+              )}
               <button className={styles.convertBtn} onClick={() => convertMutation.mutate(t)}>
                 <AutoAwesomeIcon sx={{ fontSize: 14, mr: 0.5 }} />
                 Перетворити на проєкт
@@ -135,14 +144,16 @@ export default function IdeasSection({ worldId, accent }) {
           <DialogTitle>{editing ? 'Редагувати ідею' : 'Нова ідея'}</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Назва"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 required
                 autoFocus
               />
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Опис"
                 value={form.content}
                 onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}

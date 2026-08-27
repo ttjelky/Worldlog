@@ -17,6 +17,9 @@ import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
+import LocationRichTextEditor from '../shared/LocationRichTextEditor'
+import LocationBadgeText from '../shared/LocationBadgeText'
+import { useLocations } from '../shared/locationData'
 import styles from './HistorySection.module.css'
 
 const categories = [
@@ -41,6 +44,7 @@ export default function HistorySection({ worldId, accent }) {
     queryKey: ['history', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/history/`).then((r) => r.data),
   })
+  const { data: locations = [] } = useLocations(worldId)
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -107,8 +111,18 @@ export default function HistorySection({ worldId, accent }) {
                       </span>
                       <span className={styles.catPill}>{label}</span>
                     </div>
-                    <div className={styles.eventTitle}>{h.title}</div>
-                    {h.description && <p className={styles.eventDesc}>{h.description}</p>}
+                    <div className={styles.eventTitle}>
+                      <LocationBadgeText text={h.title} worldId={worldId} locations={locations} />
+                    </div>
+                    {h.description && (
+                      <p className={styles.eventDesc}>
+                        <LocationBadgeText
+                          text={h.description}
+                          worldId={worldId}
+                          locations={locations}
+                        />
+                      </p>
+                    )}
                   </div>
                   <div className={styles.rowActions}>
                     <IconButton size="small" onClick={() => openEdit(h)}>
@@ -141,14 +155,16 @@ export default function HistorySection({ worldId, accent }) {
           <DialogTitle>{editing ? 'Редагувати подію' : 'Нова подія'}</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Заголовок"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 required
                 autoFocus
               />
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Опис"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}

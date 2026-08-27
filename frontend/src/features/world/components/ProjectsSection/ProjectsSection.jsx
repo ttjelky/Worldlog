@@ -18,6 +18,9 @@ import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
+import LocationRichTextEditor from '../shared/LocationRichTextEditor'
+import LocationBadgeText from '../shared/LocationBadgeText'
+import { useLocations } from '../shared/locationData'
 import styles from './ProjectsSection.module.css'
 
 const statusLabels = {
@@ -43,7 +46,7 @@ function calcStatus(todosCount, doneCount) {
 
 const empty = { title: '', description: '' }
 
-function ProjectDetails({ project, accent, onClose, onEdit, onDelete }) {
+function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, onDelete }) {
   const qc = useQueryClient()
   const [newTodo, setNewTodo] = useState('')
 
@@ -98,7 +101,7 @@ function ProjectDetails({ project, accent, onClose, onEdit, onDelete }) {
 
       <div className={styles.detailsHead}>
         <h3 className={styles.detailsTitle}>
-          {project.title}
+          <LocationBadgeText text={project.title} worldId={worldId} locations={locations} />
           <span
             className={styles.statusChip}
             style={{ background: statusColors[status] + '33', color: statusColors[status] }}
@@ -108,7 +111,11 @@ function ProjectDetails({ project, accent, onClose, onEdit, onDelete }) {
         </h3>
       </div>
 
-      {project.description && <p className={styles.detailsDesc}>{project.description}</p>}
+      {project.description && (
+        <p className={styles.detailsDesc}>
+          <LocationBadgeText text={project.description} worldId={worldId} locations={locations} />
+        </p>
+      )}
 
       {todos.length > 0 ? (
         <div className={styles.detailsProgress}>
@@ -196,6 +203,7 @@ export default function ProjectsSection({ worldId, accent }) {
     queryKey: ['projects', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/projects/`).then((r) => r.data),
   })
+  const { data: locations = [] } = useLocations(worldId)
 
   const mutation = useMutation({
     mutationFn: (payload) =>
@@ -258,6 +266,8 @@ export default function ProjectsSection({ worldId, accent }) {
               expandedContent={({ close }) => (
                 <ProjectDetails
                   project={p}
+                  worldId={worldId}
+                  locations={locations}
                   accent={accent}
                   onClose={close}
                   onEdit={() => openEdit(p)}
@@ -270,7 +280,7 @@ export default function ProjectsSection({ worldId, accent }) {
             >
               <div className={styles.projectItem}>
                 <div className={styles.projectTitle}>
-                  {p.title}
+                  <LocationBadgeText text={p.title} worldId={worldId} locations={locations} />
                   <span
                     className={styles.statusChip}
                     style={{
@@ -281,7 +291,11 @@ export default function ProjectsSection({ worldId, accent }) {
                     {statusLabels[pStatus]}
                   </span>
                 </div>
-                {p.description && <div className={styles.projectDesc}>{p.description}</div>}
+                {p.description && (
+                  <div className={styles.projectDesc}>
+                    <LocationBadgeText text={p.description} worldId={worldId} locations={locations} />
+                  </div>
+                )}
                 {(p.todos_count ?? 0) > 0 ? (
                   <>
                     <div className={styles.progressBar}>
@@ -339,14 +353,16 @@ export default function ProjectsSection({ worldId, accent }) {
           <DialogTitle>{editing ? 'Редагувати проєкт' : 'Новий проєкт'}</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Назва"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 required
                 autoFocus
               />
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Опис"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}

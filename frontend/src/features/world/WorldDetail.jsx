@@ -36,6 +36,7 @@ import WikiSection from './components/WikiSection/WikiSection'
 import CardsMenu from './components/CardsMenu/CardsMenu'
 import sharedStyles from './components/shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from './components/shared/ExpandableCard'
+import LocationViewerProvider from './components/shared/LocationViewer'
 import styles from './WorldDetail.module.css'
 
 const RED = '#A63C39'
@@ -746,9 +747,10 @@ export default function WorldDetail({ onBack }) {
   }
 
   return (
-    <div
-      className={`${styles.page} ${editMode ? styles.editMode : ''} ${resize ? styles.resizing : ''}`}
-    >
+    <LocationViewerProvider accent={RED}>
+      <div
+        className={`${styles.page} ${editMode ? styles.editMode : ''} ${resize ? styles.resizing : ''}`}
+      >
       <div className={styles.topBar}>
         <Button className={backBtnStyles.backBtn} onClick={onBack}>
           <ArrowBackIcon fontSize="small" />
@@ -822,6 +824,7 @@ export default function WorldDetail({ onBack }) {
         layout={layout}
         onToggle={onToggleCard}
       />
-    </div>
+      </div>
+    </LocationViewerProvider>
   )
 }

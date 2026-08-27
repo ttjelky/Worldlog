@@ -18,6 +18,9 @@ import api from '../../../../api'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
+import LocationRichTextEditor from '../shared/LocationRichTextEditor'
+import LocationBadgeText from '../shared/LocationBadgeText'
+import { useLocations } from '../shared/locationData'
 import styles from './TodosSection.module.css'
 
 const priorities = {
@@ -41,6 +44,7 @@ export default function TodosSection({ worldId, accent }) {
     queryKey: ['todos', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/todos/`).then((r) => r.data),
   })
+  const { data: locations = [] } = useLocations(worldId)
   const todos = allTodos.filter((t) => !t.project)
   const mutation = useMutation({
     mutationFn: (payload) =>
@@ -142,16 +146,26 @@ export default function TodosSection({ worldId, accent }) {
                 onChange={() => toggle.mutate(t)}
                 size="small"
               />
-              <div className={styles.todoText}>
-                <div className={styles.todoTitleRow}>
-                  <div className={styles.todoTitle}>{t.title}</div>
-                  <span className={styles.priorityChip}>
-                    <span className={styles.priorityDot} style={{ background: dot }} />
-                    {label}
-                  </span>
+                <div className={styles.todoText}>
+                  <div className={styles.todoTitleRow}>
+                    <div className={styles.todoTitle}>
+                      <LocationBadgeText text={t.title} worldId={worldId} locations={locations} />
+                    </div>
+                    <span className={styles.priorityChip}>
+                      <span className={styles.priorityDot} style={{ background: dot }} />
+                      {label}
+                    </span>
+                  </div>
+                  {t.description && (
+                    <div className={styles.todoDesc}>
+                      <LocationBadgeText
+                        text={t.description}
+                        worldId={worldId}
+                        locations={locations}
+                      />
+                    </div>
+                  )}
                 </div>
-                {t.description && <div className={styles.todoDesc}>{t.description}</div>}
-              </div>
               <div className={styles.rowActions}>
                 <IconButton
                   size="small"
@@ -193,14 +207,16 @@ export default function TodosSection({ worldId, accent }) {
           <DialogTitle>{editing ? 'Редагувати завдання' : 'Нове завдання'}</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Назва"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 required
                 autoFocus
               />
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Опис"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}

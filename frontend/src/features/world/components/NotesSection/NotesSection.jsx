@@ -17,6 +17,9 @@ import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
+import LocationRichTextEditor from '../shared/LocationRichTextEditor'
+import LocationBadgeText from '../shared/LocationBadgeText'
+import { useLocations } from '../shared/locationData'
 import styles from './NotesSection.module.css'
 
 const empty = { title: '', content: '', tags: '' }
@@ -29,7 +32,7 @@ const parseTags = (tags) =>
         .filter(Boolean)
     : []
 
-function NoteDetails({ note, accent, onClose, onEdit, onDelete }) {
+function NoteDetails({ note, worldId, locations, accent, onClose, onEdit, onDelete }) {
   const tags = parseTags(note.tags)
 
   return (
@@ -39,7 +42,9 @@ function NoteDetails({ note, accent, onClose, onEdit, onDelete }) {
       </IconButton>
 
       <div className={styles.detailsHead}>
-        <h3 className={styles.detailsTitle}>{note.title}</h3>
+        <h3 className={styles.detailsTitle}>
+          <LocationBadgeText text={note.title} worldId={worldId} locations={locations} />
+        </h3>
       </div>
       {tags.length > 0 && (
         <div className={styles.detailsTags}>
@@ -51,7 +56,11 @@ function NoteDetails({ note, accent, onClose, onEdit, onDelete }) {
         </div>
       )}
 
-      {note.content && <p className={styles.detailsContent}>{note.content}</p>}
+      {note.content && (
+        <p className={styles.detailsContent}>
+          <LocationBadgeText text={note.content} worldId={worldId} locations={locations} />
+        </p>
+      )}
 
       <div className={styles.detailsFooter}>
         <div className={styles.actionBtns}>
@@ -79,6 +88,7 @@ export default function NotesSection({ worldId, accent }) {
     queryKey: ['notes', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/notes/`).then((r) => r.data),
   })
+  const { data: locations = [] } = useLocations(worldId)
 
   const mutation = useMutation({
     mutationFn: (payload) =>
@@ -156,6 +166,8 @@ export default function NotesSection({ worldId, accent }) {
             expandedContent={({ close }) => (
               <NoteDetails
                 note={n}
+                worldId={worldId}
+                locations={locations}
                 accent={accent}
                 onClose={close}
                 onEdit={() => openEdit(n)}
@@ -168,8 +180,14 @@ export default function NotesSection({ worldId, accent }) {
           >
             <div className={styles.noteItem}>
               <div className={styles.noteContent}>
-                <div className={styles.noteTitle}>{n.title}</div>
-                {n.content && <div className={styles.noteDesc}>{n.content}</div>}
+                <div className={styles.noteTitle}>
+                  <LocationBadgeText text={n.title} worldId={worldId} locations={locations} />
+                </div>
+                {n.content && (
+                  <div className={styles.noteDesc}>
+                    <LocationBadgeText text={n.content} worldId={worldId} locations={locations} />
+                  </div>
+                )}
                 {n.tags && (
                   <div className={styles.noteTags}>
                     {parseTags(n.tags).map((tag) => (
@@ -221,14 +239,16 @@ export default function NotesSection({ worldId, accent }) {
           <DialogTitle>{editing ? 'Редагувати нотатку' : 'Нова нотатка'}</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Назва"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 required
                 autoFocus
               />
-              <TextField
+              <LocationRichTextEditor
+                worldId={worldId}
                 label="Зміст"
                 value={form.content}
                 onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}

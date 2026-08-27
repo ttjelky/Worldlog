@@ -1,0 +1,146 @@
+.root {
+  position: relative;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid #7d7188;
+  transition: border-color 150ms linear;
+  display: flex;
+  flex-direction: column;
+}
+
+.root:hover {
+  border-color: #1d1a22;
+}
+
+.root.focused {
+  border-color: var(--accent, #6f42c6);
+  border-width: 2px;
+  margin: -1px;
+}
+
+.editable {
+  flex: 1;
+  outline: none;
+  padding: 18px 14px 9px;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #0d0d0f;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-height: 56px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.editable:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(13, 13, 15, 0.42);
+  pointer-events: none;
+}
+
+.editable.multiline {
+  overflow-y: auto;
+}
+
+.label {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  line-height: 1;
+  color: rgba(13, 13, 15, 0.6);
+  background: #fbf8ff;
+  padding: 0 4px;
+  margin-left: -4px;
+  pointer-events: none;
+  transform-origin: left top;
+  transition: color 150ms linear, top 150ms linear, font-size 150ms linear, transform 150ms linear;
+}
+
+.root.focused .label,
+.labelFloat {
+  top: -8px;
+  transform: none;
+  font-size: 12px;
+  color: var(--accent, #6f42c6);
+}
+
+.root:hover .label {
+  color: #0d0d0f;
+}
+
+.root.focused:hover .label {
+  color: var(--accent, #6f42c6);
+}
+
+.required {
+  color: #b3261e;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(111, 66, 198, 0.14);
+  color: #5b2ea8;
+  font-weight: 600;
+  padding: 1px 8px;
+  margin: 0 2px;
+  cursor: pointer;
+  vertical-align: middle;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.badge:hover {
+  background: rgba(111, 66, 198, 0.24);
+  transform: translateY(-1px);
+}
+
+.popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 8px;
+  right: 8px;
+  z-index: 20;
+  background: #ffffff;
+  border: 1px solid rgba(29, 26, 34, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(13, 13, 15, 0.16);
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1d1a22;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.option:hover {
+  background: rgba(111, 66, 198, 0.08);
+}
+
+.optionActive {
+  background: rgba(111, 66, 198, 0.14);
+}
+
+.option svg {
+  color: rgba(29, 26, 34, 0.5);
+}
