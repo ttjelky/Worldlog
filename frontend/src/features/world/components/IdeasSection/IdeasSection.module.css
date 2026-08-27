@@ -10,7 +10,7 @@
 
 .ideaItem {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   padding: 10px 12px;
   border-radius: 16px;
@@ -25,11 +25,9 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-.ideaHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 6px;
+.ideaContent {
+  flex: 1;
+  min-width: 0;
 }
 
 .ideaTitle {
@@ -45,6 +43,8 @@
 }
 
 .convertBtn {
+  display: inline-flex;
+  align-items: center;
   font-size: 12px;
   font-weight: 600;
   padding: 4px 12px;
@@ -53,7 +53,7 @@
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
   cursor: pointer;
-  margin-top: 6px;
+  margin-top: 8px;
   transition: background 0.15s ease;
 }
 

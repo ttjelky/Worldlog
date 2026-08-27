@@ -99,24 +99,22 @@ export default function IdeasSection({ worldId, accent }) {
       >
         {ideas.map((t) => (
           <div key={t.id} className={styles.ideaItem}>
-            <div className={styles.ideaHeader}>
-              <div>
-                <div className={styles.ideaTitle}>{t.title}</div>
-                {t.content && <div className={styles.ideaDesc}>{t.content}</div>}
-              </div>
-              <div className={styles.rowActions}>
-                <IconButton size="small" onClick={() => openEdit(t)}>
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" onClick={() => deleteIdea(t)}>
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
-              </div>
+            <div className={styles.ideaContent}>
+              <div className={styles.ideaTitle}>{t.title}</div>
+              {t.content && <div className={styles.ideaDesc}>{t.content}</div>}
+              <button className={styles.convertBtn} onClick={() => convertMutation.mutate(t)}>
+                <AutoAwesomeIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                Перетворити на проєкт
+              </button>
             </div>
-            <button className={styles.convertBtn} onClick={() => convertMutation.mutate(t)}>
-              <AutoAwesomeIcon sx={{ fontSize: 14, mr: 0.5 }} />
-              Перетворити на проєкт
-            </button>
+            <div className={styles.rowActions}>
+              <IconButton size="small" onClick={() => openEdit(t)}>
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={() => deleteIdea(t)}>
+                <DeleteOutlinedIcon fontSize="small" />
+              </IconButton>
+            </div>
           </div>
         ))}
         {ideas.length === 0 && (
