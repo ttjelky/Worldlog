@@ -6,6 +6,12 @@
   transition: border-color 150ms linear;
   display: flex;
   flex-direction: column;
+  outline: none;
+}
+
+.root:focus,
+.root:focus-visible {
+  outline: none;
 }
 
 .root:hover {
@@ -13,9 +19,11 @@
 }
 
 .root.focused {
-  border-color: var(--accent, #6f42c6);
+  border-color: var(--accent, #7d7188);
   border-width: 2px;
   margin: -1px;
+  box-shadow: none;
+  outline: none;
 }
 
 .editable {
@@ -32,6 +40,11 @@
   min-height: 56px;
   display: flex;
   align-items: flex-start;
+}
+
+.editable:focus,
+.editable:focus-visible {
+  outline: none;
 }
 
 .editable:empty::before {
