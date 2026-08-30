@@ -108,7 +108,7 @@ export default function IdeasSection({ worldId, accent }) {
               </div>
               {t.content && (
                 <div className={styles.ideaDesc}>
-                  <LocationBadgeText text={t.content} worldId={worldId} locations={locations} />
+                  <LocationBadgeText text={t.content} worldId={worldId} locations={locations} small />
                 </div>
               )}
               <button className={styles.convertBtn} onClick={() => convertMutation.mutate(t)}>

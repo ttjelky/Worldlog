@@ -115,7 +115,7 @@
 .popup {
   position: fixed;
   z-index: 99999;
-  background: #ffffff;
+  background: #fbf8ff;
   border: 1px solid rgba(29, 26, 34, 0.12);
   border-radius: 20px;
   box-shadow: 0 8px 24px rgba(13, 13, 15, 0.16);
@@ -142,11 +142,11 @@
 }
 
 .option:hover {
-  background: color-mix(in srgb, var(--accent, #6f42c6) 8%, transparent);
+  background: rgba(29, 26, 34, 0.06);
 }
 
 .optionActive {
-  background: color-mix(in srgb, var(--accent, #6f42c6) 14%, transparent);
+  background: rgba(29, 26, 34, 0.1);
 }
 
 .option svg {

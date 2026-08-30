@@ -13,7 +13,7 @@ import styles from './LocationBadgeText.module.css'
  *  - worldId: світ (для отримання локацій, якщо не передано locations)
  *  - locations: готовий список локацій (необов'язково, економить запит)
  */
-export default function LocationBadgeText({ text, worldId, locations: locationsProp, className }) {
+export default function LocationBadgeText({ text, worldId, locations: locationsProp, className, small }) {
   const { data: fetchedLocations = [] } = useLocations(worldId)
   const locations = locationsProp ?? fetchedLocations
   const { openLocation } = useLocationViewer()
@@ -57,7 +57,7 @@ export default function LocationBadgeText({ text, worldId, locations: locationsP
           <button
             key={i}
             type="button"
-            className={styles.badge}
+            className={`${styles.badge} ${small ? styles.badgeSmall : ''}`}
             title={`Відкрити локацію «${seg.value}» (${categoryLabel(seg.location?.category)})`}
             onClick={(e) => {
               e.stopPropagation()

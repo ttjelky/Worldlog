@@ -161,6 +161,7 @@ export default function TodosSection({ worldId, accent }) {
                         text={t.description}
                         worldId={worldId}
                         locations={locations}
+                        small
                       />
                     </div>
                   )}

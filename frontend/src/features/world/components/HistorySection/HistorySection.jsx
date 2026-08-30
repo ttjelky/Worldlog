@@ -120,6 +120,7 @@ export default function HistorySection({ worldId, accent }) {
                           text={h.description}
                           worldId={worldId}
                           locations={locations}
+                          small
                         />
                       </p>
                     )}

@@ -113,7 +113,7 @@ function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, 
 
       {project.description && (
         <p className={styles.detailsDesc}>
-          <LocationBadgeText text={project.description} worldId={worldId} locations={locations} />
+          <LocationBadgeText text={project.description} worldId={worldId} locations={locations} small />
         </p>
       )}
 
@@ -293,7 +293,7 @@ export default function ProjectsSection({ worldId, accent }) {
                 </div>
                 {p.description && (
                   <div className={styles.projectDesc}>
-                    <LocationBadgeText text={p.description} worldId={worldId} locations={locations} />
+                    <LocationBadgeText text={p.description} worldId={worldId} locations={locations} small />
                   </div>
                 )}
                 {(p.todos_count ?? 0) > 0 ? (

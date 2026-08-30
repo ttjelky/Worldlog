@@ -58,7 +58,7 @@ function NoteDetails({ note, worldId, locations, accent, onClose, onEdit, onDele
 
       {note.content && (
         <p className={styles.detailsContent}>
-          <LocationBadgeText text={note.content} worldId={worldId} locations={locations} />
+          <LocationBadgeText text={note.content} worldId={worldId} locations={locations} small />
         </p>
       )}
 
@@ -185,7 +185,7 @@ export default function NotesSection({ worldId, accent }) {
                 </div>
                 {n.content && (
                   <div className={styles.noteDesc}>
-                    <LocationBadgeText text={n.content} worldId={worldId} locations={locations} />
+                    <LocationBadgeText text={n.content} worldId={worldId} locations={locations} small />
                   </div>
                 )}
                 {n.tags && (

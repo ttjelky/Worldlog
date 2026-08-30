@@ -24,6 +24,21 @@
   background: rgba(255, 255, 255, 0.42);
 }
 
+.badgeSmall {
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.14);
+  padding: 0 6px;
+  margin: 0 1px;
+}
+
+.badgeSmall:hover {
+  background: rgba(255, 255, 255, 0.24);
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .badge:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.7);
   outline-offset: 1px;

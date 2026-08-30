@@ -192,7 +192,7 @@ export default function PlannerSection({ worldId, accent }) {
                 </div>
                 {t.description && (
                   <div className={styles.todoDesc}>
-                    <LocationBadgeText text={t.description} worldId={worldId} locations={locations} />
+                    <LocationBadgeText text={t.description} worldId={worldId} locations={locations} small />
                   </div>
                 )}
               </div>
