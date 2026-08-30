@@ -150,10 +150,6 @@ export default function TodosSection({ worldId, accent }) {
                     <div className={styles.todoTitle}>
                       <LocationBadgeText text={t.title} worldId={worldId} locations={locations} />
                     </div>
-                    <span className={styles.priorityChip}>
-                      <span className={styles.priorityDot} style={{ background: dot }} />
-                      {label}
-                    </span>
                   </div>
                   {t.description && (
                     <div className={styles.todoDesc}>
@@ -166,6 +162,10 @@ export default function TodosSection({ worldId, accent }) {
                     </div>
                   )}
                 </div>
+                <span className={styles.priorityChip}>
+                  <span className={styles.priorityDot} style={{ background: dot }} />
+                  {label}
+                </span>
               <div className={styles.rowActions}>
                 <IconButton
                   size="small"
