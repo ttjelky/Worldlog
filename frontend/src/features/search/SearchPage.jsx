@@ -1,14 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Snackbar, TextField, InputAdornment, CircularProgress } from '@mui/material'
+import { Snackbar, TextField, InputAdornment, CircularProgress, Button } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import ClearIcon from '@mui/icons-material/Clear'
+import PublicIcon from '@mui/icons-material/Public'
+import PeopleIcon from '@mui/icons-material/People'
+import LocationOnIcon from '@mui/icons-material/LocationOn'
+import AssignmentIcon from '@mui/icons-material/Assignment'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
-import SearchResult from './components/SearchResult'
 import SearchSkeleton from './components/SearchSkeleton'
 import styles from './SearchPage.module.css'
+
+const THEME_LABELS = {
+  sulfur_caves: 'Сірчані печери',
+  amethyst: 'Аметист',
+  trial_palace: 'Палац випробувань',
+}
 
 export default function SearchPage() {
   const navigate = useNavigate()
@@ -31,35 +40,20 @@ export default function SearchPage() {
   }, [query])
 
   const { data: results = [], isLoading } = useQuery({
-    queryKey: ['userSearch', debouncedQuery],
-    queryFn: () => api.get(`/users/search/?q=${encodeURIComponent(debouncedQuery)}`).then((r) => r.data),
+    queryKey: ['worldSearch', debouncedQuery],
+    queryFn: () => api.get(`/worlds/search/?q=${encodeURIComponent(debouncedQuery)}`).then((r) => r.data),
     enabled: debouncedQuery.length >= 2,
   })
 
-  const sendRequest = useMutation({
-    mutationFn: (userId) => api.post('/friends/send/', { user_id: userId }),
+  const requestAccess = useMutation({
+    mutationFn: (worldId) => api.post(`/worlds/${worldId}/access-requests/`),
     onSuccess: () => {
-      qc.invalidateQueries(['userSearch', debouncedQuery])
-      setSnackbar({ open: true, message: 'Запит надіслано' })
+      setSnackbar({ open: true, message: 'Запит на доступ надіслано' })
     },
     onError: (err) => {
       setSnackbar({
         open: true,
         message: err.response?.data?.detail || 'Не вдалося надіслати запит',
-      })
-    },
-  })
-
-  const acceptRequest = useMutation({
-    mutationFn: (friendshipId) => api.post(`/friends/${friendshipId}/accept/`),
-    onSuccess: () => {
-      qc.invalidateQueries(['userSearch', debouncedQuery])
-      setSnackbar({ open: true, message: 'Запит прийнято' })
-    },
-    onError: (err) => {
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.detail || 'Не вдалося прийняти запит',
       })
     },
   })
@@ -83,7 +77,7 @@ export default function SearchPage() {
 
       <div className={styles.page}>
         <section className={styles.hero}>
-          <p className={styles.heroGreeting}>Знайдіть людей</p>
+          <p className={styles.heroGreeting}>Знайдіть світ</p>
           <h1 className={styles.heroTitle}>Пошук</h1>
         </section>
 
@@ -91,7 +85,7 @@ export default function SearchPage() {
           <TextField
             inputRef={inputRef}
             className={styles.searchInput}
-            placeholder="Введіть ім'я користувача..."
+            placeholder="Назва світу або опис..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             slotProps={{
@@ -135,7 +129,7 @@ export default function SearchPage() {
         {showEmpty && (
           <div className={styles.emptyState}>
             <SearchIcon className={styles.emptyIcon} />
-            <h3 className={styles.emptyTitle}>Нікого не знайдено</h3>
+            <h3 className={styles.emptyTitle}>Нічого не знайдено</h3>
             <p className={styles.emptyText}>
               Спробуйте інший пошуковий запит
             </p>
@@ -144,23 +138,22 @@ export default function SearchPage() {
 
         {!showResults && (
           <div className={styles.emptyState}>
-            <SearchIcon className={styles.emptyIcon} />
-            <h3 className={styles.emptyTitle}>Знайдіть користувачів</h3>
+            <PublicIcon className={styles.emptyIcon} />
+            <h3 className={styles.emptyTitle}>Знайдіть публічні світи</h3>
             <p className={styles.emptyText}>
-              Введіть ім'я користувача для пошуку
+              Введіть назву або опис світу для пошуку
             </p>
           </div>
         )}
 
         {results.length > 0 && (
           <div className={styles.resultsList}>
-            {results.map((user) => (
-              <SearchResult
-                key={user.id}
-                user={user}
-                onSendFriend={(userId) => sendRequest.mutate(userId)}
-                onAcceptFriend={(friendshipId) => acceptRequest.mutate(friendshipId)}
-                loading={sendRequest.isPending || acceptRequest.isPending}
+            {results.map((world) => (
+              <WorldSearchResult
+                key={world.id}
+                world={world}
+                onRequestAccess={(worldId) => requestAccess.mutate(worldId)}
+                loading={requestAccess.isPending}
                 onNavigate={navigate}
               />
             ))}
@@ -191,9 +184,74 @@ export default function SearchPage() {
   )
 }
 
+function WorldSearchResult({ world, onRequestAccess, loading, onNavigate }) {
+  const themeLabel = THEME_LABELS[world.theme] || world.theme
+
+  return (
+    <div
+      className={styles.worldCard}
+      onClick={() => onNavigate(`/app/worlds/${world.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onNavigate(`/app/worlds/${world.id}`)
+        }
+      }}
+    >
+      <div className={styles.worldCardHeader}>
+        {world.cover_image_url ? (
+          <img
+            src={world.cover_image_url}
+            alt={world.name}
+            className={styles.worldCover}
+          />
+        ) : (
+          <div className={styles.worldCoverPlaceholder}>
+            <PublicIcon />
+          </div>
+        )}
+        <div className={styles.worldInfo}>
+          <span className={styles.worldName}>{world.name}</span>
+          <span className={styles.worldOwner}>@{world.owner_username}</span>
+          {world.description && (
+            <span className={styles.worldDescription}>{world.description}</span>
+          )}
+        </div>
+      </div>
+      <div className={styles.worldStats}>
+        <span className={styles.worldStat}>
+          <PeopleIcon fontSize="small" /> {world.players_count}
+        </span>
+        <span className={styles.worldStat}>
+          <LocationOnIcon fontSize="small" /> {world.locations_count}
+        </span>
+        <span className={styles.worldStat}>
+          <AssignmentIcon fontSize="small" /> {world.todos_done}/{world.todos_count}
+        </span>
+        <span className={styles.worldThemeBadge}>{themeLabel}</span>
+      </div>
+      <div className={styles.actionArea}>
+        <Button
+          className={styles.accessBtn}
+          onClick={(e) => {
+            e.stopPropagation()
+            onRequestAccess(world.id)
+          }}
+          disabled={loading}
+        >
+          Запросити доступ
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function handleNav(id, navigate) {
   if (id === 'home') navigate('/app')
   else if (id === 'worlds') navigate('/app/worlds')
   else if (id === 'friends') navigate('/app/friends')
   else if (id === 'search') navigate('/app/search')
+  else if (id === 'notifications') navigate('/app/notifications')
 }

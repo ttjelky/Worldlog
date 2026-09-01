@@ -83,7 +83,13 @@ export function NotificationProvider({ children }) {
   const navigateToRequest = useCallback(
     (notification) => {
       markAsRead(notification.id)
-      navigate('/app/friends?tab=requests')
+      if (notification.notification_type === 'friend_request' || notification.notification_type === 'friend_accepted') {
+        navigate('/app/friends?tab=requests')
+      } else if (notification.notification_type.startsWith('world_access')) {
+        navigate('/app/notifications')
+      } else {
+        navigate('/app/notifications')
+      }
     },
     [navigate, markAsRead],
   )

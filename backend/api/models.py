@@ -310,15 +310,39 @@ class UserProfile(models.Model):
         return f'Profile of {self.user.username}'
 
 
+class WorldAccessRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        ACCEPTED = 'accepted', 'Accepted'
+        REJECTED = 'rejected', 'Rejected'
+
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='access_requests')
+    requester = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='world_access_requests'
+    )
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('world', 'requester')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.requester} -> {self.world} ({self.status})'
+
+
 class Notification(models.Model):
     class Type(models.TextChoices):
         FRIEND_REQUEST = 'friend_request', 'Friend Request'
         FRIEND_ACCEPTED = 'friend_accepted', 'Friend Accepted'
+        WORLD_ACCESS_REQUEST = 'world_access_request', 'World Access Request'
+        WORLD_ACCESS_ACCEPTED = 'world_access_accepted', 'World Access Accepted'
+        WORLD_ACCESS_REJECTED = 'world_access_rejected', 'World Access Rejected'
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications'
     )
-    notification_type = models.CharField(max_length=20, choices=Type.choices)
+    notification_type = models.CharField(max_length=30, choices=Type.choices)
     from_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications_from',
         null=True, blank=True

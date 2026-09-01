@@ -1,0 +1,214 @@
+.appShell {
+  min-height: 100vh;
+  background: #434343;
+  color: #ffffff;
+  --nav-link-1: #ffffff;
+  --nav-link-2: #ffffff;
+  --nav-active-text: #434343;
+  --nav-profile: #d57c6a;
+}
+
+.page {
+  padding: clamp(20px, 3vw, 42px) clamp(5px, 3vw, 20px) 64px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.hero {
+  margin-bottom: 24px;
+  margin-left: clamp(20px, 40px, 60px);
+}
+
+.heroRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.heroGreeting {
+  font-size: 36px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.heroTitle {
+  font-size: clamp(48px, 8vw, 80px);
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.markAllBtn {
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-transform: none !important;
+  padding: 8px 20px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  transition: all 0.18s ease !important;
+  flex-shrink: 0;
+}
+
+.markAllBtn:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 clamp(20px, 40px, 60px);
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.unread {
+  background: rgba(232, 133, 90, 0.08);
+  border-left: 3px solid #e8855a;
+}
+
+.itemIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 20px;
+}
+
+.itemContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.itemMessage {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.4;
+}
+
+.itemTime {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 2px;
+}
+
+.itemActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.acceptBtn {
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  text-transform: none !important;
+  padding: 6px 16px !important;
+  background: #4caf7d !important;
+  color: #ffffff !important;
+  min-width: auto !important;
+}
+
+.acceptBtn:hover {
+  background: #43a06c !important;
+}
+
+.rejectBtn {
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  text-transform: none !important;
+  padding: 6px 16px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  min-width: auto !important;
+}
+
+.rejectBtn:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 80px 20px;
+  gap: 12px;
+}
+
+.emptyIcon {
+  font-size: 56px;
+  color: rgba(255, 255, 255, 0.15);
+  margin-bottom: 8px;
+}
+
+.emptyTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.emptyText {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 360px;
+}
+
+@media (max-width: 500px) {
+  .hero {
+    margin-left: clamp(16px, 4vw, 20px);
+  }
+
+  .list {
+    padding: 0 clamp(16px, 4vw, 20px);
+  }
+
+  .item {
+    flex-wrap: wrap;
+  }
+
+  .itemActions {
+    width: 100%;
+    margin-top: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

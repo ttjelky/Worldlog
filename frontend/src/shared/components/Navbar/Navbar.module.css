@@ -77,7 +77,26 @@
 }
 
 .navRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
+}
+
+.notificationsBtn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  padding: 8px !important;
+  border-radius: 999px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: background 0.18s ease, color 0.18s ease !important;
+}
+
+.notificationsBtn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
 }
 
 .profileButton {

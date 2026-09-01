@@ -9,6 +9,7 @@ import WorldDetail from './features/world/WorldDetail'
 import ProfilePage from './features/profile/ProfilePage'
 import FriendsPage from './features/friends/FriendsPage'
 import SearchPage from './features/search/SearchPage'
+import NotificationsPage from './features/notifications/NotificationsPage'
 import UndoProvider from './shared/undo/UndoProvider'
 import { NotificationProvider } from './shared/notifications/NotificationProvider'
 import ToastNotification from './shared/notifications/ToastNotification'
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="worlds/:worldId" element={<WorldDetail onBack={back} />} />
         <Route path="friends" element={<FriendsPage />} />
         <Route path="search" element={<SearchPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="profile/:username" element={<ProfilePage />} />
       </Route>

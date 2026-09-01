@@ -368,4 +368,5 @@ function handleNav(id, navigate) {
   else if (id === 'worlds') navigate('/app/worlds')
   else if (id === 'friends') navigate('/app/friends')
   else if (id === 'search') navigate('/app/search')
+  else if (id === 'notifications') navigate('/app/notifications')
 }

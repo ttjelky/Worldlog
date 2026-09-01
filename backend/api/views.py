@@ -23,6 +23,7 @@ from .models import (
     UserProfile,
     WikiPage,
     World,
+    WorldAccessRequest,
 )
 from .permissions import IsOwnerOrMember, IsWorldOwner, IsWorldEditorOrAbove, get_user_role
 from .serializers import (
@@ -44,6 +45,7 @@ from .serializers import (
     UserSerializer,
     UserUpdateSerializer,
     WikiPageSerializer,
+    WorldAccessRequestSerializer,
     WorldSerializer,
 )
 
@@ -611,3 +613,105 @@ class ParticipantSearchView(APIView):
             results.append(data)
 
         return Response(results)
+
+
+class WorldSearchView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()
+        if len(query) < 2:
+            return Response([])
+
+        worlds = World.objects.filter(
+            is_public=True,
+        ).filter(
+            Q(name__icontains=query) | Q(description__icontains=query)
+        ).exclude(
+            owner=request.user
+        ).exclude(
+            memberships__user=request.user
+        )[:20]
+
+        serializer = WorldSerializer(worlds, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class WorldAccessRequestViewSet(viewsets.ModelViewSet):
+    serializer_class = WorldAccessRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        world_id = self.kwargs.get('world_id')
+        if world_id:
+            return WorldAccessRequest.objects.filter(world_id=world_id).select_related('requester', 'requester__profile', 'world')
+        return WorldAccessRequest.objects.none()
+
+    def perform_create(self, serializer):
+        world_id = self.kwargs['world_id']
+        world = World.objects.get(pk=world_id)
+        serializer.save(requester=self.request.user, world=world)
+
+
+class AcceptWorldAccessRequestView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            access_request = WorldAccessRequest.objects.get(pk=pk)
+        except WorldAccessRequest.DoesNotExist:
+            return Response({'detail': 'Request not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        world = access_request.world
+        if world.owner_id != request.user.id:
+            return Response({'detail': 'Only the world owner can accept requests.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if access_request.status != WorldAccessRequest.Status.PENDING:
+            return Response({'detail': 'This request is no longer pending.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        access_request.status = WorldAccessRequest.Status.ACCEPTED
+        access_request.save()
+
+        Membership.objects.get_or_create(
+            world=world,
+            user=access_request.requester,
+            defaults={'role': Membership.Role.VIEWER, 'status': Membership.Status.ACTIVE},
+        )
+
+        Notification.objects.create(
+            user=access_request.requester,
+            notification_type=Notification.Type.WORLD_ACCESS_ACCEPTED,
+            from_user=request.user,
+            message=f'Ваш запит на доступ до світу "{world.name}" прийнято',
+        )
+
+        return Response(WorldAccessRequestSerializer(access_request, context={'request': request}).data)
+
+
+class RejectWorldAccessRequestView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            access_request = WorldAccessRequest.objects.get(pk=pk)
+        except WorldAccessRequest.DoesNotExist:
+            return Response({'detail': 'Request not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        world = access_request.world
+        if world.owner_id != request.user.id:
+            return Response({'detail': 'Only the world owner can reject requests.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if access_request.status != WorldAccessRequest.Status.PENDING:
+            return Response({'detail': 'This request is no longer pending.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        access_request.status = WorldAccessRequest.Status.REJECTED
+        access_request.save()
+
+        Notification.objects.create(
+            user=access_request.requester,
+            notification_type=Notification.Type.WORLD_ACCESS_REJECTED,
+            from_user=request.user,
+            message=f'Ваш запит на доступ до світу "{world.name}" відхилено',
+        )
+
+        return Response(WorldAccessRequestSerializer(access_request, context={'request': request}).data)

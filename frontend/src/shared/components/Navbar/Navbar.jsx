@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Button, Menu, MenuItem } from '@mui/material'
+import { Button, Menu, MenuItem, Badge } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import NotificationsIcon from '@mui/icons-material/Notifications'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../auth'
+import { useNotifications } from '../../notifications/NotificationProvider'
 import UserAvatar from '../UserAvatar/UserAvatar'
 import styles from './Navbar.module.css'
 
@@ -30,6 +32,7 @@ function NavLinkButton({ item, activePage, onNavigate }) {
 export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-logo-purple.png' }) {
   const [anchorEl, setAnchorEl] = useState(null)
   const { user, logout } = useAuth()
+  const { unreadCount } = useNotifications()
   const navigate = useNavigate()
 
   const handleNav = (id) => {
@@ -37,6 +40,7 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
     else if (id === 'worlds') navigate('/app/worlds')
     else if (id === 'friends') navigate('/app/friends')
     else if (id === 'search') navigate('/app/search')
+    else if (id === 'notifications') navigate('/app/notifications')
     else onNavigate(id)
   }
 
@@ -63,6 +67,15 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
       </div>
 
       <div className={styles.navRight}>
+        <Button
+          className={styles.notificationsBtn}
+          onClick={() => navigate('/app/notifications')}
+          aria-label="Сповіщення"
+        >
+          <Badge badgeContent={unreadCount} color="error" max={9}>
+            <NotificationsIcon />
+          </Badge>
+        </Button>
         <Button
           className={styles.profileButton}
           onClick={(e) => setAnchorEl(e.currentTarget)}

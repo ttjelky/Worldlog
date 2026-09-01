@@ -24,6 +24,7 @@ from .models import (
     UserProfile,
     WikiPage,
     World,
+    WorldAccessRequest,
 )
 
 
@@ -460,6 +461,7 @@ class ProfileUpdateSerializer(serializers.Serializer):
     username = serializers.CharField(required=False, max_length=150)
     display_name = serializers.CharField(required=False, max_length=100, allow_blank=True)
     bio = serializers.CharField(required=False, max_length=500, allow_blank=True)
+    avatar = serializers.ImageField(required=False)
 
     def validate_username(self, value):
         value = value.strip().lower()
@@ -489,9 +491,33 @@ class ProfileUpdateSerializer(serializers.Serializer):
             profile.display_name = validated_data['display_name']
         if 'bio' in validated_data:
             profile.bio = validated_data['bio']
+        if 'avatar' in validated_data:
+            profile.avatar = validated_data['avatar']
         profile.save()
 
         return instance
+
+
+class WorldAccessRequestSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='requester.username', read_only=True)
+    display_name = serializers.CharField(source='requester.profile.display_name', read_only=True, default='')
+    avatar_url = serializers.SerializerMethodField()
+    world_name = serializers.CharField(source='world.name', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = WorldAccessRequest
+        fields = ('id', 'world', 'world_name', 'requester', 'username', 'display_name', 'avatar_url', 'status', 'status_display', 'created_at')
+        read_only_fields = ('requester', 'status')
+
+    def get_avatar_url(self, obj):
+        profile = getattr(obj.requester, 'profile', None)
+        if profile and profile.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(profile.avatar.url)
+            return profile.avatar.url
+        return None
 
 
 class NotificationSerializer(serializers.ModelSerializer):

@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .views import (
     AcceptFriendRequestView,
+    AcceptWorldAccessRequestView,
     BookmarkViewSet,
     CancelFriendRequestView,
     FriendshipViewSet,
@@ -22,6 +23,7 @@ from .views import (
     ProfileUpdateView,
     ProjectViewSet,
     RejectFriendRequestView,
+    RejectWorldAccessRequestView,
     RegisterView,
     RelationshipViewSet,
     SendFriendRequestView,
@@ -30,6 +32,8 @@ from .views import (
     UserPublicProfileView,
     UserSearchView,
     WikiPageViewSet,
+    WorldAccessRequestViewSet,
+    WorldSearchView,
     WorldViewSet,
 )
 
@@ -76,6 +80,11 @@ router.register(
     r'worlds/(?P<world_id>\d+)/relationships', RelationshipViewSet, basename='world-relationship'
 )
 router.register('friends', FriendshipViewSet, basename='friendship')
+router.register(
+    r'worlds/(?P<world_id>\d+)/access-requests',
+    WorldAccessRequestViewSet,
+    basename='world-access-request',
+)
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
@@ -86,6 +95,9 @@ urlpatterns = [
     path('me/profile/', ProfileUpdateView.as_view(), name='me-profile'),
     path('users/search/', UserSearchView.as_view(), name='user-search'),
     path('users/<str:username>/', UserPublicProfileView.as_view(), name='user-public-profile'),
+    path('worlds/search/', WorldSearchView.as_view(), name='world-search'),
+    path('world-access-requests/<int:pk>/accept/', AcceptWorldAccessRequestView.as_view(), name='world-access-accept'),
+    path('world-access-requests/<int:pk>/reject/', RejectWorldAccessRequestView.as_view(), name='world-access-reject'),
     path('friends/send/', SendFriendRequestView.as_view(), name='friend-send'),
     path('friends/<int:pk>/accept/', AcceptFriendRequestView.as_view(), name='friend-accept'),
     path('friends/<int:pk>/reject/', RejectFriendRequestView.as_view(), name='friend-reject'),
