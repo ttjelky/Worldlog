@@ -12,6 +12,15 @@ class World(models.Model):
     start_date = models.DateField(null=True, blank=True)
     cover_image = models.ImageField(upload_to='world_covers/', blank=True, null=True)
     is_public = models.BooleanField(default=False)
+
+    class Theme(models.TextChoices):
+        SULFUR_CAVES = 'sulfur_caves', 'Сіркові печери'
+        AMETHYST = 'amethyst', 'Аметистова'
+        TRIAL_PALACE = 'trial_palace', 'Палац випробувань'
+
+    theme = models.CharField(
+        max_length=20, choices=Theme.choices, default=Theme.SULFUR_CAVES
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

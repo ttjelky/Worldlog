@@ -18,6 +18,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import TuneIcon from '@mui/icons-material/Tune'
 import ViewListIcon from '@mui/icons-material/ViewList'
+import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api'
 import backBtnStyles from '../../shared/styles/backButton.module.css'
@@ -37,10 +38,10 @@ import CardsMenu from './components/CardsMenu/CardsMenu'
 import sharedStyles from './components/shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from './components/shared/ExpandableCard'
 import LocationViewerProvider from './components/shared/LocationViewer'
+import ThemeSelector from '../../shared/components/ThemeSelector/ThemeSelector'
+import { DEFAULT_THEME_ID, getWorldTheme, themeDialogStyle } from './themes'
 import styles from './WorldDetail.module.css'
 
-const RED = '#A63C39'
-const GREEN = '#247A57'
 const MIN_SLOT_WIDTH = 340
 
 const CARD_META = {
@@ -102,7 +103,7 @@ function saveLayout(worldId, data) {
   } catch {}
 }
 
-function InfoCard({ world }) {
+function InfoCard({ world, accent }) {
   const stats = [
     ['Гравці', world.players_count],
     ['Локації', world.locations_count],
@@ -131,7 +132,7 @@ function InfoCard({ world }) {
     <div
       ref={cardRef}
       className={`${sharedStyles.card} ${styles.infoCard} ${modal ? styles.infoCardExpanded : ''}`}
-      style={{ '--accent': RED }}
+      style={{ '--accent': accent }}
     >
       <h2 className={styles.infoTitle}>{world.name}</h2>
       <p className={styles.infoDesc}>{world.description || 'Немає опису'}</p>
@@ -166,7 +167,7 @@ function InfoCard({ world }) {
   )
 }
 
-function CoverImageCard({ world, worldId }) {
+function CoverImageCard({ world, worldId, accent }) {
   const qc = useQueryClient()
   const inputRef = useRef(null)
 
@@ -199,7 +200,7 @@ function CoverImageCard({ world, worldId }) {
   }
 
   return (
-    <div className={`${sharedStyles.card} ${styles.coverCard}`} style={{ '--accent': '#6b7280' }}>
+    <div className={`${sharedStyles.card} ${styles.coverCard}`} style={{ '--accent': accent }}>
       {world.cover_image_url ? (
         <>
           <input
@@ -283,7 +284,12 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
   }, [world])
 
   const updateMutation = useMutation({
-    mutationFn: () => api.patch(`/worlds/${worldId}/`, form),
+    mutationFn: () =>
+      api.patch(`/worlds/${worldId}/`, {
+        ...form,
+        // Порожній рядок дати DRF відхиляє 400-м; порожнє поле — це null
+        start_date: form.start_date || null,
+      }),
     onSuccess: () => {
       qc.invalidateQueries(['world', String(worldId)])
       onClose()
@@ -297,13 +303,15 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
     updateMutation.mutate()
   }
 
+  const paperStyle = themeDialogStyle(world?.theme)
+
   return (
     <Dialog
       open={open}
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      slotProps={{ paper: { className: sharedStyles.dialogPaper } }}
+      slotProps={{ paper: { className: sharedStyles.dialogPaper, style: paperStyle } }}
     >
       <form onSubmit={submit}>
         <DialogTitle>Редагувати світ</DialogTitle>
@@ -366,68 +374,119 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
   )
 }
 
-const CARD_CONTENT = {
-  info: (props) => (
-    <ExpandableCard>
-      <InfoCard world={props.world} />
-    </ExpandableCard>
-  ),
-  cover: (props) => <CoverImageCard world={props.world} worldId={props.worldId} />,
-  players: (props) => (
-    <ExpandableCard>
-      <PlayersSection worldId={props.worldId} accent={GREEN} />
-    </ExpandableCard>
-  ),
-  locations: (props) => (
-    <ExpandableCard wide>
-      <LocationsSection worldId={props.worldId} accent={RED} />
-    </ExpandableCard>
-  ),
-  todos: (props) => (
-    <ExpandableCard>
-      <TodosSection worldId={props.worldId} accent={GREEN} />
-    </ExpandableCard>
-  ),
-  history: (props) => (
-    <ExpandableCard>
-      <HistorySection worldId={props.worldId} accent={RED} />
-    </ExpandableCard>
-  ),
-  notes: (props) => (
-    <ExpandableCard>
-      <NotesSection worldId={props.worldId} accent={GREEN} />
-    </ExpandableCard>
-  ),
-  projects: (props) => (
-    <ExpandableCard>
-      <ProjectsSection worldId={props.worldId} accent={RED} />
-    </ExpandableCard>
-  ),
-  planner: (props) => (
-    <ExpandableCard>
-      <PlannerSection worldId={props.worldId} accent={GREEN} />
-    </ExpandableCard>
-  ),
-  bookmarks: (props) => (
-    <ExpandableCard>
-      <BookmarksSection worldId={props.worldId} accent={RED} />
-    </ExpandableCard>
-  ),
-  ideas: (props) => (
-    <ExpandableCard>
-      <IdeasSection worldId={props.worldId} accent={GREEN} />
-    </ExpandableCard>
-  ),
-  wiki: (props) => (
-    <ExpandableCard wide>
-      <WikiSection worldId={props.worldId} accent={GREEN} />
-    </ExpandableCard>
-  ),
-  progress: (props) => (
-    <ExpandableCard>
-      <ProgressSection worldId={props.worldId} accent={GREEN} />
-    </ExpandableCard>
-  ),
+function ThemeDialog({ open, onClose, world, worldId }) {
+  const qc = useQueryClient()
+  const [theme, setTheme] = useState(DEFAULT_THEME_ID)
+
+  useEffect(() => {
+    if (world) setTheme(world.theme || DEFAULT_THEME_ID)
+  }, [world])
+
+  const updateTheme = useMutation({
+    mutationFn: () => api.patch(`/worlds/${worldId}/`, { theme }),
+    onSuccess: () => {
+      qc.invalidateQueries(['world', String(worldId)])
+      onClose()
+    },
+  })
+
+  const submit = (e) => {
+    e.preventDefault()
+    updateTheme.mutate()
+  }
+
+  const paperStyle = themeDialogStyle(world?.theme)
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{ paper: { className: sharedStyles.dialogPaper, style: paperStyle } }}
+    >
+      <form onSubmit={submit}>
+        <DialogTitle>Тема світу</DialogTitle>
+        <DialogContent>
+          <ThemeSelector value={theme} onChange={setTheme} />
+        </DialogContent>
+        <DialogActions className={sharedStyles.dialogActions}>
+          <Button onClick={onClose} className={sharedStyles.dialogBtnCancel}>
+            Скасувати
+          </Button>
+          <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
+            Зберегти
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
+  )
+}
+
+function buildCardContent({ world, worldId, red, green, cover }) {
+  return {
+    info: () => (
+      <ExpandableCard>
+        <InfoCard world={world} accent={red} />
+      </ExpandableCard>
+    ),
+    cover: () => <CoverImageCard world={world} worldId={worldId} accent={cover} />,
+    players: () => (
+      <ExpandableCard>
+        <PlayersSection worldId={worldId} accent={green} />
+      </ExpandableCard>
+    ),
+    locations: () => (
+      <ExpandableCard wide>
+        <LocationsSection worldId={worldId} accent={red} />
+      </ExpandableCard>
+    ),
+    todos: () => (
+      <ExpandableCard>
+        <TodosSection worldId={worldId} accent={green} />
+      </ExpandableCard>
+    ),
+    history: () => (
+      <ExpandableCard>
+        <HistorySection worldId={worldId} accent={red} />
+      </ExpandableCard>
+    ),
+    notes: () => (
+      <ExpandableCard>
+        <NotesSection worldId={worldId} accent={green} />
+      </ExpandableCard>
+    ),
+    projects: () => (
+      <ExpandableCard>
+        <ProjectsSection worldId={worldId} accent={red} />
+      </ExpandableCard>
+    ),
+    planner: () => (
+      <ExpandableCard>
+        <PlannerSection worldId={worldId} accent={green} />
+      </ExpandableCard>
+    ),
+    bookmarks: () => (
+      <ExpandableCard>
+        <BookmarksSection worldId={worldId} accent={red} />
+      </ExpandableCard>
+    ),
+    ideas: () => (
+      <ExpandableCard>
+        <IdeasSection worldId={worldId} accent={green} />
+      </ExpandableCard>
+    ),
+    wiki: () => (
+      <ExpandableCard wide>
+        <WikiSection worldId={worldId} accent={green} />
+      </ExpandableCard>
+    ),
+    progress: () => (
+      <ExpandableCard>
+        <ProgressSection worldId={worldId} accent={green} />
+      </ExpandableCard>
+    ),
+  }
 }
 
 export default function WorldDetail({ onBack }) {
@@ -439,6 +498,7 @@ export default function WorldDetail({ onBack }) {
 
   const [editMode, setEditMode] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false)
   const [cardsMenuOpen, setCardsMenuOpen] = useState(false)
   const [rowConfigs, setRowConfigs] = useState(() => {
     const configs = {}
@@ -462,35 +522,41 @@ export default function WorldDetail({ onBack }) {
   const [resize, setResize] = useState(null)
   const flipSnapshotRef = useRef(null)
 
-  const rearrangeRow = useCallback((rowIndex, newCount) => {
-    setLayout((prev) => {
-      const allVisibleCards = prev.cards.filter((c) => !c.hidden)
-      const hiddenCards = prev.cards.filter((c) => c.hidden)
+  const rearrangeRow = useCallback(
+    (rowIndex, newCount) => {
+      setLayout((prev) => {
+        const allVisibleCards = prev.cards.filter((c) => !c.hidden)
+        const hiddenCards = prev.cards.filter((c) => c.hidden)
 
-      const newConfigs = { ...rowConfigs, [rowIndex]: newCount }
+        const newConfigs = { ...rowConfigs, [rowIndex]: newCount }
 
-      const row0Cards = allVisibleCards.filter((c) => c.row === 0)
-      const restCards = allVisibleCards.filter((c) => c.row > 0)
+        const row0Cards = allVisibleCards.filter((c) => c.row === 0)
+        const restCards = allVisibleCards.filter((c) => c.row > 0)
 
-      const result = row0Cards.map((c) => ({ ...c }))
+        const result = row0Cards.map((c) => ({ ...c }))
 
-      let cardIndex = 0
-      for (let row = 1; cardIndex < restCards.length; row++) {
-        const count = newConfigs[row] || 2
-        for (let i = 0; i < count && cardIndex < restCards.length; i++) {
-          result.push({ ...restCards[cardIndex], row })
-          cardIndex++
+        let cardIndex = 0
+        for (let row = 1; cardIndex < restCards.length; row++) {
+          const count = newConfigs[row] || 2
+          for (let i = 0; i < count && cardIndex < restCards.length; i++) {
+            result.push({ ...restCards[cardIndex], row })
+            cardIndex++
+          }
         }
-      }
 
-      return { ...prev, cards: [...result, ...hiddenCards] }
-    })
-  }, [rowConfigs])
+        return { ...prev, cards: [...result, ...hiddenCards] }
+      })
+    },
+    [rowConfigs],
+  )
 
-  const handleRowConfigChange = useCallback((rowIndex, newCount) => {
-    setRowConfigs((prev) => ({ ...prev, [rowIndex]: newCount }))
-    rearrangeRow(rowIndex, newCount)
-  }, [rearrangeRow])
+  const handleRowConfigChange = useCallback(
+    (rowIndex, newCount) => {
+      setRowConfigs((prev) => ({ ...prev, [rowIndex]: newCount }))
+      rearrangeRow(rowIndex, newCount)
+    },
+    [rearrangeRow],
+  )
 
   const saveTimerRef = useRef(null)
   useEffect(() => {
@@ -688,6 +754,12 @@ export default function WorldDetail({ onBack }) {
   if (isLoading) return <LinearProgress />
   if (!world) return <p>Світ не знайдено</p>
 
+  const theme = getWorldTheme(world.theme)
+  const red = theme.accentRed
+  const green = theme.accentGreen
+  const cover = theme.cover
+  const CARD_CONTENT = buildCardContent({ world, worldId, red, green, cover })
+
   const renderCard = (cardId, isSingle) => {
     const flex = flexes[cardId]
     const style = {}
@@ -711,7 +783,7 @@ export default function WorldDetail({ onBack }) {
         onDragEnd={onDragEnd}
         style={style}
       >
-        {CARD_CONTENT[cardId]?.({ world, worldId })}
+        {CARD_CONTENT[cardId]?.()}
         {editMode && !isLocked && (
           <div className={styles.dragHandle}>
             <DragIndicatorIcon fontSize="small" />
@@ -747,29 +819,45 @@ export default function WorldDetail({ onBack }) {
   }
 
   return (
-    <LocationViewerProvider accent={RED}>
+    <LocationViewerProvider accent={red}>
       <div
         className={`${styles.page} ${editMode ? styles.editMode : ''} ${resize ? styles.resizing : ''}`}
+        style={{
+          '--page-bg': theme.pageBg,
+          '--page-ink': theme.ink,
+          '--page-soft': theme.soft,
+          '--page-soft-hover': theme.softHover,
+          '--page-active-bg': theme.activeBg,
+          '--page-active-bg-hover': theme.activeBgHover,
+          '--page-active-ink': theme.activeInk,
+          '--page-row-bg': theme.rowBg,
+          '--page-row-label': theme.rowLabel,
+          '--page-outline': theme.outline,
+          '--page-outline-hover': theme.outlineHover,
+          '--page-dragover': theme.dragOver,
+          '--page-resize': theme.resize,
+          '--page-resize-active': theme.resizeActive,
+        }}
       >
-      <div className={styles.topBar}>
-        <Button className={backBtnStyles.backBtn} onClick={onBack}>
-          <ArrowBackIcon fontSize="small" />
-          Назад
-        </Button>
-        <div className={styles.topActions}>
-          {editMode && (
-            <Button className={styles.resetBtn} onClick={resetLayout}>
-              Скинути
-            </Button>
-          )}
-          <Button
-            className={styles.worldEditBtn}
-            onClick={() => setCardsMenuOpen(true)}
-            startIcon={<ViewListIcon />}
-          >
-            Картки
+        <div className={styles.topBar}>
+          <Button className={backBtnStyles.backBtn} onClick={onBack}>
+            <ArrowBackIcon fontSize="small" />
+            Назад
           </Button>
-          <Button
+          <div className={styles.topActions}>
+            {editMode && (
+              <Button className={styles.resetBtn} onClick={resetLayout}>
+                Скинути
+              </Button>
+            )}
+            <Button
+              className={styles.worldEditBtn}
+              onClick={() => setCardsMenuOpen(true)}
+              startIcon={<ViewListIcon />}
+            >
+              Картки
+            </Button>
+<Button
             className={styles.worldEditBtn}
             onClick={() => setEditDialogOpen(true)}
             startIcon={<EditOutlinedIcon />}
@@ -777,53 +865,70 @@ export default function WorldDetail({ onBack }) {
             Світ
           </Button>
           <Button
-            className={`${styles.editBtn} ${editMode ? styles.editBtnActive : ''}`}
-            onClick={() => setEditMode((v) => !v)}
-            startIcon={<TuneIcon />}
+            className={styles.worldEditBtn}
+            onClick={() => setThemeDialogOpen(true)}
+            startIcon={<PaletteOutlinedIcon />}
           >
-            {editMode ? 'Готово' : 'Оверлей'}
+            Тема
           </Button>
-        </div>
-      </div>
-
-      <div className={styles.board}>
-        {[0, 1, 2, 3, 4, 5, 6].map((rowIndex) => (
-          <div key={rowIndex} className={styles.rowWrapper}>
-            {editMode && rowIndex > 0 && (
-              <div className={styles.rowControls}>
-                <span className={styles.rowLabel}>Ряд {rowIndex + 1}</span>
-                <ButtonGroup className={styles.cardsPerRowGroup}>
-                  {[1, 2, 3].map((value) => (
-                    <Button
-                      key={value}
-                      className={`${styles.cardsPerRowBtn} ${(rowConfigs[rowIndex] || 2) === value ? styles.cardsPerRowBtnActive : ''}`}
-                      onClick={() => handleRowConfigChange(rowIndex, value)}
-                    >
-                      {value}
-                    </Button>
-                  ))}
-                </ButtonGroup>
-              </div>
-            )}
-            <div className={`${styles.row} ${rowIndex === 0 ? styles.rowTop : ''} ${rowIndex === 1 ? styles.rowBottom : ''}`}>
-              {renderRow(getRowCards(rowIndex))}
-            </div>
+            <Button
+              className={`${styles.editBtn} ${editMode ? styles.editBtnActive : ''}`}
+              onClick={() => setEditMode((v) => !v)}
+              startIcon={<TuneIcon />}
+            >
+              {editMode ? 'Готово' : 'Оверлей'}
+            </Button>
           </div>
-        ))}
-      </div>
+        </div>
 
-      <WorldEditDialog
+        <div className={styles.board}>
+          {[0, 1, 2, 3, 4, 5, 6].map((rowIndex) => (
+            <div key={rowIndex} className={styles.rowWrapper}>
+              {editMode && rowIndex > 0 && (
+                <div className={styles.rowControls}>
+                  <span className={styles.rowLabel}>Ряд {rowIndex + 1}</span>
+                  <ButtonGroup className={styles.cardsPerRowGroup}>
+                    {[1, 2, 3].map((value) => (
+                      <Button
+                        key={value}
+                        className={`${styles.cardsPerRowBtn} ${(rowConfigs[rowIndex] || 2) === value ? styles.cardsPerRowBtnActive : ''}`}
+                        onClick={() => handleRowConfigChange(rowIndex, value)}
+                      >
+                        {value}
+                      </Button>
+                    ))}
+                  </ButtonGroup>
+                </div>
+              )}
+              <div
+                className={`${styles.row} ${rowIndex === 0 ? styles.rowTop : ''} ${rowIndex === 1 ? styles.rowBottom : ''}`}
+              >
+                {renderRow(getRowCards(rowIndex))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+<WorldEditDialog
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         world={world}
         worldId={worldId}
       />
-      <CardsMenu
-        open={cardsMenuOpen}
-        onClose={() => setCardsMenuOpen(false)}
-        layout={layout}
-        onToggle={onToggleCard}
+      <ThemeDialog
+        open={themeDialogOpen}
+        onClose={() => setThemeDialogOpen(false)}
+        world={world}
+        worldId={worldId}
       />
+        <CardsMenu
+          open={cardsMenuOpen}
+          onClose={() => setCardsMenuOpen(false)}
+          layout={layout}
+          onToggle={onToggleCard}
+          accentRed={red}
+          accentGreen={green}
+        />
       </div>
     </LocationViewerProvider>
   )

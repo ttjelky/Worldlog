@@ -270,6 +270,7 @@ class WorldSerializer(serializers.ModelSerializer):
             'cover_image',
             'cover_image_url',
             'is_public',
+            'theme',
             'created_at',
             'updated_at',
             'players_count',
