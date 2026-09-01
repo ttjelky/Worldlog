@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { LinearProgress, Snackbar, Tab, Tabs } from '@mui/material'
+import { Button, LinearProgress, Snackbar, Tab, Tabs, TextField } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/People'
 import MailIcon from '@mui/icons-material/Mail'
+import SearchIcon from '@mui/icons-material/Search'
 import api from '../../api'
 import { useAuth } from '../../auth'
 import Navbar from '../../shared/components/Navbar/Navbar'
+import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
 import FriendsList from './components/FriendsList'
 import FriendRequestsList from './components/FriendRequestsList'
 import FriendsSkeleton from './components/FriendsSkeleton'
@@ -20,6 +22,26 @@ export default function FriendsPage() {
   const [activePage, setActivePage] = useState('friends')
   const [tab, setTab] = useState(searchParams.get('tab') === 'requests' ? 1 : 0)
   const [snackbar, setSnackbar] = useState({ open: false, message: '' })
+  const [userSearch, setUserSearch] = useState('')
+
+  const { data: searchUsers = [] } = useQuery({
+    queryKey: ['userSearch', userSearch],
+    queryFn: () => api.get('/users/search/', { params: { q: userSearch } }).then((r) => r.data),
+    enabled: userSearch.length >= 2,
+    staleTime: 5000,
+  })
+
+  const sendRequest = useMutation({
+    mutationFn: (userId) => api.post('/friends/send/', { user_id: userId }),
+    onSuccess: () => {
+      qc.invalidateQueries(['friends'])
+      setUserSearch('')
+      setSnackbar({ open: true, message: 'Запит надіслано' })
+    },
+    onError: (err) => {
+      setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося надіслати запит' })
+    },
+  })
 
   useEffect(() => {
     if (searchParams.get('tab') === 'requests') {
@@ -125,11 +147,46 @@ export default function FriendsPage() {
             <FriendsSkeleton />
           </>
         ) : tab === 0 ? (
-          <FriendsList
-            friends={friends}
-            onRemove={removeFriend.mutate}
-            loading={removeFriend.isPending}
-          />
+          <>
+            <div className={styles.searchWrap}>
+              <TextField
+                fullWidth
+                placeholder="Знайти користувача…"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                slotProps={{
+                  input: {
+                    startAdornment: <SearchIcon sx={{ color: 'rgba(255,255,255,0.5)', mr: 1 }} />,
+                  },
+                }}
+                className={styles.searchField}
+              />
+              {userSearch.length >= 2 && (
+                <div className={styles.searchResults}>
+                  {searchUsers.map((u) => (
+                    <div key={u.id} className={styles.searchResult}>
+                      <UserAvatar username={u.username} size="sm" />
+                      <div className={styles.searchResultInfo}>
+                        <span className={styles.searchResultName}>{u.username}</span>
+                      </div>
+                      <Button
+                        size="small"
+                        onClick={() => sendRequest.mutate(u.id)}
+                        disabled={sendRequest.isPending}
+                      >
+                        Додати
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <FriendsList
+              friends={friends}
+              onRemove={removeFriend.mutate}
+              loading={removeFriend.isPending}
+            />
+          </>
         ) : (
           <FriendRequestsList
             received={receivedRequests}

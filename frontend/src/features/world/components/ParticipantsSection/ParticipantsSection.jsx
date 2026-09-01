@@ -36,7 +36,7 @@ const ROLE_CHIP_CLASS = {
   viewer: styles.roleViewer,
 }
 
-export default function ParticipantsSection({ worldId, accent, userRole }) {
+export default function ParticipantsSection({ worldId, accent, userRole, world }) {
   const qc = useQueryClient()
   const isOwner = userRole === 'owner'
   const isEditor = userRole === 'editor' || isOwner
@@ -74,6 +74,13 @@ export default function ParticipantsSection({ worldId, accent, userRole }) {
       </div>
 
       <div className={`${sharedStyles.body} ${styles.list}`}>
+        <div className={`${styles.row} ${styles.ownerRow}`}>
+          <UserAvatar username={world.owner_username} size="sm" />
+          <div className={styles.info}>
+            <div className={styles.name}>{world.owner_username}</div>
+            <div className={`${styles.roleChip} ${styles.roleOwner}`}>Власник</div>
+          </div>
+        </div>
         {participants.map((p) => (
           <div key={p.id} className={styles.row}>
             <UserAvatar username={p.username} avatarUrl={p.avatar_url} size="sm" />
@@ -95,9 +102,9 @@ export default function ParticipantsSection({ worldId, accent, userRole }) {
             )}
           </div>
         ))}
-        {participants.length === 0 && (
+        {participants.length === 0 && !isOwner && (
           <p className={sharedStyles.emptyMsg}>
-            Поки немає учасників. Додайте друга для спільної роботи.
+            Поки немає інших учасників.
           </p>
         )}
       </div>

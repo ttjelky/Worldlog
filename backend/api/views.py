@@ -112,20 +112,23 @@ class WorldViewSet(viewsets.ModelViewSet):
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get_queryset(self):
-        return World.objects.filter(
+        return (World.objects.filter(
             owner=self.request.user
-        ) | World.objects.filter(memberships__user=self.request.user)
+        ) | World.objects.filter(
+            memberships__user=self.request.user
+        )).distinct()
 
     def perform_create(self, serializer):
-        world = serializer.save(owner=self.request.user)
-        Membership.objects.get_or_create(
-            world=world, user=self.request.user,
-            defaults={'role': Membership.Role.OWNER, 'status': Membership.Status.ACTIVE},
-        )
+        serializer.save(owner=self.request.user)
 
 
 class RelatedViewSetMixin:
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrMember]
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [permissions.IsAuthenticated(), IsOwnerOrMember()]
+        return [permissions.IsAuthenticated(), IsWorldEditorOrAbove()]
 
     def get_queryset(self):
         queryset = super().get_queryset()

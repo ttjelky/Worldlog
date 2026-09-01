@@ -434,8 +434,9 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
       <ExpandableCard>
         <ParticipantsSection
           worldId={worldId}
-          accent="#5b7fa5"
+          accent={green}
           userRole={userRole}
+          world={world}
         />
       </ExpandableCard>
     ),

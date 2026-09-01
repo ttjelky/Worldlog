@@ -130,6 +130,47 @@
   box-shadow: 0 8px 28px rgba(13, 13, 15, 0.35);
 }
 
+.searchWrap {
+  padding: 0 clamp(20px, 40px, 60px);
+  margin-bottom: 24px;
+}
+
+.searchField :global(.MuiOutlinedInput-root) {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.searchField :global(.MuiOutlinedInput-notchedOutline) {
+  display: none;
+}
+
+.searchResults {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.searchResult {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.searchResultInfo {
+  flex: 1;
+}
+
+.searchResultName {
+  font-weight: 600;
+  color: #ffffff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;

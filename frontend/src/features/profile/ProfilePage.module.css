@@ -10,6 +10,8 @@
 
 .page {
   padding: clamp(20px, 3vw, 42px) clamp(5px, 3vw, 20px) 64px;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
 .errorState {

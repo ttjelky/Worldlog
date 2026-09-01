@@ -20,6 +20,7 @@ const FONT_SIZE_MAP = {
 export default function UserAvatar({
   user,
   src,
+  avatarUrl,
   username,
   displayName,
   size = 'md',
@@ -28,7 +29,7 @@ export default function UserAvatar({
   const [imgError, setImgError] = useState(false)
 
   const resolvedUsername = username || user?.username || ''
-  const resolvedSrc = src || user?.avatar_url || null
+  const resolvedSrc = src || avatarUrl || user?.avatar_url || null
   const initial = (resolvedUsername || '?')[0].toUpperCase()
   const px = SIZE_MAP[size] || SIZE_MAP.md
   const fontSize = FONT_SIZE_MAP[size] || FONT_SIZE_MAP.md
