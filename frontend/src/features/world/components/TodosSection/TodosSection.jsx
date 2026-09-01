@@ -116,6 +116,7 @@ export default function TodosSection({ worldId, accent }) {
               className={styles.filterBtnDeleteDone}
               onClick={deleteDone}
             >
+              <DeleteOutlinedIcon fontSize="small" />
               Видалити виконані
             </button>
           )}
