@@ -23,6 +23,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api'
 import backBtnStyles from '../../shared/styles/backButton.module.css'
 import { useUndo } from '../../shared/undo/UndoProvider'
+import ParticipantsSection from './components/ParticipantsSection/ParticipantsSection'
 import PlayersSection from './components/PlayersSection/PlayersSection'
 import LocationsSection from './components/LocationsSection/LocationsSection'
 import TodosSection from './components/TodosSection/TodosSection'
@@ -45,25 +46,27 @@ import styles from './WorldDetail.module.css'
 const MIN_SLOT_WIDTH = 340
 
 const CARD_META = {
-  info: { row: 0, slotClass: 'slotTypeInfo' },
-  cover: { row: 0, slotClass: 'slotTypeCover' },
-  players: { row: 1, slotClass: 'slotTypePlayers' },
-  locations: { row: 1, slotClass: 'slotTypeLocations' },
-  todos: { row: 2, slotClass: 'slotTypeTodos' },
-  history: { row: 2, slotClass: 'slotTypeHistory' },
-  notes: { row: 3, slotClass: 'slotTypeNotes' },
-  projects: { row: 3, slotClass: 'slotTypeProjects' },
-  planner: { row: 4, slotClass: 'slotTypePlanner' },
-  bookmarks: { row: 4, slotClass: 'slotTypeBookmarks' },
-  ideas: { row: 5, slotClass: 'slotTypeIdeas' },
-  wiki: { row: 6, slotClass: 'slotTypeWiki' },
-  progress: { row: 6, slotClass: 'slotTypeProgress' },
+  info:          { row: 0, slotClass: 'slotTypeInfo' },
+  cover:         { row: 0, slotClass: 'slotTypeCover' },
+  players:       { row: 1, slotClass: 'slotTypePlayers' },
+  participants:  { row: 1, slotClass: 'slotTypeParticipants' },
+  locations:     { row: 1, slotClass: 'slotTypeLocations' },
+  todos:         { row: 2, slotClass: 'slotTypeTodos' },
+  history:       { row: 2, slotClass: 'slotTypeHistory' },
+  notes:         { row: 3, slotClass: 'slotTypeNotes' },
+  projects:      { row: 3, slotClass: 'slotTypeProjects' },
+  planner:       { row: 4, slotClass: 'slotTypePlanner' },
+  bookmarks:     { row: 4, slotClass: 'slotTypeBookmarks' },
+  ideas:         { row: 5, slotClass: 'slotTypeIdeas' },
+  wiki:          { row: 6, slotClass: 'slotTypeWiki' },
+  progress:      { row: 6, slotClass: 'slotTypeProgress' },
 }
 
 const DEFAULT_CARDS = [
   { id: 'info', row: 0 },
   { id: 'cover', row: 0 },
   { id: 'players', row: 1 },
+  { id: 'participants', row: 1 },
   { id: 'locations', row: 1 },
   { id: 'todos', row: 2 },
   { id: 'history', row: 2 },
@@ -111,8 +114,6 @@ function InfoCard({ world, accent }) {
     ['Події', world.history_count],
   ]
 
-  // Ця ж картка рендериться двічі: раз у прихованій обгортці (collapsed),
-  // раз у розгорнутій модалці (modal). `modal` розрізняє їх.
   const { open, modal } = useExpandableCard()
   const cardRef = useRef(null)
   const [overflowing, setOverflowing] = useState(false)
@@ -167,7 +168,7 @@ function InfoCard({ world, accent }) {
   )
 }
 
-function CoverImageCard({ world, worldId, accent }) {
+function CoverImageCard({ world, worldId, accent, userRole }) {
   const qc = useQueryClient()
   const inputRef = useRef(null)
 
@@ -199,36 +200,26 @@ function CoverImageCard({ world, worldId, accent }) {
     if (file) uploadCover.mutate(file)
   }
 
+  const canEdit = userRole && userRole !== 'viewer'
+
   return (
     <div className={`${sharedStyles.card} ${styles.coverCard}`} style={{ '--accent': accent }}>
       {world.cover_image_url ? (
         <>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            className={styles.coverFileInput}
-            onChange={handleFile}
-          />
+          {canEdit && <input ref={inputRef} type="file" accept="image/*" className={styles.coverFileInput} onChange={handleFile} />}
           <img className={styles.coverImgFull} src={world.cover_image_url} alt={world.name} />
-          <div className={styles.coverOverlay}>
-            <IconButton
-              className={styles.coverAction}
-              onClick={() => inputRef.current?.click()}
-              disabled={uploadCover.isPending}
-            >
-              <EditOutlinedIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              className={styles.coverAction}
-              onClick={() => deleteCover.mutate()}
-              disabled={deleteCover.isPending}
-            >
-              <DeleteOutlinedIcon fontSize="small" />
-            </IconButton>
-          </div>
+          {canEdit && (
+            <div className={styles.coverOverlay}>
+              <IconButton className={styles.coverAction} onClick={() => inputRef.current?.click()} disabled={uploadCover.isPending}>
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+              <IconButton className={styles.coverAction} onClick={() => deleteCover.mutate()} disabled={deleteCover.isPending}>
+                <DeleteOutlinedIcon fontSize="small" />
+              </IconButton>
+            </div>
+          )}
         </>
-      ) : (
+      ) : canEdit ? (
         <>
           <input
             ref={inputRef}
@@ -253,6 +244,11 @@ function CoverImageCard({ world, worldId, accent }) {
             )}
           </button>
         </>
+      ) : (
+        <div className={styles.coverPlaceholder} style={{ cursor: 'default' }}>
+          <PhotoCameraOutlinedIcon className={styles.coverPlaceholderIcon} />
+          <span className={styles.coverPlaceholderText}>Немає картинки</span>
+        </div>
       )}
     </div>
   )
@@ -349,8 +345,6 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
           <Button
             onClick={() => {
               if (window.confirm('Ви впевнені, що хочете видалити цей світ?')) {
-                // Реальне видалення відкладене: тост у AppLayout дає 6 секунд
-                // натиснути «Скасувати» і повернутися на сторінку світу
                 onClose()
                 deleteWorld({ id: worldId, name: world?.name })
                 navigate('/app')
@@ -423,67 +417,76 @@ function ThemeDialog({ open, onClose, world, worldId }) {
   )
 }
 
-function buildCardContent({ world, worldId, red, green, cover }) {
+function buildCardContent({ world, worldId, red, green, cover, userRole }) {
   return {
     info: () => (
       <ExpandableCard>
         <InfoCard world={world} accent={red} />
       </ExpandableCard>
     ),
-    cover: () => <CoverImageCard world={world} worldId={worldId} accent={cover} />,
+    cover: () => <CoverImageCard world={world} worldId={worldId} accent={cover} userRole={userRole} />,
     players: () => (
       <ExpandableCard>
-        <PlayersSection worldId={worldId} accent={green} />
+        <PlayersSection worldId={worldId} accent={green} userRole={userRole} />
+      </ExpandableCard>
+    ),
+    participants: () => (
+      <ExpandableCard>
+        <ParticipantsSection
+          worldId={worldId}
+          accent="#5b7fa5"
+          userRole={userRole}
+        />
       </ExpandableCard>
     ),
     locations: () => (
       <ExpandableCard wide>
-        <LocationsSection worldId={worldId} accent={red} />
+        <LocationsSection worldId={worldId} accent={red} userRole={userRole} />
       </ExpandableCard>
     ),
     todos: () => (
       <ExpandableCard>
-        <TodosSection worldId={worldId} accent={green} />
+        <TodosSection worldId={worldId} accent={green} userRole={userRole} />
       </ExpandableCard>
     ),
     history: () => (
       <ExpandableCard>
-        <HistorySection worldId={worldId} accent={red} />
+        <HistorySection worldId={worldId} accent={red} userRole={userRole} />
       </ExpandableCard>
     ),
     notes: () => (
       <ExpandableCard>
-        <NotesSection worldId={worldId} accent={green} />
+        <NotesSection worldId={worldId} accent={green} userRole={userRole} />
       </ExpandableCard>
     ),
     projects: () => (
       <ExpandableCard>
-        <ProjectsSection worldId={worldId} accent={red} />
+        <ProjectsSection worldId={worldId} accent={red} userRole={userRole} />
       </ExpandableCard>
     ),
     planner: () => (
       <ExpandableCard>
-        <PlannerSection worldId={worldId} accent={green} />
+        <PlannerSection worldId={worldId} accent={green} userRole={userRole} />
       </ExpandableCard>
     ),
     bookmarks: () => (
       <ExpandableCard>
-        <BookmarksSection worldId={worldId} accent={red} />
+        <BookmarksSection worldId={worldId} accent={red} userRole={userRole} />
       </ExpandableCard>
     ),
     ideas: () => (
       <ExpandableCard>
-        <IdeasSection worldId={worldId} accent={green} />
+        <IdeasSection worldId={worldId} accent={green} userRole={userRole} />
       </ExpandableCard>
     ),
     wiki: () => (
       <ExpandableCard wide>
-        <WikiSection worldId={worldId} accent={green} />
+        <WikiSection worldId={worldId} accent={green} userRole={userRole} />
       </ExpandableCard>
     ),
     progress: () => (
       <ExpandableCard>
-        <ProgressSection worldId={worldId} accent={green} />
+        <ProgressSection worldId={worldId} accent={green} userRole={userRole} />
       </ExpandableCard>
     ),
   }
@@ -596,8 +599,6 @@ export default function WorldDetail({ onBack }) {
     setDrag(null)
     if (sourceId === targetId) return
 
-    // FLIP step 1 (First): snapshot every card's current position/size
-    // before the swap so we can animate from here after the DOM updates.
     const snapshot = {}
     Object.keys(CARD_META).forEach((id) => {
       const el = document.getElementById(`slot-${id}`)
@@ -610,16 +611,10 @@ export default function WorldDetail({ onBack }) {
       const tgtIdx = prev.cards.findIndex((c) => c.id === targetId)
       if (srcIdx === -1 || tgtIdx === -1) return prev
 
-      // Swap only the card ids between these two slots. Each slot keeps
-      // its own fixed `row`, so every row always keeps exactly the same
-      // number of cards — no more 3-in-a-row / cards landing in random rows.
       const nextCards = prev.cards.map((c) => ({ ...c }))
       nextCards[srcIdx].id = targetId
       nextCards[tgtIdx].id = sourceId
 
-      // A card's manually-resized width follows it wherever it goes,
-      // instead of leaking onto the card left behind (which caused the
-      // "random size" bug).
       const nextFlexes = { ...prev.flexes }
       const srcFlex = prev.flexes[sourceId]
       const tgtFlex = prev.flexes[targetId]
@@ -634,21 +629,11 @@ export default function WorldDetail({ onBack }) {
 
   const onDragEnd = () => setDrag(null)
 
-  // FLIP steps 2-4 (Last, Invert, Play): once React has committed the new
-  // positions, measure where each card ended up, offset it back to where it
-  // used to be with a transform, then transition that transform away so the
-  // card visibly glides into place instead of jumping.
-  //
-  // Reads and writes are batched into separate passes (read all, then write
-  // all) instead of interleaved per card — interleaving forces the browser
-  // to recompute layout on every single card, which is what made the
-  // animation feel choppy.
   useLayoutEffect(() => {
     const snapshot = flipSnapshotRef.current
     if (!snapshot) return
     flipSnapshotRef.current = null
 
-    // Pass 1 — reads only: measure how far each card actually moved.
     const moves = []
     Object.keys(snapshot).forEach((id) => {
       const el = document.getElementById(`slot-${id}`)
@@ -667,7 +652,6 @@ export default function WorldDetail({ onBack }) {
 
     if (moves.length === 0) return
 
-    // Pass 2 — writes only: pin every moved card back to its old spot.
     moves.forEach(({ el, dx, dy, sx, sy }) => {
       el.style.willChange = 'transform'
       el.style.transition = 'none'
@@ -675,8 +659,6 @@ export default function WorldDetail({ onBack }) {
       el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
     })
 
-    // A single forced reflow flushes all the writes above at once, instead
-    // of once per card.
     // eslint-disable-next-line no-unused-expressions
     document.body.offsetHeight
 
@@ -758,7 +740,8 @@ export default function WorldDetail({ onBack }) {
   const red = theme.accentRed
   const green = theme.accentGreen
   const cover = theme.cover
-  const CARD_CONTENT = buildCardContent({ world, worldId, red, green, cover })
+  const userRole = world.current_user_role
+  const CARD_CONTENT = buildCardContent({ world, worldId, red, green, cover, userRole })
 
   const renderCard = (cardId, isSingle) => {
     const flex = flexes[cardId]
@@ -857,20 +840,24 @@ export default function WorldDetail({ onBack }) {
             >
               Картки
             </Button>
-<Button
-            className={styles.worldEditBtn}
-            onClick={() => setEditDialogOpen(true)}
-            startIcon={<EditOutlinedIcon />}
-          >
-            Світ
-          </Button>
-          <Button
-            className={styles.worldEditBtn}
-            onClick={() => setThemeDialogOpen(true)}
-            startIcon={<PaletteOutlinedIcon />}
-          >
-            Тема
-          </Button>
+            {userRole && userRole !== 'viewer' && (
+              <Button
+                className={styles.worldEditBtn}
+                onClick={() => setEditDialogOpen(true)}
+                startIcon={<EditOutlinedIcon />}
+              >
+                Світ
+              </Button>
+            )}
+            {userRole && userRole !== 'viewer' && (
+              <Button
+                className={styles.worldEditBtn}
+                onClick={() => setThemeDialogOpen(true)}
+                startIcon={<PaletteOutlinedIcon />}
+              >
+                Тема
+              </Button>
+            )}
             <Button
               className={`${styles.editBtn} ${editMode ? styles.editBtnActive : ''}`}
               onClick={() => setEditMode((v) => !v)}
@@ -909,18 +896,18 @@ export default function WorldDetail({ onBack }) {
           ))}
         </div>
 
-<WorldEditDialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        world={world}
-        worldId={worldId}
-      />
-      <ThemeDialog
-        open={themeDialogOpen}
-        onClose={() => setThemeDialogOpen(false)}
-        world={world}
-        worldId={worldId}
-      />
+        <WorldEditDialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          world={world}
+          worldId={worldId}
+        />
+        <ThemeDialog
+          open={themeDialogOpen}
+          onClose={() => setThemeDialogOpen(false)}
+          world={world}
+          worldId={worldId}
+        />
         <CardsMenu
           open={cardsMenuOpen}
           onClose={() => setCardsMenuOpen(false)}

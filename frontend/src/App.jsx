@@ -6,7 +6,12 @@ import { Login, Register } from './features/auth/Auth'
 import Dashboard from './features/dashboard/Dashboard'
 import MyWorlds from './features/myworlds/MyWorlds'
 import WorldDetail from './features/world/WorldDetail'
+import ProfilePage from './features/profile/ProfilePage'
+import FriendsPage from './features/friends/FriendsPage'
+import SearchPage from './features/search/SearchPage'
 import UndoProvider from './shared/undo/UndoProvider'
+import { NotificationProvider } from './shared/notifications/NotificationProvider'
+import ToastNotification from './shared/notifications/ToastNotification'
 
 function PrivateRoute({ children }) {
   const location = useLocation()
@@ -21,9 +26,12 @@ function PrivateRoute({ children }) {
 
 function AppLayout() {
   return (
-    <UndoProvider>
-      <Outlet />
-    </UndoProvider>
+    <NotificationProvider>
+      <UndoProvider>
+        <ToastNotification />
+        <Outlet />
+      </UndoProvider>
+    </NotificationProvider>
   )
 }
 
@@ -51,6 +59,10 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="worlds" element={<MyWorlds />} />
         <Route path="worlds/:worldId" element={<WorldDetail onBack={back} />} />
+        <Route path="friends" element={<FriendsPage />} />
+        <Route path="search" element={<SearchPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile/:username" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

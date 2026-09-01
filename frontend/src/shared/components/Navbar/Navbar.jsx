@@ -3,6 +3,7 @@ import { Button, Menu, MenuItem } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../auth'
+import UserAvatar from '../UserAvatar/UserAvatar'
 import styles from './Navbar.module.css'
 
 const NAV_ITEMS = [
@@ -31,6 +32,14 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
+  const handleNav = (id) => {
+    if (id === 'home') navigate('/app')
+    else if (id === 'worlds') navigate('/app/worlds')
+    else if (id === 'friends') navigate('/app/friends')
+    else if (id === 'search') navigate('/app/search')
+    else onNavigate(id)
+  }
+
   return (
     <nav className={styles.navbar}>
       <div className={styles.navGroup}>
@@ -47,7 +56,7 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
               key={item.id}
               item={item}
               activePage={activePage}
-              onNavigate={onNavigate}
+              onNavigate={handleNav}
             />
           ))}
         </div>
@@ -60,14 +69,21 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
           aria-haspopup="menu"
           aria-expanded={Boolean(anchorEl)}
         >
-          <span className={styles.avatar}>{(user?.username || '?')[0].toUpperCase()}</span>
+          <UserAvatar user={user} size="xs" className={styles.navAvatar} />
           <span className={styles.profileName}>{user?.username}</span>
           <span className={styles.chevron}>
             <KeyboardArrowDownIcon fontSize="small" />
           </span>
         </Button>
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-          <MenuItem onClick={() => setAnchorEl(null)}>Профіль</MenuItem>
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null)
+              navigate('/app/profile')
+            }}
+          >
+            Профіль
+          </MenuItem>
           <MenuItem onClick={() => setAnchorEl(null)}>Налаштування</MenuItem>
           <MenuItem
             onClick={() => {

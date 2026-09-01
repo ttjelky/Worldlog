@@ -9,16 +9,19 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import (
     Bookmark,
+    Friendship,
     HistoryEvent,
     Idea,
     Location,
     LocationScreenshot,
     Membership,
     Note,
+    Notification,
     Player,
     Project,
     Relationship,
     TodoItem,
+    UserProfile,
     WikiPage,
     World,
 )
@@ -256,6 +259,7 @@ class WorldSerializer(serializers.ModelSerializer):
     todos_done = serializers.SerializerMethodField()
     history_count = serializers.IntegerField(source='history.count', read_only=True)
     cover_image_url = serializers.SerializerMethodField()
+    current_user_role = serializers.SerializerMethodField()
 
     class Meta:
         model = World
@@ -278,6 +282,7 @@ class WorldSerializer(serializers.ModelSerializer):
             'todos_count',
             'todos_done',
             'history_count',
+            'current_user_role',
         )
         read_only_fields = ('owner',)
 
@@ -294,15 +299,33 @@ class WorldSerializer(serializers.ModelSerializer):
     def get_todos_done(self, obj):
         return obj.todos.filter(is_done=True).count()
 
+    def get_current_user_role(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return None
+        from .permissions import get_user_role
+        return get_user_role(request.user, obj)
+
 
 class MembershipSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     world_name = serializers.CharField(source='world.name', read_only=True)
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Membership
-        fields = ('id', 'world', 'world_name', 'user', 'username', 'role', 'status')
+        fields = ('id', 'world', 'world_name', 'user', 'username', 'role', 'status', 'avatar_url')
         read_only_fields = ('world', 'user')
+
+    def get_avatar_url(self, obj):
+        try:
+            if obj.user.profile.avatar:
+                url = obj.user.profile.avatar.url
+                request = self.context.get('request')
+                return request.build_absolute_uri(url) if request else url
+        except UserProfile.DoesNotExist:
+            pass
+        return None
 
 
 class NoteSerializer(serializers.ModelSerializer):
@@ -372,3 +395,124 @@ class RelationshipSerializer(serializers.ModelSerializer):
             return str(instance)
         except model.DoesNotExist:
             return None
+
+
+class UserPublicSerializer(serializers.ModelSerializer):
+    worlds_count = serializers.SerializerMethodField()
+    friends_count = serializers.SerializerMethodField()
+    display_name = serializers.SerializerMethodField()
+    bio = serializers.SerializerMethodField()
+    avatar_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'display_name', 'bio', 'avatar_url', 'date_joined', 'worlds_count', 'friends_count')
+
+    def get_worlds_count(self, obj):
+        return obj.worlds.count()
+
+    def get_friends_count(self, obj):
+        from django.db.models import Q
+
+        return Friendship.objects.filter(
+            Q(user_a=obj, status=Friendship.Status.ACCEPTED)
+            | Q(user_b=obj, status=Friendship.Status.ACCEPTED)
+        ).count()
+
+    def get_display_name(self, obj):
+        try:
+            return obj.profile.display_name
+        except UserProfile.DoesNotExist:
+            return ''
+
+    def get_bio(self, obj):
+        try:
+            return obj.profile.bio
+        except UserProfile.DoesNotExist:
+            return ''
+
+    def get_avatar_url(self, obj):
+        try:
+            if obj.profile.avatar:
+                url = obj.profile.avatar.url
+                request = self.context.get('request')
+                return request.build_absolute_uri(url) if request else url
+        except UserProfile.DoesNotExist:
+            pass
+        return None
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ('id', 'username', 'email', 'display_name', 'bio', 'avatar')
+        extra_kwargs = {
+            'display_name': {'required': False},
+            'bio': {'required': False},
+            'avatar': {'required': False},
+        }
+
+
+class ProfileUpdateSerializer(serializers.Serializer):
+    username = serializers.CharField(required=False, max_length=150)
+    display_name = serializers.CharField(required=False, max_length=100, allow_blank=True)
+    bio = serializers.CharField(required=False, max_length=500, allow_blank=True)
+
+    def validate_username(self, value):
+        value = value.strip().lower()
+        if not USERNAME_RE.match(value):
+            raise serializers.ValidationError(
+                'Допустимі символи: букви, цифри, @ . + - _'
+            )
+        if len(value) < 3:
+            raise serializers.ValidationError(
+                'Мінімальна довжина — 3 символи'
+            )
+        user = self.context['request'].user
+        if User.objects.filter(username__iexact=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError(
+                'Це ім\'я користувача вже зайняте'
+            )
+        return value
+
+    def update(self, instance, validated_data):
+        username = validated_data.get('username')
+        if username:
+            instance.username = username
+            instance.save()
+
+        profile, _ = UserProfile.objects.get_or_create(user=instance)
+        if 'display_name' in validated_data:
+            profile.display_name = validated_data['display_name']
+        if 'bio' in validated_data:
+            profile.bio = validated_data['bio']
+        profile.save()
+
+        return instance
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    from_user_username = serializers.CharField(source='from_user.username', read_only=True, default='')
+
+    class Meta:
+        model = Notification
+        fields = ('id', 'notification_type', 'from_user', 'from_user_username', 'message', 'is_read', 'created_at')
+
+
+class FriendshipSerializer(serializers.ModelSerializer):
+    other_user = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Friendship
+        fields = ('id', 'user_a', 'user_b', 'status', 'status_display', 'other_user', 'created_at', 'updated_at')
+
+    def get_other_user(self, obj):
+        request_user = self.context.get('request')
+        if not request_user:
+            return None
+        other = obj.get_other_user(request_user)
+        return UserPublicSerializer(other).data

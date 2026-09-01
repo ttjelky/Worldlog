@@ -3,7 +3,10 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .views import (
+    AcceptFriendRequestView,
     BookmarkViewSet,
+    CancelFriendRequestView,
+    FriendshipViewSet,
     HistoryEventViewSet,
     IdeaViewSet,
     LocationScreenshotViewSet,
@@ -11,12 +14,21 @@ from .views import (
     LogoutView,
     MembershipViewSet,
     NoteViewSet,
+    NotificationListView,
+    NotificationReadAllView,
+    NotificationReadView,
+    ParticipantSearchView,
     PlayerViewSet,
+    ProfileUpdateView,
     ProjectViewSet,
+    RejectFriendRequestView,
     RegisterView,
     RelationshipViewSet,
+    SendFriendRequestView,
     TodoViewSet,
     UserDetailView,
+    UserPublicProfileView,
+    UserSearchView,
     WikiPageViewSet,
     WorldViewSet,
 )
@@ -63,6 +75,7 @@ router.register(
 router.register(
     r'worlds/(?P<world_id>\d+)/relationships', RelationshipViewSet, basename='world-relationship'
 )
+router.register('friends', FriendshipViewSet, basename='friendship')
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
@@ -70,4 +83,15 @@ urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('me/', UserDetailView.as_view(), name='me'),
+    path('me/profile/', ProfileUpdateView.as_view(), name='me-profile'),
+    path('users/search/', UserSearchView.as_view(), name='user-search'),
+    path('users/<str:username>/', UserPublicProfileView.as_view(), name='user-public-profile'),
+    path('friends/send/', SendFriendRequestView.as_view(), name='friend-send'),
+    path('friends/<int:pk>/accept/', AcceptFriendRequestView.as_view(), name='friend-accept'),
+    path('friends/<int:pk>/reject/', RejectFriendRequestView.as_view(), name='friend-reject'),
+    path('friends/<int:pk>/cancel/', CancelFriendRequestView.as_view(), name='friend-cancel'),
+    path('notifications/', NotificationListView.as_view(), name='notification-list'),
+    path('notifications/read-all/', NotificationReadAllView.as_view(), name='notification-read-all'),
+    path('notifications/<int:pk>/read/', NotificationReadView.as_view(), name='notification-read'),
+    path('worlds/<int:world_id>/participants/search/', ParticipantSearchView.as_view(), name='participant-search'),
 ] + router.urls

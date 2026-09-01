@@ -1,0 +1,106 @@
+.btn {
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  text-transform: none !important;
+  padding: 10px 24px !important;
+  transition: all 0.18s ease !important;
+  letter-spacing: 0.01em !important;
+}
+
+.btnPrimary {
+  background: #e8855a !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.btnPrimary:hover {
+  background: #d6754c !important;
+  box-shadow: 0 2px 12px rgba(232, 133, 90, 0.3) !important;
+}
+
+.btnPrimary:active {
+  background: #c4673f !important;
+}
+
+.btnEdit {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.btnEdit:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+.btnOutlined {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.btnOutlined:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+}
+
+.btnChip {
+  background: rgba(76, 175, 125, 0.15) !important;
+  color: #4caf7d !important;
+  pointer-events: none !important;
+}
+
+.btnRemove {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-size: 13px !important;
+  padding: 6px 16px !important;
+}
+
+.btnRemove:hover {
+  color: #ef5350 !important;
+  background: rgba(239, 83, 80, 0.08) !important;
+}
+
+.btnLoading {
+  background: rgba(255, 255, 255, 0.08) !important;
+  min-width: 48px !important;
+  padding: 10px 16px !important;
+}
+
+.spinner {
+  color: #e8855a !important;
+}
+
+.pendingActions {
+  display: flex;
+  gap: 10px;
+}
+
+.friendActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 700px) {
+  .pendingActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .pendingActions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .friendActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .friendActions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

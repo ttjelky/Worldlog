@@ -23,12 +23,13 @@ import styles from './IdeasSection.module.css'
 
 const empty = { title: '', content: '' }
 
-export default function IdeasSection({ worldId, accent }) {
+export default function IdeasSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const canEdit = userRole && userRole !== 'viewer'
 
   const { data: ideas = [] } = useQuery({
     queryKey: ['ideas', String(worldId)],
@@ -89,10 +90,19 @@ export default function IdeasSection({ worldId, accent }) {
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>Ідеї ({ideas.length})</h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Нова ідея
-        </Button>
+        <h3 className={sharedStyles.sectionTitle}>
+          Ідеї ({ideas.length})
+        </h3>
+        {canEdit && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={openNew}
+          >
+            Нова ідея
+          </Button>
+        )}
       </div>
 
       <div
@@ -117,12 +127,16 @@ export default function IdeasSection({ worldId, accent }) {
               </button>
             </div>
             <div className={styles.rowActions}>
-              <IconButton size="small" onClick={() => openEdit(t)}>
-                <EditOutlinedIcon fontSize="small" />
-              </IconButton>
-              <IconButton size="small" onClick={() => deleteIdea(t)}>
-                <DeleteOutlinedIcon fontSize="small" />
-              </IconButton>
+              {canEdit && (
+                <>
+                  <IconButton size="small" onClick={() => openEdit(t)}>
+                    <EditOutlinedIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => deleteIdea(t)}>
+                    <DeleteOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </>
+              )}
             </div>
           </div>
         ))}

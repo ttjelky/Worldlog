@@ -180,8 +180,9 @@
 
 .slotTypeInfo      { flex: 2; }
 .slotTypeCover     { flex: 3; }
-.slotTypePlayers   { flex: 1; }
-.slotTypeLocations { flex: 2; }
+.slotTypePlayers     { flex: 1; }
+.slotTypeParticipants { flex: 1; }
+.slotTypeLocations   { flex: 2; }
 .slotTypeTodos     { flex: 1; }
 .slotTypeHistory   { flex: 1; }
 .slotTypeNotes     { flex: 1; }

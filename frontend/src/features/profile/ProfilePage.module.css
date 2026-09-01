@@ -1,0 +1,90 @@
+.appShell {
+  min-height: 100vh;
+  background: #434343;
+  color: #ffffff;
+  --nav-link-1: #ffffff;
+  --nav-link-2: #ffffff;
+  --nav-active-text: #434343;
+  --nav-profile: #d57c6a;
+}
+
+.page {
+  padding: clamp(20px, 3vw, 42px) clamp(5px, 3vw, 20px) 64px;
+}
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.errorTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.errorText {
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.65);
+  max-width: 400px;
+}
+
+/* Unsaved changes dialog */
+.confirmPaper {
+  background: #454545 !important;
+  border-radius: 28px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.confirmTitle {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.confirmText {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+.confirmActions {
+  padding: 12px 24px 20px !important;
+  gap: 12px !important;
+}
+
+.confirmCancelBtn {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+  text-transform: none !important;
+}
+
+.confirmCancelBtn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.confirmDiscardBtn {
+  color: #ef5350 !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+  text-transform: none !important;
+}
+
+.confirmDiscardBtn:hover {
+  background: rgba(239, 83, 80, 0.12) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

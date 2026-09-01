@@ -257,6 +257,83 @@ class Relationship(models.Model):
         return f'{self.source_type}:{self.source_id} -> {self.target_type}:{self.target_id}'
 
 
+class Friendship(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        ACCEPTED = 'accepted', 'Accepted'
+        BLOCKED = 'blocked', 'Blocked'
+
+    user_a = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friendships_as_a'
+    )
+    user_b = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friendships_as_b'
+    )
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.PENDING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('user_a', 'user_b')
+
+    def __str__(self):
+        return f'{self.user_a} <-> {self.user_b} ({self.status})'
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if self.user_a_id and self.user_b_id and self.user_a_id == self.user_b_id:
+            raise ValidationError('Cannot create friendship with yourself.')
+
+    def get_other_user(self, user):
+        if user.id == self.user_a_id:
+            return self.user_b
+        if user.id == self.user_b_id:
+            return self.user_a
+        raise ValueError('User is not part of this friendship')
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile'
+    )
+    display_name = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(max_length=500, blank=True)
+    avatar = models.ImageField(upload_to='user_avatars/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Profile of {self.user.username}'
+
+
+class Notification(models.Model):
+    class Type(models.TextChoices):
+        FRIEND_REQUEST = 'friend_request', 'Friend Request'
+        FRIEND_ACCEPTED = 'friend_accepted', 'Friend Accepted'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications'
+    )
+    notification_type = models.CharField(max_length=20, choices=Type.choices)
+    from_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications_from',
+        null=True, blank=True
+    )
+    message = models.CharField(max_length=300)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.notification_type} for {self.user.username}'
+
+
 class Membership(models.Model):
     class Role(models.TextChoices):
         OWNER = 'owner', 'Owner'

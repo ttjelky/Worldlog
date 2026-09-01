@@ -7,7 +7,6 @@
   justify-content: space-between;
   gap: 24px;
   padding: 22px clamp(20px, 4vw, 56px);
-  /* Наслідуємо фон батьківського .appShell, щоб контент не просвічував */
   background: inherit;
 }
 
@@ -31,16 +30,14 @@
   padding: 4px;
   overflow-x: auto;
   scrollbar-width: none;
-  /* Акценти посилань можна перевизначити на конкретній сторінці */
-  --link-accent-1: var(--nav-link-1, #9166c8);
-  --link-accent-2: var(--nav-link-2, #9166c8);
+  --link-accent-1: var(--nav-link-1, #ffffff);
+  --link-accent-2: var(--nav-link-2, #ffffff);
 }
 
 .navLinks::-webkit-scrollbar {
   display: none;
 }
 
-/* Чергуємо акценти як кольори карток сітки */
 .navLinks > :nth-child(odd) {
   --link-accent: var(--link-accent-1);
 }
@@ -56,18 +53,18 @@
   border-radius: 999px !important;
   font-size: 15px !important;
   font-weight: 600 !important;
-  color: var(--link-accent, #9166c8) !important;
+  color: var(--link-accent, #ffffff) !important;
   text-transform: none !important;
   transition: background 0.18s ease, color 0.18s ease !important;
 }
 
 .navLink:hover {
-  color: var(--link-accent, #9166c8) !important;
-  background: color-mix(in srgb, var(--link-accent, #9166c8) 12%, transparent) !important;
+  color: var(--link-accent, #ffffff) !important;
+  background: color-mix(in srgb, var(--link-accent, #ffffff) 12%, transparent) !important;
 }
 
 .navLinkActive {
-  color: var(--nav-active-text, var(--link-accent, #9166c8)) !important;
+  color: var(--nav-active-text, #434343) !important;
   background: #ffffff !important;
   font-size: 16px !important;
   font-weight: 600 !important;
@@ -75,7 +72,7 @@
 }
 
 .navLinkActive:hover {
-  color: var(--nav-active-text, var(--link-accent, #9166c8)) !important;
+  color: var(--nav-active-text, #434343) !important;
   background: #ffffff !important;
 }
 
@@ -84,7 +81,7 @@
 }
 
 .profileButton {
-  --profile-accent: var(--nav-profile, #9166c8);
+  --profile-accent: var(--nav-profile, #d57c6a);
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
@@ -96,32 +93,22 @@
 }
 
 .profileButton:hover {
-  background: color-mix(in srgb, var(--profile-accent, #9166c8) 12%, transparent) !important;
+  background: color-mix(in srgb, var(--profile-accent, #d57c6a) 12%, transparent) !important;
 }
 
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--profile-accent, #9166c8);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 14px;
+.navAvatar {
   flex-shrink: 0;
 }
 
 .profileName {
   font-size: 15px;
   font-weight: 700;
-  color: var(--profile-accent, #9166c8);
+  color: var(--profile-accent, #d57c6a);
   white-space: nowrap;
 }
 
 .chevron {
-  color: var(--profile-accent, #9166c8);
+  color: var(--profile-accent, #d57c6a);
   opacity: 0.7;
   display: flex;
 }

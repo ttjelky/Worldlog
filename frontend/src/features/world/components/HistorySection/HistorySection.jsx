@@ -33,12 +33,13 @@ const categories = [
 const categoryLabels = Object.fromEntries(categories)
 const empty = { title: '', description: '', date: '', category: 'milestone' }
 
-export default function HistorySection({ worldId, accent }) {
+export default function HistorySection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const canEdit = userRole && userRole !== 'viewer'
 
   const { data: events = [] } = useQuery({
     queryKey: ['history', String(worldId)],
@@ -85,9 +86,16 @@ export default function HistorySection({ worldId, accent }) {
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>Історія світу ({events.length})</h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Нова подія
-        </Button>
+        {canEdit && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={openNew}
+          >
+            Нова подія
+          </Button>
+        )}
       </div>
 
       <div
@@ -126,12 +134,16 @@ export default function HistorySection({ worldId, accent }) {
                     )}
                   </div>
                   <div className={styles.rowActions}>
-                    <IconButton size="small" onClick={() => openEdit(h)}>
-                      <EditOutlinedIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => deleteEvent(h)}>
-                      <DeleteOutlinedIcon fontSize="small" />
-                    </IconButton>
+                    {canEdit && (
+                      <>
+                        <IconButton size="small" onClick={() => openEdit(h)}>
+                          <EditOutlinedIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" onClick={() => deleteEvent(h)}>
+                          <DeleteOutlinedIcon fontSize="small" />
+                        </IconButton>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

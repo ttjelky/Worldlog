@@ -73,7 +73,7 @@ function renderContent(text) {
   })
 }
 
-export default function WikiSection({ worldId, accent }) {
+export default function WikiSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
 
@@ -83,6 +83,7 @@ export default function WikiSection({ worldId, accent }) {
   const [form, setForm] = useState(empty)
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState(null)
+  const canEdit = userRole && userRole !== 'viewer'
 
   const { data: pages = [] } = useQuery({
     queryKey: ['wiki', String(worldId)],
@@ -169,18 +170,22 @@ export default function WikiSection({ worldId, accent }) {
           <div className={styles.pageDetailHeader}>
             <h3 className={styles.pageDetailTitle}>{selectedPage.title}</h3>
             <div className={styles.pageDetailActions}>
-              <IconButton aria-label="Редагувати" onClick={() => openEdit(selectedPage)}>
-                <EditOutlinedIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                aria-label="Видалити"
-                onClick={() => {
-                  deletePage(selectedPage)
-                  setSelectedPage(null)
-                }}
-              >
-                <DeleteOutlinedIcon fontSize="small" />
-              </IconButton>
+              {canEdit && (
+                <>
+                  <IconButton aria-label="Редагувати" onClick={() => openEdit(selectedPage)}>
+                    <EditOutlinedIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    aria-label="Видалити"
+                    onClick={() => {
+                      deletePage(selectedPage)
+                      setSelectedPage(null)
+                    }}
+                  >
+                    <DeleteOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </>
+              )}
             </div>
           </div>
           <div className={styles.pageDetailMeta}>
@@ -257,9 +262,11 @@ export default function WikiSection({ worldId, accent }) {
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>Вікі ({pages.length})</h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Нова сторінка
-        </Button>
+        {canEdit && (
+          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
+            Нова сторінка
+          </Button>
+        )}
       </div>
 
       <div
@@ -276,18 +283,22 @@ export default function WikiSection({ worldId, accent }) {
             <div className={styles.pageDetailHeader}>
               <h3 className={styles.pageDetailTitle}>{selectedPage.title}</h3>
               <div className={styles.pageDetailActions}>
-                <IconButton aria-label="Редагувати" onClick={() => openEdit(selectedPage)}>
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  aria-label="Видалити"
-                  onClick={() => {
-                    deletePage(selectedPage)
-                    setSelectedPage(null)
-                  }}
-                >
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
+                {canEdit && (
+                  <>
+                    <IconButton aria-label="Редагувати" onClick={() => openEdit(selectedPage)}>
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      aria-label="Видалити"
+                      onClick={() => {
+                        deletePage(selectedPage)
+                        setSelectedPage(null)
+                      }}
+                    >
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
               </div>
             </div>
             <div className={styles.pageDetailMeta}>

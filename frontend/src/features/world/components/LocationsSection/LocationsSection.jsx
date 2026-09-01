@@ -51,6 +51,7 @@ function LocationDetails({
   onDelete,
   onUpload,
   onDeleteShot,
+  canEdit,
 }) {
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef(null)
@@ -141,28 +142,30 @@ function LocationDetails({
           </Button>
         )}
         <div className={styles.locSpacer} />
-        <IconButton className={styles.actionBtn} aria-label="Редагувати локацію" onClick={onEdit}>
-          <EditOutlinedIcon fontSize="small" />
-        </IconButton>
-        <IconButton className={styles.actionBtn} aria-label="Видалити локацію" onClick={onDelete}>
-          <DeleteOutlinedIcon fontSize="small" />
-        </IconButton>
+        {canEdit && (
+          <>
+            <IconButton className={styles.actionBtn} aria-label="Редагувати локацію" onClick={onEdit}>
+              <EditOutlinedIcon fontSize="small" />
+            </IconButton>
+            <IconButton className={styles.actionBtn} aria-label="Видалити локацію" onClick={onDelete}>
+              <DeleteOutlinedIcon fontSize="small" />
+            </IconButton>
+          </>
+        )}
       </div>
     </div>
   )
 }
 
-export default function LocationsSection({ worldId, accent }) {
+export default function LocationsSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
-  // Прихована копія секції (modal=false) завжди показує лише 2 картки,
-  // щоб не роздувати рядок сторінки; у розгорнутому вигляді — всі
-  // (visibleLocations визначається нижче, після useQuery)
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [pendingPhoto, setPendingPhoto] = useState(null)
   const attachInputRef = useRef(null)
+  const canEdit = userRole && userRole !== 'viewer'
 
   const { data: locations = [] } = useQuery({
     queryKey: ['locations', String(worldId)],
@@ -207,7 +210,6 @@ export default function LocationsSection({ worldId, accent }) {
     onSuccess: () => qc.invalidateQueries(['locations', String(worldId)]),
   })
 
-  // Відгукуємо object-URL прев'ю при зміні та при розмонтуванні
   useEffect(() => {
     return () => {
       if (pendingPhoto) URL.revokeObjectURL(pendingPhoto.url)
@@ -258,9 +260,16 @@ export default function LocationsSection({ worldId, accent }) {
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>Локації ({locations.length})</h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Нова локація
-        </Button>
+        {canEdit && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={openNew}
+          >
+            Нова локація
+          </Button>
+        )}
       </div>
 
       <div className={`${sharedStyles.body} ${styles.locGrid} ${styles.gridFull}`}>
@@ -283,6 +292,7 @@ export default function LocationsSection({ worldId, accent }) {
                 }}
                 onUpload={(file) => uploadPhotos.mutateAsync({ locationId: l.id, files: [file] })}
                 onDeleteShot={(shot) => deleteScreenshot.mutate({ location: l, shot })}
+                canEdit={canEdit}
               />
             )}
           >
@@ -311,26 +321,30 @@ export default function LocationsSection({ worldId, accent }) {
                 {l.description && <div className={styles.desc}>{l.description}</div>}
               </div>
               <footer className={styles.locFooter}>
-                <IconButton
-                  className={styles.actionBtn}
-                  aria-label="Редагувати локацію"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    openEdit(l)
-                  }}
-                >
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  className={styles.actionBtn}
-                  aria-label="Видалити локацію"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteLocation(l)
-                  }}
-                >
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
+                {canEdit && (
+                  <>
+                    <IconButton
+                      className={styles.actionBtn}
+                      aria-label="Редагувати локацію"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEdit(l)
+                      }}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      className={styles.actionBtn}
+                      aria-label="Видалити локацію"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteLocation(l)
+                      }}
+                    >
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
               </footer>
             </article>
           </ExpandableCard>

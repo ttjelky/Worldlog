@@ -31,14 +31,13 @@ const priorities = {
 }
 const empty = { title: '', description: '', priority: 'medium' }
 
-export default function TodosSection({ worldId, accent }) {
+export default function TodosSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
-  // modal=true — копія всередині розкритої модалки (там знімаємо ліміт
-  // висоти списку), false — звичайна картка на дошці
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const canEdit = userRole && userRole !== 'viewer'
 
   const { data: allTodos = [] } = useQuery({
     queryKey: ['todos', String(worldId)],
@@ -56,7 +55,6 @@ export default function TodosSection({ worldId, accent }) {
   const toggle = useMutation({
     mutationFn: (todo) =>
       api.patch(`/worlds/${worldId}/todos/${todo.id}/`, { is_done: !todo.is_done }),
-    // Оптимістично перемикаємо одразу, щоб анімація була миттєвою
     onMutate: async (todo) => {
       await qc.cancelQueries(['todos', String(worldId)])
       const prev = qc.getQueryData(['todos', String(worldId)])
@@ -120,9 +118,16 @@ export default function TodosSection({ worldId, accent }) {
               Видалити виконані
             </button>
           )}
-          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-            Нове завдання
-          </Button>
+          {canEdit && (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={openNew}
+            >
+              Нове завдання
+            </Button>
+          )}
         </div>
       </div>
 
@@ -168,24 +173,28 @@ export default function TodosSection({ worldId, accent }) {
                   )}
                 </div>
               <div className={styles.rowActions}>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    openEdit(t)
-                  }}
-                >
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteTodo(t)
-                  }}
-                >
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
+                {canEdit && (
+                  <>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEdit(t)
+                      }}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteTodo(t)
+                      }}
+                    >
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
               </div>
             </div>
           )
