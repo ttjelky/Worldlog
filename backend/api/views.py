@@ -178,55 +178,82 @@ class WikiPageViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='graph')
     def graph(self, request, world_id=None):
-        """Граф зв'язків вікі: вузли — сторінки, ребра — [[згадки]] і Relationship."""
+        """Граф зв'язків вікі: вузли — сторінки й повʼязані елементи світу,
+        ребра — [[згадки]] та Relationship (у т.ч. встановлені поза wiki)."""
         world_id = self.kwargs.get('world_id')
         pages = list(WikiPage.objects.filter(world_id=world_id))
-        node_ids = {p.id for p in pages}
+        page_ids = {p.id for p in pages}
         title_to_id = {p.title.strip().lower(): p.id for p in pages}
 
         nodes = [
             {'id': p.id, 'type': p.page_type, 'title': p.title, 'emoji': p.emoji or ''}
             for p in pages
         ]
+        node_ids = {p.id for p in pages}  # числові id вікі-сторінок
+        # id зовнішніх вузлів — "тип:id", щоб не конфліктувати з id сторінок
+        external_ids = set()
+
+        def add_external(etype, entity_id):
+            key = f'{etype}:{entity_id}'
+            if key not in external_ids and key not in node_ids:
+                external_ids.add(key)
+                model = RELATION_MODEL_MAP.get(etype)
+                title = ''
+                if model is not None:
+                    title = str(
+                        model.objects.filter(world_id=world_id, pk=entity_id).first() or ''
+                    )
+                nodes.append(
+                    {
+                        'id': key,
+                        'type': etype,
+                        'title': title,
+                        'emoji': EXTERNAL_EMOJI.get(etype, '📄'),
+                    }
+                )
+
+        # Повертає ключ вузла для сутності, за потреби додаючи його в граф.
+        # Вікі-сторінки — числові id (вузол вже існує), решта — "тип:id".
+        def node_ref(etype, entity_id):
+            if etype == 'wiki_page':
+                return entity_id
+            add_external(etype, entity_id)
+            return f'{etype}:{entity_id}'
+
+        def add_edge(source, target, kind, label=''):
+            key = (source, target)
+            if key in seen:
+                existing_label = edge_labels.get(key)
+                if label and not existing_label:
+                    edge_labels[key] = label
+                    existing = next(
+                        (e for e in edges if e['source'] == key[0] and e['target'] == key[1]),
+                        None,
+                    )
+                    if existing is not None:
+                        existing['label'] = label
+                return
+            seen.add(key)
+            edge_labels[key] = label
+            edges.append({'source': source, 'target': target, 'kind': kind, 'label': label})
 
         edges = []
         seen = set()
+        edge_labels = {}
 
         for p in pages:
             for raw in re.findall(r'\[\[(?:wiki:)?([^\]|]+)\]\]', p.content):
                 target_id = title_to_id.get(raw.strip().lower())
                 if target_id is None or target_id == p.id:
                     continue
-                key = (p.id, target_id)
-                if key not in seen:
-                    seen.add(key)
-                    edges.append(
-                        {'source': p.id, 'target': target_id, 'kind': 'link', 'label': ''}
-                    )
+                add_edge(p.id, target_id, 'link')
 
-        for rel in Relationship.objects.filter(
-            world_id=world_id, source_type='wiki_page', target_type='wiki_page'
-        ):
-            if rel.source_id == rel.target_id:
+        for rel in Relationship.objects.filter(world_id=world_id):
+            src = node_ref(rel.source_type, rel.source_id)
+            tgt = node_ref(rel.target_type, rel.target_id)
+            if src == tgt:
                 continue
-            if rel.source_id not in node_ids or rel.target_id not in node_ids:
-                continue
-            key = (rel.source_id, rel.target_id)
-            existing = next(
-                (e for e in edges if e['source'] == key[0] and e['target'] == key[1]),
-                None,
-            )
-            if existing is None:
-                edges.append(
-                    {
-                        'source': rel.source_id,
-                        'target': rel.target_id,
-                        'kind': 'rel',
-                        'label': rel.label,
-                    }
-                )
-            elif rel.label and not existing['label']:
-                existing['label'] = rel.label
+            add_edge(src, tgt, 'rel', rel.label)
 
         return Response({'nodes': nodes, 'edges': edges})
 
@@ -259,6 +286,18 @@ ENTITY_NAME_FIELDS = {
     'note': 'title',
     'bookmark': 'title',
     'idea': 'title',
+}
+
+# Емодзі-заповнювачі для вузлів графа, коли у зовнішніх елементів немає власного.
+EXTERNAL_EMOJI = {
+    'player': '🧑',
+    'location': '📍',
+    'project': '🏗️',
+    'todo': '✅',
+    'event': '📅',
+    'note': '📝',
+    'bookmark': '🔖',
+    'idea': '💡',
 }
 
 

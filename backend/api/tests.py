@@ -550,3 +550,74 @@ class WikiTests(TestCase):
         resp = self.client.get('/api/worlds/{}/wiki/graph/'.format(self.world.pk))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data['edges'], [])
+
+    def test_graph_includes_relationships_to_non_wiki_entities(self):
+        page = self.world.wiki_pages.create(title='Дракон', page_type='character')
+        loc = self.world.locations.create(name='Драконяча печера', x=1, y=1, z=1)
+        player = self.world.players.create(nickname='Альдар')
+        # Зв'язки, встановлені поза wiki (локація та гравець ↔ сторінка)
+        self.world.relationships.create(
+            source_type='location',
+            source_id=loc.pk,
+            target_type='wiki_page',
+            target_id=page.pk,
+            label='домівка',
+        )
+        self.world.relationships.create(
+            source_type='wiki_page',
+            source_id=page.pk,
+            target_type='player',
+            target_id=player.pk,
+            label='полює на',
+        )
+
+        resp = self.client.get('/api/worlds/{}/wiki/graph/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        node_ids = {n['id'] for n in resp.data['nodes']}
+        # сторінка + два зовнішні вузли (локація, гравець)
+        self.assertEqual(len(resp.data['nodes']), 3)
+        self.assertIn(page.pk, node_ids)
+        self.assertIn('location:{}'.format(loc.pk), node_ids)
+        self.assertIn('player:{}'.format(player.pk), node_ids)
+
+        self.assertEqual(len(resp.data['edges']), 2)
+        sources = {(e['source'], e['target']) for e in resp.data['edges']}
+        self.assertIn((page.pk, 'player:{}'.format(player.pk)), sources)
+        self.assertIn(('location:{}'.format(loc.pk), page.pk), sources)
+
+    def test_graph_includes_relationships_between_non_wiki_entities(self):
+        loc_a = self.world.locations.create(name='Печера', x=1, y=1, z=1)
+        loc_b = self.world.locations.create(name='Замок', x=2, y=2, z=2)
+        project = self.world.projects.create(title='Фортеця', status='active')
+        todo = self.world.todos.create(title='Побудувати стіну')
+
+        self.world.relationships.create(
+            source_type='location',
+            source_id=loc_a.pk,
+            target_type='location',
+            target_id=loc_b.pk,
+            label='поруч із',
+        )
+        self.world.relationships.create(
+            source_type='project',
+            source_id=project.pk,
+            target_type='todo',
+            target_id=todo.pk,
+            label='включає',
+        )
+
+        resp = self.client.get('/api/worlds/{}/wiki/graph/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        node_ids = {n['id'] for n in resp.data['nodes']}
+        self.assertIn('location:{}'.format(loc_a.pk), node_ids)
+        self.assertIn('location:{}'.format(loc_b.pk), node_ids)
+        self.assertIn('project:{}'.format(project.pk), node_ids)
+        self.assertIn('todo:{}'.format(todo.pk), node_ids)
+        self.assertEqual(len(node_ids), 4)
+
+        sources = {(e['source'], e['target']) for e in resp.data['edges']}
+        self.assertIn(
+            ('location:{}'.format(loc_a.pk), 'location:{}'.format(loc_b.pk)), sources
+        )
+        self.assertIn(('project:{}'.format(project.pk), 'todo:{}'.format(todo.pk)), sources)
+        self.assertEqual(len(resp.data['edges']), 2)
