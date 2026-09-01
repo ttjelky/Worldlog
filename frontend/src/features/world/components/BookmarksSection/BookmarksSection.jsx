@@ -16,6 +16,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './BookmarksSection.module.css'
 
@@ -95,6 +96,13 @@ export default function BookmarksSection({ worldId, accent }) {
               <div className={styles.bookmarkUrl}>{b.url}</div>
             </div>
             <div className={styles.rowActions}>
+              <RelationshipButton
+                worldId={worldId}
+                sourceType="bookmark"
+                sourceId={b.id}
+                name={b.title}
+                accent={accent}
+              />
               <IconButton
                 size="small"
                 onClick={(e) => {

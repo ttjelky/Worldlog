@@ -234,12 +234,15 @@ class WikiPage(models.Model):
 
 class Relationship(models.Model):
     class SourceType(models.TextChoices):
+        PLAYER = 'player', 'Player'
         LOCATION = 'location', 'Location'
         WIKI_PAGE = 'wiki_page', 'Wiki Page'
         PROJECT = 'project', 'Project'
         TODO = 'todo', 'Todo'
         EVENT = 'event', 'Event'
         NOTE = 'note', 'Note'
+        BOOKMARK = 'bookmark', 'Bookmark'
+        IDEA = 'idea', 'Idea'
 
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='relationships')
     source_type = models.CharField(max_length=20, choices=SourceType.choices)

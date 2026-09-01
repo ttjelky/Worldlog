@@ -1,7 +1,15 @@
 .relationships {
   margin-top: 12px;
   padding-top: 12px;
+}
+
+.cardVariant {
   border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dialogVariant {
+  border-top: 1px solid rgba(29, 26, 34, 0.12);
+  margin-top: 4px;
 }
 
 .sectionLabel {
@@ -10,19 +18,37 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
   margin-bottom: 8px;
+}
+
+.cardVariant .sectionLabel {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dialogVariant .sectionLabel {
+  color: rgba(29, 26, 34, 0.8);
 }
 
 .addBtn {
   margin-left: auto !important;
   font-size: 12px !important;
-  color: rgba(255, 255, 255, 0.8) !important;
   text-transform: none !important;
 }
 
-.addBtn:hover {
+.cardVariant .addBtn {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.cardVariant .addBtn:hover {
   color: #ffffff !important;
+}
+
+.dialogVariant .addBtn {
+  color: rgba(29, 26, 34, 0.75) !important;
+}
+
+.dialogVariant .addBtn:hover {
+  color: #0d0d0f !important;
 }
 
 .relList {
@@ -37,20 +63,38 @@
   gap: 8px;
   padding: 8px 10px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
   transition: background 0.15s ease;
 }
 
-.relItem:hover {
+.cardVariant .relItem {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cardVariant .relItem:hover {
   background: rgba(255, 255, 255, 0.18);
+}
+
+.dialogVariant .relItem {
+  background: rgba(29, 26, 34, 0.05);
+}
+
+.dialogVariant .relItem:hover {
+  background: rgba(29, 26, 34, 0.09);
 }
 
 .relDirection {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
   flex-shrink: 0;
   width: 16px;
   text-align: center;
+}
+
+.cardVariant .relDirection {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dialogVariant .relDirection {
+  color: rgba(29, 26, 34, 0.55);
 }
 
 .relInfo {
@@ -67,32 +111,89 @@
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.cardVariant .relType {
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
-  flex-shrink: 0;
+}
+
+.dialogVariant .relType {
+  background: rgba(29, 26, 34, 0.1);
+  color: #1d1a22;
 }
 
 .relName {
   font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.cardVariant .relName {
+  color: #ffffff;
+}
+
+.dialogVariant .relName {
+  color: #1d1a22;
+}
+
 .relLabel {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
   font-style: italic;
 }
 
+.cardVariant .relLabel {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dialogVariant .relLabel {
+  color: rgba(29, 26, 34, 0.55);
+}
+
 .relDelete {
-  color: rgba(255, 255, 255, 0.6) !important;
   padding: 4px !important;
 }
 
-.relDelete:hover {
+.cardVariant .relDelete {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.cardVariant .relDelete:hover {
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.16) !important;
+}
+
+.dialogVariant .relDelete {
+  color: rgba(29, 26, 34, 0.55) !important;
+}
+
+.dialogVariant .relDelete:hover {
+  color: #1d1a22 !important;
+  background: rgba(29, 26, 34, 0.1) !important;
+}
+
+.dialogTitle {
+  font-size: 22px !important;
+  line-height: 1.3 !important;
+  padding-bottom: 4px !important;
+}
+
+.optType {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(29, 26, 34, 0.1);
+  color: #1d1a22;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.optName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

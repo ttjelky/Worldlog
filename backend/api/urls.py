@@ -18,6 +18,7 @@ from .views import (
     TodoViewSet,
     UserDetailView,
     WikiPageViewSet,
+    WorldEntitiesView,
     WorldViewSet,
 )
 
@@ -70,4 +71,9 @@ urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('me/', UserDetailView.as_view(), name='me'),
+    path(
+        'worlds/<int:world_id>/entities/',
+        WorldEntitiesView.as_view(),
+        name='world-entities',
+    ),
 ] + router.urls

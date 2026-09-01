@@ -17,6 +17,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import LocationBadgeText from '../shared/LocationBadgeText'
@@ -181,6 +182,13 @@ function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, 
       </div>
 
       <div className={styles.detailsFooter}>
+        <RelationshipButton
+          worldId={worldId}
+          sourceType="project"
+          sourceId={project.id}
+          name={project.title}
+          accent={accent}
+        />
         <IconButton className={styles.actionBtn} aria-label="Редагувати проєкт" onClick={onEdit}>
           <EditOutlinedIcon fontSize="small" />
         </IconButton>
@@ -312,6 +320,13 @@ export default function ProjectsSection({ worldId, accent }) {
                   <div className={styles.progressText}>Завдань ще немає</div>
                 )}
                 <div className={styles.rowActions}>
+                  <RelationshipButton
+                    worldId={worldId}
+                    sourceType="project"
+                    sourceId={p.id}
+                    name={p.title}
+                    accent={accent}
+                  />
                   <IconButton
                     size="small"
                     onClick={(e) => {

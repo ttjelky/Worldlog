@@ -16,6 +16,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './PlayersSection.module.css'
 
@@ -93,6 +94,13 @@ export default function PlayersSection({ worldId, accent }) {
               <div className={styles.playerRole}>{p.role_note || 'Немає ролі'}</div>
             </div>
             <div className={styles.rowActions}>
+              <RelationshipButton
+                worldId={worldId}
+                sourceType="player"
+                sourceId={p.id}
+                name={p.nickname}
+                accent={accent}
+              />
               <IconButton size="small" onClick={() => openEdit(p)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>

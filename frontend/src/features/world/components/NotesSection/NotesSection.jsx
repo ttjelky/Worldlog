@@ -16,6 +16,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import LocationBadgeText from '../shared/LocationBadgeText'
@@ -199,6 +200,13 @@ export default function NotesSection({ worldId, accent }) {
                 )}
               </div>
               <div className={styles.rowActions}>
+                <RelationshipButton
+                  worldId={worldId}
+                  sourceType="note"
+                  sourceId={n.id}
+                  name={n.title}
+                  accent={accent}
+                />
                 <IconButton
                   size="small"
                   onClick={(e) => {

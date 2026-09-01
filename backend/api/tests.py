@@ -367,3 +367,124 @@ class AuthFlowTests(TestCase):
             'password': 'Str0ng!Pass1',
         }, format='json')
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver'],
+    REST_FRAMEWORK={
+        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
+        'DEFAULT_THROTTLE_CLASSES': [],
+        'DEFAULT_THROTTLE_RATES': {},
+    },
+)
+class RelationshipTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='reluser', email='rel@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ зв\'язків')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        self.location = self.world.locations.create(name='Печера', x=1, y=1, z=1)
+        self.wiki = self.world.wiki_pages.create(title='Дракон', page_type='character')
+        self.note = self.world.notes.create(title='Легенда')
+
+    def url(self, path=''):
+        return f'/api/worlds/{self.world.pk}/relationships/{path}'
+
+    def test_create_relationship_between_any_types(self):
+        resp = self.client.post(self.url(), {
+            'source_type': 'wiki_page',
+            'source_id': self.wiki.pk,
+            'target_type': 'location',
+            'target_id': self.location.pk,
+            'label': 'мешкає в',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['source_name'], 'Дракон')
+        self.assertEqual(resp.data['target_name'], 'Печера')
+
+    def test_create_note_to_project(self):
+        project = self.world.projects.create(title='Будівництво')
+        resp = self.client.post(self.url(), {
+            'source_type': 'note',
+            'source_id': self.note.pk,
+            'target_type': 'project',
+            'target_id': project.pk,
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['target_name'], 'Будівництво')
+
+    def test_filtering_by_source_and_target(self):
+        self.world.relationships.create(
+            source_type='wiki_page',
+            source_id=self.wiki.pk,
+            target_type='location',
+            target_id=self.location.pk,
+        )
+        self.world.relationships.create(
+            source_type='note',
+            source_id=self.note.pk,
+            target_type='location',
+            target_id=self.location.pk,
+        )
+
+        resp = self.client.get(self.url(), {
+            'source_type': 'wiki_page', 'source_id': self.wiki.pk,
+        })
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['target_name'], 'Печера')
+
+        resp = self.client.get(self.url(), {
+            'target_type': 'location', 'target_id': self.location.pk,
+        })
+        self.assertEqual(len(resp.data), 2)
+
+    def test_rejects_link_to_missing_entity(self):
+        resp = self.client.post(self.url(), {
+            'source_type': 'wiki_page',
+            'source_id': self.wiki.pk,
+            'target_type': 'location',
+            'target_id': 99999,
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_link_to_other_world_entity(self):
+        other_world = self.user.worlds.create(name='Інший світ')
+        other_loc = other_world.locations.create(name='Чужак', x=0, y=0, z=0)
+        resp = self.client.post(self.url(), {
+            'source_type': 'wiki_page',
+            'source_id': self.wiki.pk,
+            'target_type': 'location',
+            'target_id': other_loc.pk,
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_self_link(self):
+        resp = self.client.post(self.url(), {
+            'source_type': 'wiki_page',
+            'source_id': self.wiki.pk,
+            'target_type': 'wiki_page',
+            'target_id': self.wiki.pk,
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_entities_endpoint_lists_all_types_and_searches(self):
+        resp = self.client.get('/api/worlds/{}/entities/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        types = {e['type'] for e in resp.data}
+        self.assertIn('wiki_page', types)
+        self.assertIn('location', types)
+        self.assertIn('note', types)
+
+        resp = self.client.get(
+            '/api/worlds/{}/entities/'.format(self.world.pk), {'q': 'ракон'}
+        )
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['name'], 'Дракон')
+
+        resp = self.client.get(
+            '/api/worlds/{}/entities/'.format(self.world.pk),
+            {'exclude_type': 'wiki_page', 'exclude_id': self.wiki.pk},
+        )
+        self.assertNotIn('Дракон', [e['name'] for e in resp.data])
