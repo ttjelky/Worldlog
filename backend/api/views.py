@@ -1,8 +1,11 @@
 from django.contrib.auth.models import User
 from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+import re
 
 from .models import (
     Bookmark,
@@ -172,6 +175,60 @@ class IdeaViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 class WikiPageViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = WikiPage.objects.all()
     serializer_class = WikiPageSerializer
+
+    @action(detail=False, methods=['get'], url_path='graph')
+    def graph(self, request, world_id=None):
+        """Граф зв'язків вікі: вузли — сторінки, ребра — [[згадки]] і Relationship."""
+        world_id = self.kwargs.get('world_id')
+        pages = list(WikiPage.objects.filter(world_id=world_id))
+        node_ids = {p.id for p in pages}
+        title_to_id = {p.title.strip().lower(): p.id for p in pages}
+
+        nodes = [
+            {'id': p.id, 'type': p.page_type, 'title': p.title, 'emoji': p.emoji or ''}
+            for p in pages
+        ]
+
+        edges = []
+        seen = set()
+
+        for p in pages:
+            for raw in re.findall(r'\[\[(?:wiki:)?([^\]|]+)\]\]', p.content):
+                target_id = title_to_id.get(raw.strip().lower())
+                if target_id is None or target_id == p.id:
+                    continue
+                key = (p.id, target_id)
+                if key not in seen:
+                    seen.add(key)
+                    edges.append(
+                        {'source': p.id, 'target': target_id, 'kind': 'link', 'label': ''}
+                    )
+
+        for rel in Relationship.objects.filter(
+            world_id=world_id, source_type='wiki_page', target_type='wiki_page'
+        ):
+            if rel.source_id == rel.target_id:
+                continue
+            if rel.source_id not in node_ids or rel.target_id not in node_ids:
+                continue
+            key = (rel.source_id, rel.target_id)
+            existing = next(
+                (e for e in edges if e['source'] == key[0] and e['target'] == key[1]),
+                None,
+            )
+            if existing is None:
+                edges.append(
+                    {
+                        'source': rel.source_id,
+                        'target': rel.target_id,
+                        'kind': 'rel',
+                        'label': rel.label,
+                    }
+                )
+            elif rel.label and not existing['label']:
+                existing['label'] = rel.label
+
+        return Response({'nodes': nodes, 'edges': edges})
 
 
 class RelationshipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):

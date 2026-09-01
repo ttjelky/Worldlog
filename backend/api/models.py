@@ -221,6 +221,13 @@ class WikiPage(models.Model):
         max_length=20, choices=PageType.choices, default=PageType.CUSTOM
     )
     content = models.TextField(blank=True)
+    emoji = models.CharField(max_length=32, blank=True)
+    # Пер-типові поля інфобоксу: {'race': 'Ельф', 'faction': 'Орден' ...}
+    infobox = models.JSONField(default=dict, blank=True)
+    tags = models.CharField(max_length=500, blank=True)
+    # Дата в ігровому часі («Рік 4») + числовий порядок для таймлайну
+    world_date = models.CharField(max_length=120, blank=True)
+    world_date_order = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -488,3 +488,65 @@ class RelationshipTests(TestCase):
             {'exclude_type': 'wiki_page', 'exclude_id': self.wiki.pk},
         )
         self.assertNotIn('Дракон', [e['name'] for e in resp.data])
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver'],
+    REST_FRAMEWORK={
+        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
+        'DEFAULT_THROTTLE_CLASSES': [],
+        'DEFAULT_THROTTLE_RATES': {},
+    },
+)
+class WikiTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='wikiuser', email='wiki@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ вікі')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_wiki_page_roundtrip_with_infobox(self):
+        resp = self.client.post('/api/worlds/{}/wiki/'.format(self.world.pk), {
+            'title': 'За́снована',
+            'page_type': 'character',
+            'emoji': '🧙',
+            'infobox': {'race': 'Ельф', 'status': 'alive', 'faction': 'Орден Світла'},
+            'tags': 'герой, рада',
+            'world_date': 'Рік 3',
+            'content': 'Згадка про [[Місто]]',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['infobox']['race'], 'Ельф')
+        self.assertEqual(resp.data['emoji'], '🧙')
+        self.assertEqual(resp.data['tags'], 'герой, рада')
+
+    def test_graph_endpoint_builds_nodes_and_edges(self):
+        a = self.world.wiki_pages.create(title='Дракон', page_type='character')
+        b = self.world.wiki_pages.create(title='Печера', page_type='location')
+        a.content = 'Дракон живе в [[Печера]]'
+        a.save()
+        self.world.relationships.create(
+            source_type='wiki_page',
+            source_id=b.pk,
+            target_type='wiki_page',
+            target_id=a.pk,
+            label='ворог',
+        )
+
+        resp = self.client.get('/api/worlds/{}/wiki/graph/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data['nodes']), 2)
+        self.assertEqual(len(resp.data['edges']), 2)
+        kinds = {e['kind'] for e in resp.data['edges']}
+        self.assertEqual(kinds, {'link', 'rel'})
+
+    def test_graph_ignores_broken_links(self):
+        self.world.wiki_pages.create(title='Дракон', page_type='character')
+        self.world.wiki_pages.create(
+            title='Сторінка', content='Згадка про [[Невідома]]', page_type='custom'
+        )
+        resp = self.client.get('/api/worlds/{}/wiki/graph/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['edges'], [])

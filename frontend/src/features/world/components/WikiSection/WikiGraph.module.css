@@ -1,0 +1,27 @@
+.graphWrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+}
+
+.svg {
+  display: block;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.node circle {
+  transition: stroke 0.15s ease, fill 0.15s ease;
+}
+
+.node:hover circle {
+  stroke: #ffffff;
+  fill: rgba(255, 255, 255, 0.3);
+}

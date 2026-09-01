@@ -357,7 +357,20 @@ class IdeaSerializer(serializers.ModelSerializer):
 class WikiPageSerializer(serializers.ModelSerializer):
     class Meta:
         model = WikiPage
-        fields = ('id', 'world', 'title', 'page_type', 'content', 'created_at', 'updated_at')
+        fields = (
+            'id',
+            'world',
+            'title',
+            'page_type',
+            'content',
+            'emoji',
+            'infobox',
+            'tags',
+            'world_date',
+            'world_date_order',
+            'created_at',
+            'updated_at',
+        )
         read_only_fields = ('world',)
 
 
