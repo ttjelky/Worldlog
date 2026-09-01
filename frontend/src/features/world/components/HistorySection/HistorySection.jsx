@@ -16,6 +16,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import LocationBadgeText from '../shared/LocationBadgeText'
@@ -134,6 +135,13 @@ export default function HistorySection({ worldId, accent, userRole }) {
                     )}
                   </div>
                   <div className={styles.rowActions}>
+                    <RelationshipButton
+                      worldId={worldId}
+                      sourceType="event"
+                      sourceId={h.id}
+                      name={h.title}
+                      accent={accent}
+                    />
                     {canEdit && (
                       <>
                         <IconButton size="small" onClick={() => openEdit(h)}>

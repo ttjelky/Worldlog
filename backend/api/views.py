@@ -2,9 +2,12 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.db.models import Q
 from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+import re
 
 from .models import (
     Bookmark,
@@ -39,6 +42,7 @@ from .serializers import (
     PlayerSerializer,
     ProfileUpdateSerializer,
     ProjectSerializer,
+    RELATION_MODEL_MAP,
     RelationshipSerializer,
     TodoItemSerializer,
     UserPublicSerializer,
@@ -247,10 +251,104 @@ class WikiPageViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = WikiPage.objects.all()
     serializer_class = WikiPageSerializer
 
+    @action(detail=False, methods=['get'], url_path='graph')
+    def graph(self, request, world_id=None):
+        """Граф зв'язків вікі: вузли — сторінки й повʼязані елементи світу,
+        ребра — [[згадки]] та Relationship (у т.ч. встановлені поза wiki)."""
+        world_id = self.kwargs.get('world_id')
+        pages = list(WikiPage.objects.filter(world_id=world_id))
+        page_ids = {p.id for p in pages}
+        title_to_id = {p.title.strip().lower(): p.id for p in pages}
+
+        nodes = [
+            {'id': p.id, 'type': p.page_type, 'title': p.title, 'emoji': p.emoji or ''}
+            for p in pages
+        ]
+        node_ids = {p.id for p in pages}  # числові id вікі-сторінок
+        # id зовнішніх вузлів — "тип:id", щоб не конфліктувати з id сторінок
+        external_ids = set()
+
+        def add_external(etype, entity_id):
+            key = f'{etype}:{entity_id}'
+            if key not in external_ids and key not in node_ids:
+                external_ids.add(key)
+                model = RELATION_MODEL_MAP.get(etype)
+                title = ''
+                if model is not None:
+                    title = str(
+                        model.objects.filter(world_id=world_id, pk=entity_id).first() or ''
+                    )
+                nodes.append(
+                    {
+                        'id': key,
+                        'type': etype,
+                        'title': title,
+                        'emoji': EXTERNAL_EMOJI.get(etype, '📄'),
+                    }
+                )
+
+        # Повертає ключ вузла для сутності, за потреби додаючи його в граф.
+        # Вікі-сторінки — числові id (вузол вже існує), решта — "тип:id".
+        def node_ref(etype, entity_id):
+            if etype == 'wiki_page':
+                return entity_id
+            add_external(etype, entity_id)
+            return f'{etype}:{entity_id}'
+
+        def add_edge(source, target, kind, label=''):
+            key = (source, target)
+            if key in seen:
+                existing_label = edge_labels.get(key)
+                if label and not existing_label:
+                    edge_labels[key] = label
+                    existing = next(
+                        (e for e in edges if e['source'] == key[0] and e['target'] == key[1]),
+                        None,
+                    )
+                    if existing is not None:
+                        existing['label'] = label
+                return
+            seen.add(key)
+            edge_labels[key] = label
+            edges.append({'source': source, 'target': target, 'kind': kind, 'label': label})
+
+        edges = []
+        seen = set()
+        edge_labels = {}
+
+        for p in pages:
+            for raw in re.findall(r'\[\[(?:wiki:)?([^\]|]+)\]\]', p.content):
+                target_id = title_to_id.get(raw.strip().lower())
+                if target_id is None or target_id == p.id:
+                    continue
+                add_edge(p.id, target_id, 'link')
+
+        for rel in Relationship.objects.filter(world_id=world_id):
+            src = node_ref(rel.source_type, rel.source_id)
+            tgt = node_ref(rel.target_type, rel.target_id)
+            if src == tgt:
+                continue
+            add_edge(src, tgt, 'rel', rel.label)
+
+        return Response({'nodes': nodes, 'edges': edges})
+
 
 class RelationshipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = Relationship.objects.all()
     serializer_class = RelationshipSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        params = self.request.query_params
+        if params.get('source_type') and params.get('source_id'):
+            queryset = queryset.filter(
+                source_type=params['source_type'], source_id=params['source_id']
+            )
+        if params.get('target_type') and params.get('target_id'):
+            queryset = queryset.filter(
+                target_type=params['target_type'], target_id=params['target_id']
+            )
+        return queryset
 
 
 class FriendshipViewSet(viewsets.ViewSet):
@@ -715,3 +813,77 @@ class RejectWorldAccessRequestView(APIView):
         )
 
         return Response(WorldAccessRequestSerializer(access_request, context={'request': request}).data)
+
+
+ENTITY_NAME_FIELDS = {
+    'player': 'nickname',
+    'location': 'name',
+    'wiki_page': 'title',
+    'project': 'title',
+    'todo': 'title',
+    'event': 'title',
+    'note': 'title',
+    'bookmark': 'title',
+    'idea': 'title',
+}
+
+# Емодзі-заповнювачі для вузлів графа, коли у зовнішніх елементів немає власного.
+EXTERNAL_EMOJI = {
+    'player': '🧑',
+    'location': '📍',
+    'project': '🏗️',
+    'todo': '✅',
+    'event': '📅',
+    'note': '📝',
+    'bookmark': '🔖',
+    'idea': '💡',
+}
+
+
+class WorldEntitiesView(APIView):
+    """Список сутностей світу для пікера зв'язків у картках.
+
+    Повертає плоский список [{id, type, name}]. Пошук через ?q=,
+    фільтр за типом через ?type=, виключення самого елемента через
+    ?exclude_type= + ?exclude_id=.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrMember]
+
+    def get(self, request, world_id):
+        world = World.objects.filter(pk=world_id).first()
+        if world is None:
+            return Response(
+                {'detail': 'Світ не знайдено'}, status=status.HTTP_404_NOT_FOUND
+            )
+        if world.owner_id != request.user.id and not world.memberships.filter(
+            user=request.user, status='active'
+        ).exists():
+            return Response(
+                {'detail': 'Доступ заборонено'}, status=status.HTTP_403_FORBIDDEN
+            )
+
+        q = request.query_params.get('q', '').strip()
+        entity_type = request.query_params.get('type')
+        exclude_type = request.query_params.get('exclude_type')
+        exclude_id = request.query_params.get('exclude_id')
+        try:
+            limit = min(int(request.query_params.get('limit', 200)), 500)
+        except (TypeError, ValueError):
+            limit = 200
+
+        results = []
+        for etype, model in RELATION_MODEL_MAP.items():
+            if entity_type and etype != entity_type:
+                continue
+            name_field = ENTITY_NAME_FIELDS[etype]
+            qs = model.objects.filter(world_id=world_id)
+            if q:
+                qs = qs.filter(**{f'{name_field}__icontains': q})
+            if exclude_type == etype and exclude_id:
+                qs = qs.exclude(pk=exclude_id)
+            for obj in qs.order_by(name_field)[:limit]:
+                results.append(
+                    {'id': obj.pk, 'type': etype, 'name': getattr(obj, name_field)}
+                )
+        return Response(results)

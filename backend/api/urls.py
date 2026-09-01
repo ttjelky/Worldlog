@@ -33,6 +33,7 @@ from .views import (
     UserSearchView,
     WikiPageViewSet,
     WorldAccessRequestViewSet,
+    WorldEntitiesView,
     WorldSearchView,
     WorldViewSet,
 )
@@ -96,6 +97,7 @@ urlpatterns = [
     path('users/search/', UserSearchView.as_view(), name='user-search'),
     path('users/<str:username>/', UserPublicProfileView.as_view(), name='user-public-profile'),
     path('worlds/search/', WorldSearchView.as_view(), name='world-search'),
+    path('worlds/<int:world_id>/entities/', WorldEntitiesView.as_view(), name='world-entities'),
     path('world-access-requests/<int:pk>/accept/', AcceptWorldAccessRequestView.as_view(), name='world-access-accept'),
     path('world-access-requests/<int:pk>/reject/', RejectWorldAccessRequestView.as_view(), name='world-access-reject'),
     path('friends/send/', SendFriendRequestView.as_view(), name='friend-send'),

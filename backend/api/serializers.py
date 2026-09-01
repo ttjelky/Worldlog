@@ -27,6 +27,20 @@ from .models import (
     WorldAccessRequest,
 )
 
+# Всі типи елементів світу, які можуть брати участь у зв'язках.
+# Ключ — значення Relationship.SourceType, значення — (модель, назва поля імені).
+RELATION_MODEL_MAP = {
+    'player': Player,
+    'location': Location,
+    'wiki_page': WikiPage,
+    'project': Project,
+    'todo': TodoItem,
+    'event': HistoryEvent,
+    'note': Note,
+    'bookmark': Bookmark,
+    'idea': Idea,
+}
+
 
 class CustomTokenObtainSerializer(TokenObtainPairSerializer):
     email = serializers.EmailField()
@@ -367,35 +381,100 @@ class IdeaSerializer(serializers.ModelSerializer):
 class WikiPageSerializer(serializers.ModelSerializer):
     class Meta:
         model = WikiPage
-        fields = ('id', 'world', 'title', 'page_type', 'content', 'created_at', 'updated_at')
+        fields = (
+            'id',
+            'world',
+            'title',
+            'page_type',
+            'content',
+            'emoji',
+            'infobox',
+            'tags',
+            'world_date',
+            'world_date_order',
+            'created_at',
+            'updated_at',
+        )
         read_only_fields = ('world',)
 
 
 class RelationshipSerializer(serializers.ModelSerializer):
+    source_name = serializers.SerializerMethodField()
     target_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Relationship
-        fields = ('id', 'world', 'source_type', 'source_id', 'target_type', 'target_id', 'label', 'target_name', 'created_at')
+        fields = (
+            'id',
+            'world',
+            'source_type',
+            'source_id',
+            'target_type',
+            'target_id',
+            'label',
+            'source_name',
+            'target_name',
+            'created_at',
+        )
         read_only_fields = ('world',)
 
-    def get_target_name(self, obj):
-        model_map = {
-            'location': Location,
-            'wiki_page': WikiPage,
-            'project': Project,
-            'todo': TodoItem,
-            'event': HistoryEvent,
-            'note': Note,
-        }
-        model = model_map.get(obj.target_type)
+    @staticmethod
+    def get_entity_name(entity_type, entity_id):
+        model = RELATION_MODEL_MAP.get(entity_type)
         if not model:
             return None
         try:
-            instance = model.objects.get(pk=obj.target_id)
-            return str(instance)
+            return str(model.objects.get(pk=entity_id))
         except model.DoesNotExist:
             return None
+
+    def get_source_name(self, obj):
+        return self.get_entity_name(obj.source_type, obj.source_id)
+
+    def get_target_name(self, obj):
+        return self.get_entity_name(obj.target_type, obj.target_id)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        request = self.context.get('request')
+        world_id = None
+        if request and getattr(request, 'resolver_match', None):
+            world_id = request.resolver_match.kwargs.get('world_id')
+        if world_id is None and self.instance:
+            world_id = self.instance.world_id
+
+        source_type = attrs.get('source_type', getattr(self.instance, 'source_type', None))
+        source_id = attrs.get('source_id', getattr(self.instance, 'source_id', None))
+        target_type = attrs.get('target_type', getattr(self.instance, 'target_type', None))
+        target_id = attrs.get('target_id', getattr(self.instance, 'target_id', None))
+
+        if world_id is not None:
+            if source_type is not None and source_id is not None:
+                self._check_exists(world_id, source_type, source_id, 'source')
+            if target_type is not None and target_id is not None:
+                self._check_exists(world_id, target_type, target_id, 'target')
+
+        if (
+            source_type is not None
+            and source_id is not None
+            and source_type == target_type
+            and source_id == target_id
+        ):
+            raise serializers.ValidationError(
+                'Не можна зв\'язати елемент із самим собою'
+            )
+        return attrs
+
+    def _check_exists(self, world_id, entity_type, entity_id, field):
+        model = RELATION_MODEL_MAP.get(entity_type)
+        if model is None:
+            raise serializers.ValidationError(
+                {field: 'Невідомий тип елемента'}
+            )
+        if not model.objects.filter(world_id=world_id, pk=entity_id).exists():
+            raise serializers.ValidationError(
+                {field: 'Елемент не знайдено у цьому світі'}
+            )
 
 
 class UserPublicSerializer(serializers.ModelSerializer):

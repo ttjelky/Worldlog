@@ -15,6 +15,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import LocationBadgeText from '../shared/LocationBadgeText'
@@ -127,6 +128,13 @@ export default function IdeasSection({ worldId, accent, userRole }) {
               </button>
             </div>
             <div className={styles.rowActions}>
+              <RelationshipButton
+                worldId={worldId}
+                sourceType="idea"
+                sourceId={t.id}
+                name={t.title}
+                accent={accent}
+              />
               {canEdit && (
                 <>
                   <IconButton size="small" onClick={() => openEdit(t)}>

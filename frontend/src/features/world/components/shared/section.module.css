@@ -40,13 +40,14 @@
   padding: 4px 2px;
 }
 
-/* Блок вмісту картки — росте за контентом, скролиться тільки коли не влазить.
+/* Блок вмісту картки — зайвий контент скролиться всередині картки,
+   щоб усі картки мали однакову висоту.
    Нижній паддінг — «пусте місце», яке скролиться разом зі списком,
    тому останній елемент не притиснутий до нижнього краю картки. */
 .body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  max-height: 320px;
   padding-right: 4px;
   margin-right: -4px;
   padding-bottom: 24px;
@@ -98,10 +99,6 @@
   .sectionHeader :global(.MuiButton-contained) {
     font-size: 12px !important;
     padding: 6px 12px !important;
-  }
-
-  .body {
-    max-height: 240px;
   }
 }
 

@@ -1,13 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  Autocomplete,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
-  MenuItem,
   TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
@@ -17,22 +17,31 @@ import api from '../../../../api'
 import sharedStyles from './section.module.css'
 import styles from './RelationshipList.module.css'
 
-const targetTypeLabels = {
+export const entityTypeLabels = {
+  player: 'Гравець',
   location: 'Локація',
   wiki_page: 'Wiki-сторінка',
   project: 'Проєкт',
   todo: 'Завдання',
   event: 'Подія',
   note: 'Нотатка',
+  bookmark: 'Закладка',
+  idea: 'Ідея',
 }
 
-export default function RelationshipList({ worldId, sourceType, sourceId }) {
+// variant="card"  — на кольоровій картці (білий текст),
+// variant="dialog" — у світлому діалозі (темний текст).
+export default function RelationshipList({ worldId, sourceType, sourceId, accent, variant = 'card' }) {
   const qc = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
-  const [form, setForm] = useState({ target_type: 'wiki_page', target_id: '', label: '' })
+  const [selected, setSelected] = useState(null)
+  const [label, setLabel] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
 
+  const key = [String(worldId), sourceType, String(sourceId)]
   const { data: relationships = [] } = useQuery({
-    queryKey: ['relationships', String(worldId), sourceType, String(sourceId)],
+    queryKey: ['relationships', ...key],
     queryFn: () =>
       api
         .get(`/worlds/${worldId}/relationships/`, {
@@ -42,7 +51,7 @@ export default function RelationshipList({ worldId, sourceType, sourceId }) {
   })
 
   const { data: reverseRelationships = [] } = useQuery({
-    queryKey: ['relationships', String(worldId), 'reverse', sourceType, String(sourceId)],
+    queryKey: ['relationships', 'reverse', ...key],
     queryFn: () =>
       api
         .get(`/worlds/${worldId}/relationships/`, {
@@ -56,12 +65,45 @@ export default function RelationshipList({ worldId, sourceType, sourceId }) {
     ...reverseRelationships.map((r) => ({ ...r, direction: 'incoming' })),
   ]
 
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 300)
+    return () => clearTimeout(t)
+  }, [searchInput])
+
+  const { data: entities = [] } = useQuery({
+    queryKey: ['world-entities', String(worldId), search],
+    queryFn: () =>
+      api
+        .get(`/worlds/${worldId}/entities/`, {
+          params: {
+            q: search || undefined,
+            exclude_type: sourceType,
+            exclude_id: sourceId,
+            limit: 100,
+          },
+        })
+        .then((r) => r.data),
+    enabled: addOpen,
+  })
+
+  const linkedKeys = new Set(
+    allRelationships.map((r) =>
+      r.direction === 'outgoing'
+        ? `${r.target_type}:${r.target_id}`
+        : `${r.source_type}:${r.source_id}`,
+    ),
+  )
+  const availableEntities = entities.filter((e) => !linkedKeys.has(`${e.type}:${e.id}`))
+
   const createMutation = useMutation({
     mutationFn: (payload) => api.post(`/worlds/${worldId}/relationships/`, payload),
     onSuccess: () => {
       qc.invalidateQueries(['relationships', String(worldId)])
       setAddOpen(false)
-      setForm({ target_type: 'wiki_page', target_id: '', label: '' })
+      setSelected(null)
+      setLabel('')
+      setSearch('')
+      setSearchInput('')
     },
   })
 
@@ -72,58 +114,57 @@ export default function RelationshipList({ worldId, sourceType, sourceId }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (!selected) return
     createMutation.mutate({
       source_type: sourceType,
       source_id: sourceId,
-      target_type: form.target_type,
-      target_id: Number(form.target_id),
-      label: form.label,
+      target_type: selected.type,
+      target_id: selected.id,
+      label,
     })
   }
 
-  if (allRelationships.length === 0 && !addOpen) {
-    return (
-      <div className={styles.relationships}>
-        <div className={styles.sectionLabel}>
-          <LinkIcon fontSize="small" />
-          <span>Пов'язані об'єкти</span>
-          <Button
-            size="small"
-            startIcon={<AddIcon />}
-            onClick={() => setAddOpen(true)}
-            className={styles.addBtn}
-          >
-            Додати зв'язок
-          </Button>
-        </div>
-        <p className={sharedStyles.emptyMsg}>Немає пов'язаних об'єктів</p>
-      </div>
-    )
-  }
+  const rows = allRelationships.map((r) => ({
+    id: r.id,
+    direction: r.direction,
+    type: r.direction === 'outgoing' ? r.target_type : r.source_type,
+    idOfOther: r.direction === 'outgoing' ? r.target_id : r.source_id,
+    name: r.direction === 'outgoing' ? r.target_name : r.source_name,
+    label: r.label,
+  }))
+
+  const variantClass = variant === 'dialog' ? styles.dialogVariant : styles.cardVariant
 
   return (
-    <div className={styles.relationships}>
+    <div className={`${styles.relationships} ${variantClass}`}>
       <div className={styles.sectionLabel}>
         <LinkIcon fontSize="small" />
-        <span>Пов'язані об'єкти ({allRelationships.length})</span>
+        <span>Пов'язані об'єкти ({rows.length})</span>
         <Button
           size="small"
           startIcon={<AddIcon />}
           onClick={() => setAddOpen(true)}
           className={styles.addBtn}
         >
-          Додати
+          Додати зв'язок
         </Button>
       </div>
+
+      {rows.length === 0 && (
+        <p className={sharedStyles.emptyMsg}>Немає пов'язаних об'єктів</p>
+      )}
+
       <div className={styles.relList}>
-        {allRelationships.map((rel) => (
+        {rows.map((rel) => (
           <div key={rel.id} className={styles.relItem}>
-            <span className={styles.relDirection}>{rel.direction === 'outgoing' ? '→' : '←'}</span>
+            <span className={styles.relDirection}>
+              {rel.direction === 'outgoing' ? '→' : '←'}
+            </span>
             <div className={styles.relInfo}>
               <span className={styles.relType}>
-                {targetTypeLabels[rel.target_type] || rel.target_type}
+                {entityTypeLabels[rel.type] || rel.type}
               </span>
-              <span className={styles.relName}>{rel.target_name || `#${rel.target_id}`}</span>
+              <span className={styles.relName}>{rel.name || `#${rel.idOfOther}`}</span>
               {rel.label && <span className={styles.relLabel}>{rel.label}</span>}
             </div>
             <IconButton
@@ -142,35 +183,45 @@ export default function RelationshipList({ worldId, sourceType, sourceId }) {
         onClose={() => setAddOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { className: sharedStyles.dialogPaper } }}
+        slotProps={{
+          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+        }}
       >
         <form onSubmit={handleSubmit}>
-          <DialogTitle>Додати зв'язок</DialogTitle>
+          <DialogTitle className={styles.dialogTitle}>Додати зв'язок</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
-              <TextField
-                label="Тип об'єкта"
-                select
-                value={form.target_type}
-                onChange={(e) => setForm((f) => ({ ...f, target_type: e.target.value }))}
-              >
-                {Object.entries(targetTypeLabels).map(([k, v]) => (
-                  <MenuItem key={k} value={k}>
-                    {v}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                label="ID об'єкта"
-                type="number"
-                value={form.target_id}
-                onChange={(e) => setForm((f) => ({ ...f, target_id: e.target.value }))}
-                required
+              <Autocomplete
+                options={availableEntities}
+                groupBy={(option) => entityTypeLabels[option.type] || option.type}
+                getOptionLabel={(option) => option.name || ''}
+                isOptionEqualToValue={(o, v) => o.type === v?.type && o.id === v?.id}
+                filterOptions={(x) => x}
+                value={selected}
+                onChange={(_, val) => setSelected(val)}
+                onInputChange={(_, val) => setSearchInput(val)}
+                renderOption={(props, option) => (
+                  <li {...props} key={`${option.type}-${option.id}`}>
+                    <span className={styles.optType}>
+                      {entityTypeLabels[option.type] || option.type}
+                    </span>
+                    <span className={styles.optName}>{option.name}</span>
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Обрати елемент"
+                    required
+                    placeholder="Почни вводити назву…"
+                  />
+                )}
               />
               <TextField
                 label="Позначка (необов'язково)"
-                value={form.label}
-                onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="наприклад: батько, ворог, мешкає в"
               />
             </div>
           </DialogContent>
@@ -178,7 +229,11 @@ export default function RelationshipList({ worldId, sourceType, sourceId }) {
             <Button onClick={() => setAddOpen(false)} className={sharedStyles.dialogBtnCancel}>
               Скасувати
             </Button>
-            <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
+            <Button
+              type="submit"
+              className={sharedStyles.dialogBtnSubmit}
+              disabled={!selected}
+            >
               Додати
             </Button>
           </DialogActions>

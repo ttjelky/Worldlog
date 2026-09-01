@@ -16,6 +16,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './BookmarksSection.module.css'
 
@@ -105,17 +106,30 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
               <div className={styles.bookmarkUrl}>{b.url}</div>
             </div>
             <div className={styles.rowActions}>
+              <RelationshipButton
+                worldId={worldId}
+                sourceType="bookmark"
+                sourceId={b.id}
+                name={b.title}
+                accent={accent}
+              />
               {canEdit && (
                 <>
                   <IconButton
                     size="small"
-                    onClick={() => openEdit(b)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openEdit(b)
+                    }}
                   >
                     <EditOutlinedIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
-                    onClick={() => deleteBookmark(b)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteBookmark(b)
+                    }}
                   >
                     <DeleteOutlinedIcon fontSize="small" />
                   </IconButton>

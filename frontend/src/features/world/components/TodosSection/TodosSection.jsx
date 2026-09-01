@@ -17,6 +17,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import LocationBadgeText from '../shared/LocationBadgeText'
@@ -173,6 +174,13 @@ export default function TodosSection({ worldId, accent, userRole }) {
                   )}
                 </div>
               <div className={styles.rowActions}>
+                <RelationshipButton
+                  worldId={worldId}
+                  sourceType="todo"
+                  sourceId={t.id}
+                  name={t.title}
+                  accent={accent}
+                />
                 {canEdit && (
                   <>
                     <IconButton
