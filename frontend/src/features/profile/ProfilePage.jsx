@@ -157,6 +157,7 @@ export default function ProfilePage() {
       return { userData: null, hasAvatar }
     },
     onSuccess: async ({ userData, hasAvatar }) => {
+      let avatarUrl = null
       if (userData) {
         updateUser({
           username: userData.username,
@@ -168,7 +169,9 @@ export default function ProfilePage() {
         try {
           const fd = new FormData()
           fd.append('avatar', avatarFile)
-          await api.patch('/me/profile/', fd)
+          const res = await api.patch('/me/profile/', fd)
+          avatarUrl = res.data.avatar_url || null
+          updateUser({ avatar_url: avatarUrl })
         } catch {
           setSnackbar({ open: true, message: 'Аватар оновлено, але сталася помилка завантаження' })
         }

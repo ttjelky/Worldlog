@@ -1,3 +1,6 @@
+import os
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -306,13 +309,24 @@ class Friendship(models.Model):
         raise ValueError('User is not part of this friendship')
 
 
+def user_avatar_upload_path(instance, filename):
+    """Store user avatars with a unique filename.
+
+    Giving every upload a fresh name produces a new URL, so browsers always
+    load a just-uploaded avatar while keeping previously seen avatars cached.
+    """
+    ext = os.path.splitext(filename)[1]
+    name = f'{instance.user_id}-{uuid.uuid4().hex[:12]}{ext}'
+    return os.path.join('user_avatars', name)
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile'
     )
     display_name = models.CharField(max_length=100, blank=True)
     bio = models.TextField(max_length=500, blank=True)
-    avatar = models.ImageField(upload_to='user_avatars/', blank=True, null=True)
+    avatar = models.ImageField(upload_to=user_avatar_upload_path, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
