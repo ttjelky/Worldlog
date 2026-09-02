@@ -90,29 +90,32 @@
   min-width: 0 !important;
   padding: 8px !important;
   border-radius: 999px !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-  transition: background 0.18s ease, color 0.18s ease !important;
+  color: #000000 !important;
+  background: #ffffff !important;
+  transition: background 0.18s ease, color 0.18s ease, opacity 0.18s ease !important;
 }
 
 .notificationsBtn:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  opacity: 0.7;
 }
 
 .profileButton {
-  --profile-accent: var(--nav-profile, #d57c6a);
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
   min-width: 0 !important;
   padding: 6px 10px 6px 6px !important;
   border-radius: 999px !important;
+  background: #ffffff !important;
   text-transform: none !important;
-  transition: background 0.18s ease !important;
+  transition: background 0.18s ease, opacity 0.18s ease !important;
 }
 
 .profileButton:hover {
-  background: color-mix(in srgb, var(--profile-accent, #d57c6a) 12%, transparent) !important;
+  background: #ffffff !important;
+  opacity: 0.7;
 }
 
 .navAvatar {
@@ -122,12 +125,12 @@
 .profileName {
   font-size: 15px;
   font-weight: 700;
-  color: var(--profile-accent, #d57c6a);
+  color: #000000;
   white-space: nowrap;
 }
 
 .chevron {
-  color: var(--profile-accent, #d57c6a);
+  color: #000000;
   opacity: 0.7;
   display: flex;
 }

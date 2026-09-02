@@ -268,6 +268,7 @@ class HistoryEventSerializer(serializers.ModelSerializer):
 
 class WorldSerializer(serializers.ModelSerializer):
     owner_username = serializers.CharField(source='owner.username', read_only=True)
+    owner_avatar_url = serializers.SerializerMethodField()
     players_count = serializers.IntegerField(source='players.count', read_only=True)
     locations_count = serializers.IntegerField(source='locations.count', read_only=True)
     todos_count = serializers.IntegerField(source='todos.count', read_only=True)
@@ -282,6 +283,7 @@ class WorldSerializer(serializers.ModelSerializer):
             'id',
             'owner',
             'owner_username',
+            'owner_avatar_url',
             'name',
             'description',
             'seed',
@@ -309,6 +311,16 @@ class WorldSerializer(serializers.ModelSerializer):
                 return None
             request = self.context.get('request')
             return request.build_absolute_uri(url) if request else url
+        return None
+
+    def get_owner_avatar_url(self, obj):
+        try:
+            if obj.owner.profile.avatar:
+                url = obj.owner.profile.avatar.url
+                request = self.context.get('request')
+                return request.build_absolute_uri(url) if request else url
+        except UserProfile.DoesNotExist:
+            pass
         return None
 
     def get_todos_done(self, obj):
@@ -601,10 +613,23 @@ class WorldAccessRequestSerializer(serializers.ModelSerializer):
 
 class NotificationSerializer(serializers.ModelSerializer):
     from_user_username = serializers.CharField(source='from_user.username', read_only=True, default='')
+    from_user_avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
-        fields = ('id', 'notification_type', 'from_user', 'from_user_username', 'message', 'is_read', 'created_at')
+        fields = ('id', 'notification_type', 'from_user', 'from_user_username', 'from_user_avatar_url', 'message', 'is_read', 'created_at')
+
+    def get_from_user_avatar_url(self, obj):
+        if not obj.from_user:
+            return None
+        try:
+            if obj.from_user.profile.avatar:
+                url = obj.from_user.profile.avatar.url
+                request = self.context.get('request')
+                return request.build_absolute_uri(url) if request else url
+        except UserProfile.DoesNotExist:
+            pass
+        return None
 
 
 class FriendshipSerializer(serializers.ModelSerializer):

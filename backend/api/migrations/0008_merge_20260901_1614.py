@@ -6,8 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0006_world_theme'),
         ('api', '0007_add_userprofile_and_notifications'),
+        ('api', '0008_wikipage_emoji_wikipage_infobox_wikipage_tags_and_more'),
     ]
 
     operations = [

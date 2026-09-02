@@ -58,6 +58,7 @@ function ToastItem({ toast, onDismiss, onClick }) {
       <div className={styles.iconWrap}>
         <UserAvatar
           username={notification.from_user_username}
+          avatarUrl={notification.from_user_avatar_url}
           size="sm"
         />
       </div>

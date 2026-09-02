@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { Snackbar, Button } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
-import PersonIcon from '@mui/icons-material/Person'
 import PublicIcon from '@mui/icons-material/Public'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
@@ -12,11 +11,11 @@ import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
 import styles from './NotificationsPage.module.css'
 
 const TYPE_META = {
-  friend_request: { icon: PersonIcon, label: 'Запит у друзі', color: '#4caf7d' },
-  friend_accepted: { icon: PersonIcon, label: 'Друзі', color: '#4caf7d' },
-  world_access_request: { icon: PublicIcon, label: 'Запит доступу до світу', color: '#e8855a' },
-  world_access_accepted: { icon: PublicIcon, label: 'Доступ надано', color: '#4caf7d' },
-  world_access_rejected: { icon: PublicIcon, label: 'Доступ відхилено', color: '#d57c6a' },
+  friend_request: { label: 'Запит у друзі' },
+  friend_accepted: { label: 'Друзі' },
+  world_access_request: { label: 'Запит доступу до світу' },
+  world_access_accepted: { label: 'Доступ надано' },
+  world_access_rejected: { label: 'Доступ відхилено' },
 }
 
 export default function NotificationsPage() {
@@ -163,8 +162,6 @@ export default function NotificationsPage() {
 }
 
 function NotificationItem({ notification, onClick, onAcceptAccess, onRejectAccess, loading }) {
-  const meta = TYPE_META[notification.notification_type] || TYPE_META.friend_request
-  const Icon = meta.icon
   const isPendingAccess = notification.notification_type === 'world_access_request' && !notification.is_read
 
   return (
@@ -180,8 +177,12 @@ function NotificationItem({ notification, onClick, onAcceptAccess, onRejectAcces
         }
       }}
     >
-      <div className={styles.itemIcon} style={{ color: meta.color }}>
-        <Icon />
+      <div className={styles.itemIcon}>
+        <UserAvatar
+          username={notification.from_user_username || ''}
+          avatarUrl={notification.from_user_avatar_url}
+          size="sm"
+        />
       </div>
       <div className={styles.itemContent}>
         <span className={styles.itemLabel}>{meta.label}</span>

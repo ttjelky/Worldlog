@@ -2,6 +2,10 @@
   min-height: 100vh;
   background: #dfcefd;
   color: #9166c8;
+  --nav-link-1: #9166c8;
+  --nav-link-2: #9166c8;
+  --nav-active-text: #434343;
+  --nav-profile: #d57c6a;
   /* font inherited from body/theme */
 }
 

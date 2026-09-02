@@ -165,7 +165,7 @@ export default function FriendsPage() {
                 <div className={styles.searchResults}>
                   {searchUsers.map((u) => (
                     <div key={u.id} className={styles.searchResult}>
-                      <UserAvatar username={u.username} size="sm" />
+                      <UserAvatar username={u.username} avatarUrl={u.avatar_url} size="sm" />
                       <div className={styles.searchResultInfo}>
                         <span className={styles.searchResultName}>{u.username}</span>
                       </div>

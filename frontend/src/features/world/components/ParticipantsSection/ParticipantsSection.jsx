@@ -75,7 +75,7 @@ export default function ParticipantsSection({ worldId, accent, userRole, world }
 
       <div className={`${sharedStyles.body} ${styles.list}`}>
         <div className={`${styles.row} ${styles.ownerRow}`}>
-          <UserAvatar username={world.owner_username} size="sm" />
+          <UserAvatar username={world.owner_username} avatarUrl={world.owner_avatar_url} size="sm" />
           <div className={styles.info}>
             <div className={styles.name}>{world.owner_username}</div>
             <div className={`${styles.roleChip} ${styles.roleOwner}`}>Власник</div>

@@ -59,7 +59,7 @@ function WorldCard({ world, index }) {
       <h3 className={styles.cardTitle}>{world.name}</h3>
       <div className={styles.cardFooter}>
         <div className={styles.cardOwner}>
-          <UserAvatar username={world.owner_username} size="xs" className={styles.ownerAvatarWrap} />
+          <UserAvatar username={world.owner_username} avatarUrl={world.owner_avatar_url} size="xs" className={styles.ownerAvatarWrap} />
           <span className={styles.ownerName}>{world.owner_username}</span>
         </div>
         <div className={styles.cardProgressTrack}>
