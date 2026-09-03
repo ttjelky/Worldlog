@@ -2,8 +2,6 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
-
-
 @override_settings(
     ALLOWED_HOSTS=['testserver'],
     REST_FRAMEWORK={
@@ -621,3 +619,156 @@ class WikiTests(TestCase):
         )
         self.assertIn(('project:{}'.format(project.pk), 'todo:{}'.format(todo.pk)), sources)
         self.assertEqual(len(resp.data['edges']), 2)
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver'],
+    REST_FRAMEWORK={
+        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
+        'DEFAULT_THROTTLE_CLASSES': [],
+        'DEFAULT_THROTTLE_RATES': {},
+    },
+)
+class GameDayTests(TestCase):
+    """Розрахунок ігрового дня від дня старту світу."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='histuser', email='hist@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_game_day_from_world_start(self):
+        from datetime import date, timedelta
+        self.world.start_date = date(2026, 1, 1)
+        self.world.save()
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія', 'date': '2026-01-01'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['game_day'], 1)
+
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія 2', 'date': (date(2026, 1, 1) + timedelta(days=5)).isoformat()},
+            format='json'
+        )
+        self.assertEqual(resp.data['game_day'], 6)
+
+    def test_game_day_null_without_world_start(self):
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(resp.data['game_day'])
+
+    def test_game_day_can_be_overridden(self):
+        from datetime import date
+        self.world.start_date = date(2026, 1, 1)
+        self.world.save()
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія', 'date': '2026-01-01', 'game_day': 42}, format='json'
+        )
+        self.assertEqual(resp.data['game_day'], 42)
+
+    def test_new_event_defaults_to_other_type(self):
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія'}, format='json'
+        )
+        self.assertEqual(resp.data['event_type'], 'other')
+        self.assertFalse(resp.data['is_important'])
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver'],
+    REST_FRAMEWORK={
+        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
+        'DEFAULT_THROTTLE_CLASSES': [],
+        'DEFAULT_THROTTLE_RATES': {},
+    },
+)
+class EpochTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='epochuser', email='epoch@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def url(self, path=''):
+        return '/api/worlds/{}/epochs/{}'.format(self.world.pk, path)
+
+    def test_create_epoch(self):
+        resp = self.client.post(self.url(), {'name': 'Епоха перша'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(resp.data['is_active'])
+        self.assertIsNone(resp.data['end_date'])
+
+    def test_epoch_crud_and_list(self):
+        created = self.client.post(self.url(), {'name': 'Нова'}, format='json').data
+        pk = created['id']
+        resp = self.client.get(self.url())
+        self.assertEqual(len(resp.data), 1)
+
+        resp = self.client.patch(
+            self.url('{}/'.format(pk)), {'name': 'Перейменована'}, format='json'
+        )
+        self.assertEqual(resp.data['name'], 'Перейменована')
+
+        resp = self.client.delete(self.url('{}/'.format(pk)))
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_new_events_land_in_active_epoch(self):
+        epoch = self.world.epochs.create(name='Епоха')
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['epoch'], epoch.pk)
+        self.assertEqual(resp.data['epoch_name'], 'Епоха')
+
+    def test_close_epoch_creates_new(self):
+        epoch = self.world.epochs.create(name='Перша')
+        resp = self.client.post(
+            self.url('{}/close/'.format(epoch.pk)), {'name': 'Друга'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(resp.data['closed']['end_date'])
+        self.assertFalse(resp.data['closed']['is_active'])
+        self.assertEqual(resp.data['new']['name'], 'Друга')
+        self.assertTrue(resp.data['new']['is_active'])
+
+    def test_close_epoch_requires_name(self):
+        epoch = self.world.epochs.create(name='Перша')
+        resp = self.client.post(self.url('{}/close/'.format(epoch.pk)), {}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_close_already_closed_epoch_rejected(self):
+        from datetime import date
+        epoch = self.world.epochs.create(name='Закрита', end_date=date(2026, 2, 1))
+        resp = self.client.post(self.url('{}/close/'.format(epoch.pk)),
+                                {'name': 'Друга'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cannot_delete_epoch_with_events(self):
+        epoch = self.world.epochs.create(name='Епоха')
+        self.world.history.create(title='Подія', epoch=epoch)
+        resp = self.client.delete(self.url('{}/'.format(epoch.pk)))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.world.epochs.get(pk=epoch.pk)
+
+    def test_participants_split(self):
+        self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія', 'participants': 'Альдар, Грім,  Зоря'}, format='json'
+        )
+        resp = self.client.get('/api/worlds/{}/history/'.format(self.world.pk))
+        self.assertEqual(resp.data[0]['participants_list'], ['Альдар', 'Грім', 'Зоря'])

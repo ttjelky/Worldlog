@@ -1,5 +1,6 @@
 import os
 import uuid
+from datetime import date
 
 from django.conf import settings
 from django.db import models
@@ -143,26 +144,78 @@ class TodoItem(models.Model):
         return self.title
 
 
+class Epoch(models.Model):
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='epochs')
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    start_date = models.DateField(auto_now_add=True)
+    end_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def is_active(self):
+        return self.end_date is None
+
+    @property
+    def events_count(self):
+        return self.events.count()
+
+
 class HistoryEvent(models.Model):
-    class Category(models.TextChoices):
-        ACHIEVEMENT = 'achievement', 'Achievement'
-        MILESTONE = 'milestone', 'Milestone'
-        IMPORTANT = 'important', 'Important'
-        COMPLETED = 'completed', 'Completed'
-        EXPANSION = 'expansion', 'Expansion'
-        OTHER = 'other', 'Other'
+    class EventType(models.TextChoices):
+        BATTLE = 'battle', 'Битва'
+        BUILDING = 'building', 'Будівництво'
+        DEATH = 'death', 'Смерть'
+        BOSS = 'boss', 'Бос'
+        DISCOVERY = 'discovery', 'Відкриття'
+        ACHIEVEMENT = 'achievement', 'Досягнення'
+        OTHER = 'other', 'Інше'
 
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='history')
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    date = models.DateField()
-    category = models.CharField(
-        max_length=20, choices=Category.choices, default=Category.OTHER
+    date = models.DateField(default=date.today)
+    epoch = models.ForeignKey(
+        Epoch, on_delete=models.SET_NULL, null=True, blank=True, related_name='events'
     )
+    event_type = models.CharField(
+        max_length=20, choices=EventType.choices, default=EventType.OTHER
+    )
+    game_day = models.PositiveIntegerField(null=True, blank=True)
+    is_important = models.BooleanField(default=False)
+    coord_x = models.IntegerField(null=True, blank=True)
+    coord_y = models.IntegerField(null=True, blank=True)
+    coord_z = models.IntegerField(null=True, blank=True)
+    image = models.ImageField(upload_to='history_events/', blank=True, null=True)
+    participants = models.CharField(max_length=500, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['date', 'created_at']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def image_url(self):
+        if self.image:
+            try:
+                return self.image.url
+            except (ValueError, OSError):
+                return None
+        return None
+
+    @property
+    def coordinates(self):
+        if self.coord_x is not None and self.coord_y is not None and self.coord_z is not None:
+            return {'x': self.coord_x, 'y': self.coord_y, 'z': self.coord_z}
+        return None
 
 
 class Note(models.Model):

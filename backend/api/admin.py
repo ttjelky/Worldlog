@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Bookmark,
+    Epoch,
     HistoryEvent,
     Idea,
     Location,
@@ -22,6 +23,7 @@ admin.site.register(Location)
 admin.site.register(LocationScreenshot)
 admin.site.register(TodoItem)
 admin.site.register(HistoryEvent)
+admin.site.register(Epoch)
 admin.site.register(Membership)
 admin.site.register(Note)
 admin.site.register(Project)

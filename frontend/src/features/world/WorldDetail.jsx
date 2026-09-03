@@ -452,7 +452,7 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
     ),
     history: () => (
       <ExpandableCard>
-        <HistorySection worldId={worldId} accent={red} userRole={userRole} />
+        <HistorySection worldId={worldId} accent={red} userRole={userRole} world={world} />
       </ExpandableCard>
     ),
     notes: () => (

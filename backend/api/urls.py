@@ -7,6 +7,7 @@ from .views import (
     AcceptWorldAccessRequestView,
     BookmarkViewSet,
     CancelFriendRequestView,
+    EpochViewSet,
     FriendshipViewSet,
     HistoryEventViewSet,
     IdeaViewSet,
@@ -58,6 +59,9 @@ router.register(
 )
 router.register(
     r'worlds/(?P<world_id>\d+)/history', HistoryEventViewSet, basename='world-history'
+)
+router.register(
+    r'worlds/(?P<world_id>\d+)/epochs', EpochViewSet, basename='world-epoch'
 )
 router.register(
     r'worlds/(?P<world_id>\d+)/memberships', MembershipViewSet, basename='world-membership'

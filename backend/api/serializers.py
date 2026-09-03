@@ -9,6 +9,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import (
     Bookmark,
+    Epoch,
     Friendship,
     HistoryEvent,
     Idea,
@@ -260,10 +261,78 @@ class TodoItemSerializer(serializers.ModelSerializer):
 
 
 class HistoryEventSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+    coordinates = serializers.SerializerMethodField()
+    participants_list = serializers.SerializerMethodField()
+
     class Meta:
         model = HistoryEvent
-        fields = ('id', 'world', 'title', 'description', 'date', 'category')
-        read_only_fields = ('world',)
+        fields = (
+            'id',
+            'world',
+            'title',
+            'description',
+            'date',
+            'created_at',
+            'event_type',
+            'game_day',
+            'is_important',
+            'epoch',
+            'epoch_name',
+            'coordinates',
+            'image',
+            'image_url',
+            'participants',
+            'participants_list',
+        )
+        read_only_fields = (
+            'world',
+            'created_at',
+            'epoch_name',
+            'image_url',
+            'participants_list',
+        )
+        extra_kwargs = {
+            'image': {'write_only': True, 'allow_null': True},
+            'participants': {'required': False, 'allow_blank': True},
+        }
+
+    epoch_name = serializers.SerializerMethodField()
+
+    def get_epoch_name(self, obj):
+        return obj.epoch.name if obj.epoch else None
+
+    def get_image_url(self, obj):
+        return obj.image_url
+
+    def get_coordinates(self, obj):
+        return obj.coordinates
+
+    def get_participants_list(self, obj):
+        if not obj.participants:
+            return []
+        return [p.strip() for p in obj.participants.split(',') if p.strip()]
+
+
+class EpochSerializer(serializers.ModelSerializer):
+    is_active = serializers.BooleanField(read_only=True)
+    events_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Epoch
+        fields = (
+            'id',
+            'world',
+            'name',
+            'description',
+            'start_date',
+            'end_date',
+            'created_at',
+            'is_active',
+            'events_count',
+        )
+        read_only_fields = ('world',) 
+
 
 
 class WorldSerializer(serializers.ModelSerializer):
@@ -274,6 +343,7 @@ class WorldSerializer(serializers.ModelSerializer):
     todos_count = serializers.IntegerField(source='todos.count', read_only=True)
     todos_done = serializers.SerializerMethodField()
     history_count = serializers.IntegerField(source='history.count', read_only=True)
+    epochs_count = serializers.IntegerField(source='epochs.count', read_only=True)
     cover_image_url = serializers.SerializerMethodField()
     current_user_role = serializers.SerializerMethodField()
 
@@ -299,6 +369,7 @@ class WorldSerializer(serializers.ModelSerializer):
             'todos_count',
             'todos_done',
             'history_count',
+            'epochs_count',
             'current_user_role',
         )
         read_only_fields = ('owner',)

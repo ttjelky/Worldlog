@@ -11,6 +11,7 @@ import re
 
 from .models import (
     Bookmark,
+    Epoch,
     Friendship,
     HistoryEvent,
     Idea,
@@ -31,6 +32,7 @@ from .models import (
 from .permissions import IsOwnerOrMember, IsWorldOwner, IsWorldEditorOrAbove, get_user_role
 from .serializers import (
     BookmarkSerializer,
+    EpochSerializer,
     FriendshipSerializer,
     HistoryEventSerializer,
     IdeaSerializer,
@@ -184,8 +186,76 @@ class TodoViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 
 
 class HistoryEventViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
-    queryset = HistoryEvent.objects.all()
+    queryset = HistoryEvent.objects.select_related('epoch').all()
     serializer_class = HistoryEventSerializer
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+    def _finalize(self, serializer):
+        """Підрахувати ігровий день від дня старту світу, якщо його
+        не задали вручну."""
+        world_id = self.kwargs['world_id']
+        data = serializer.validated_data
+        if 'game_day' not in data:
+            world = World.objects.filter(pk=world_id).first()
+            event_date = data.get('date') or getattr(serializer.instance, 'date', None)
+            if world and world.start_date and event_date:
+                data['game_day'] = (event_date - world.start_date).days + 1
+        return data
+
+    def perform_create(self, serializer):
+        world_id = self.kwargs['world_id']
+        data = serializer.validated_data
+        epoch = (data.get('epoch')
+                 or Epoch.objects.filter(world_id=world_id, end_date__isnull=True).first()
+                 or Epoch.objects.filter(world_id=world_id).order_by('-created_at').first())
+        data = self._finalize(serializer)
+        data['world_id'] = world_id
+        if epoch:
+            data['epoch'] = epoch
+        serializer.save(**data)
+
+    def perform_update(self, serializer):
+        data = self._finalize(serializer)
+        serializer.save(**data)
+
+
+class EpochViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Epoch.objects.prefetch_related('events').all()
+    serializer_class = EpochSerializer
+
+    @action(detail=True, methods=['post'])
+    def close(self, request, world_id=None, pk=None):
+        """Завершити епоху й почати нову"""
+        from django.utils import timezone
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from rest_framework.exceptions import ValidationError
+
+        epoch = self.get_object()
+        if epoch.end_date is not None:
+            raise ValidationError('Епоху вже завершено.')
+        new_name = (request.data.get('name') or '').strip()
+        if not new_name:
+            raise ValidationError({'name': 'Вкажіть назву нової епохи.'})
+        if Epoch.objects.filter(world_id=epoch.world_id, name=new_name).exists():
+            raise ValidationError({'name': 'Епоха з такою назвою вже існує.'})
+
+        epoch.end_date = timezone.localdate()
+        epoch.save(update_fields=['end_date'])
+
+        new_epoch = Epoch.objects.create(world_id=epoch.world_id, name=new_name)
+        serializer = EpochSerializer(new_epoch, context={'request': request})
+        return Response(
+            {'closed': EpochSerializer(epoch, context={'request': request}).data,
+             'new': serializer.data},
+            status=status.HTTP_201_CREATED,
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        from rest_framework.exceptions import ValidationError
+        epoch = self.get_object()
+        if epoch.events.exists():
+            raise ValidationError('Не можна видалити епоху, що містить події.')
+        return super().destroy(request, *args, **kwargs)
 
 
 class MembershipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):

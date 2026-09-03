@@ -3,61 +3,396 @@
   padding-left: 4px;
   display: flex;
   flex-direction: column;
+  gap: 22px;
 }
 
 .timelineFull {
   max-height: none;
 }
 
-.event {
-  position: relative;
-  padding-bottom: 18px;
-  display: flex;
+/* ---- Статистика ---- */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
-.eventLast {
-  padding-bottom: 0;
+.stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 10px 10px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  text-align: center;
+  overflow: hidden;
+}
+
+.statIcon {
+  width: 20px !important;
+  height: 20px !important;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 2px;
+}
+
+.statValue {
+  font-weight: 800;
+  font-size: 28px;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ---- Фільтри ---- */
+.filters {
+  margin-bottom: 16px;
+}
+
+.filterToggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.filterIconBtn {
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+.filterIconBtnOpen {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.filterToggleLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.filterGroup {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.filterSelect {
+  min-width: 180px;
+}
+
+.filterSelect :global(.MuiFormLabel-root) {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 12px;
+}
+
+.filterSelect :global(.MuiInputBase-root) {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 13.5px;
+}
+
+.filterSelect :global(.MuiOutlinedInput-notchedOutline) {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.filterSelect :global(.MuiSvgIcon-root) {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.filterSwitches {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.importantToggle,
+.sortToggle {
+  margin: 0 !important;
+}
+
+.importantToggle :global(.MuiFormControlLabel-label),
+.sortToggle :global(.MuiFormControlLabel-label) {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* ---- Епохи ---- */
+.epochBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.epochHeader {
+  position: relative;
+  padding: 12px 16px 12px 20px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.epochHeader::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #6f42c6, #9a6bb8);
+  opacity: 0.55;
+}
+
+.epochTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.epochTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.epochMark {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+}
+
+.epochMarkActive {
+  background: #4caf7d;
+  box-shadow: 0 0 0 4px rgba(76, 175, 125, 0.22);
+}
+
+.epochName {
+  font-weight: 800;
+  font-size: 17px;
+  color: #ffffff;
+}
+
+.epochActiveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(76, 175, 125, 0.18);
+  color: #a6e8c0;
+  border: 1px solid rgba(76, 175, 125, 0.45);
+}
+
+.epochActiveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4caf7d;
+}
+
+.epochHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.epochCloseBtn {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  border-radius: 999px !important;
+  text-transform: none !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 4px 12px !important;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.epochCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.epochDeleteBtn {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.epochDeleteBtn:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+.epochMeta {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.epochDesc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 6px 0 0;
+}
+
+.epochEmpty {
+  margin-bottom: 8px;
+}
+
+.epochBtn {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-radius: 999px !important;
+  text-transform: none !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  margin-top: 8px;
+}
+
+.epochBtn:hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+}
+
+.epochEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+  margin-left: 46px;
+}
+
+.epochEmptyText {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.epochEmptyBtn {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-radius: 999px !important;
+  text-transform: none !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+.epochEmptyBtn:hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+}
+
+.epochTimeline {
+  position: relative;
+  padding-left: 46px;
+}
+
+/* ---- Події ---- */
+.event {
+  position: relative;
+  display: flex;
+  padding-bottom: 16px;
+}
+
+.eventTrack {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 24px;
 }
 
 .rail {
   position: absolute;
-  left: 13px;
-  top: 30px;
+  left: 50%;
+  top: 18px;
   bottom: 0;
   width: 2px;
-  background: rgba(255, 255, 255, 0.28);
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.22);
   z-index: 1;
 }
 
+.eventLast .rail {
+  display: none;
+}
+
 .node {
-  width: 28px;
-  height: 28px;
+  position: relative;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  color: #1d1a22;
-  font-weight: 800;
-  font-size: 11px;
+  background: var(--type-color, #9aa0a6);
+  margin-top: 6px;
   z-index: 2;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
+}
+
+.nodeImportant {
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.22), 0 0 14px var(--type-color, #e8855a);
+}
+
+.eventCardWrap {
+  flex: 1;
+  min-width: 0;
+  margin-left: 34px;
 }
 
 .eventCard {
-  flex: 1;
-  min-width: 0;
-  margin-left: 14px;
-  border-radius: 16px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.eventCardImportant {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .eventHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 6px;
+  gap: 10px;
 }
 
 .eventLeft {
@@ -68,54 +403,314 @@
 .eventMeta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .eventDate {
-  font-weight: 800;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.62);
 }
 
-.catPill {
+.gameDay {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.importantPill {
   font-size: 10px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   padding: 2px 9px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  background: rgba(232, 133, 90, 0.24);
+  color: #f6b993;
+  border: 1px solid rgba(232, 133, 90, 0.35);
 }
 
 .eventTitle {
   font-family: inherit;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 15.5px;
   color: #ffffff;
-  margin-top: 3px;
+  margin-top: 4px;
+  line-height: 1.25;
+}
+
+.typeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--type-color, #9aa0a6) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--type-color, #9aa0a6) 55%, transparent);
+  line-height: 1;
+}
+
+.typeBadgeIcon {
+  width: 15px !important;
+  height: 15px !important;
 }
 
 .eventDesc {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.72);
   margin: 3px 0 0;
+}
+
+.eventExtras {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.thumbBtn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.thumb {
+  width: 84px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.thumbBtn:hover .thumb {
+  transform: scale(1.05);
+}
+
+.addPhotoBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.addPhotoBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+}
+
+.addPhotoIcon {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.coordsPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.participants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 9px;
+}
+
+.participantChip {
+  font-size: 11px !important;
+  height: 24px !important;
+  background: rgba(255, 255, 255, 0.13) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+.participantChip :global(.MuiChip-label) {
+  padding: 0 8px;
+}
+
+.participantChip :global(.MuiChip-deleteIcon) {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .rowActions {
   display: flex;
   gap: 0;
   flex-shrink: 0;
+  margin-left: 6px;
 }
 
 .rowActions :global(.MuiIconButton-root) {
-  color: rgba(255, 255, 255, 0.85);
-  padding: 4px;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 6px;
+  border-radius: 10px;
 }
 
 .rowActions :global(.MuiIconButton-root:hover) {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+/* ---- Форма ---- */
+.coordRow {
+  display: flex;
+  gap: 10px;
+}
+
+.coordField {
+  flex: 1;
+}
+
+.photoInput {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pendingPhoto {
+  position: relative;
+  display: inline-block;
+  width: max-content;
+}
+
+.pendingPhoto img {
+  width: 120px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.pendingPhoto :global(.MuiIconButton-root) {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.suggestionChip {
+  font-size: 12px !important;
+  height: 26px !important;
+}
+
+.aiButton {
+  align-self: flex-start;
+  border-radius: 999px !important;
+  text-transform: none !important;
+  opacity: 0.75;
+}
+
+/* ---- Лайтбокс ---- */
+.lightbox {
+  position: relative;
+  padding: 8px;
+}
+
+.lightboxImg {
+  max-width: 80vw;
+  max-height: 80vh;
+  border-radius: 12px;
+  display: block;
+}
+
+.lightboxClose {
+  position: absolute !important;
+  top: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5) !important;
+  color: #fff !important;
+}
+
+/* ---- Мобільна адаптивність ---- */
+@media (max-width: 760px) {
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .statValue {
+    font-size: 24px;
+  }
+
+  .filterToggle {
+    display: flex;
+  }
+
+  .filterGroup {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterGroupOpen {
+    display: flex;
+  }
+
+  .filterSelect {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filterSwitches {
+    margin-left: 0;
+    justify-content: flex-start;
+    gap: 4px;
+  }
+
+  .epochTimeline {
+    padding-left: 28px;
+  }
+
+  .eventCardWrap {
+    margin-left: 22px;
+  }
+
+  .epochEmptyState {
+    margin-left: 0;
+    padding: 12px 14px;
+  }
+
+  .epochTopRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .epochCloseBtn {
+    align-self: flex-start;
+  }
 }
