@@ -13,7 +13,6 @@ import {
   MenuItem,
   TextField,
   Tooltip,
-  Switch,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
@@ -116,8 +115,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   const [form, setForm] = useState(empty)
   const [pendingImage, setPendingImage] = useState(null)
   const [lightbox, setLightbox] = useState(null)
-  const [filters, setFilters] = useState({ importantOnly: false, epoch: '', type: '' })
-  const [sortBy, setSortBy] = useState('date')
+  const [filters, setFilters] = useState({ epoch: '', type: '' })
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [epochDialog, setEpochDialog] = useState(false)
   const [closeEpoch, setCloseEpoch] = useState(null)
@@ -265,22 +263,16 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
 
   const filtered = useMemo(() => {
     let list = [...events]
-    if (filters.importantOnly) list = list.filter((e) => e.is_important)
     if (filters.type) list = list.filter((e) => e.event_type === filters.type)
     let epochId = filters.epoch
     if (epochId === '') epochId = activeEpochObj ? String(activeEpochObj.id) : ''
     if (epochId && epochId !== 'all') list = list.filter((e) => String(e.epoch) === String(epochId))
     if (filters.participant) list = list.filter((e) => (e.participants_list || []).includes(filters.participant))
     list.sort((a, b) => {
-      if (sortBy === 'game_day') {
-        const ad = a.game_day ?? Number.MAX_SAFE_INTEGER
-        const bd = b.game_day ?? Number.MAX_SAFE_INTEGER
-        return ad - bd || new Date(a.date) - new Date(b.date)
-      }
       return new Date(a.date) - new Date(b.date)
     })
     return list
-  }, [events, filters, activeEpochObj, sortBy])
+  }, [events, filters, activeEpochObj])
 
   const grouped = useMemo(() => {
     const byEpoch = new Map()
@@ -371,6 +363,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
             value={filters.type}
             onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))}
             className={styles.filterSelect}
+            InputProps={{ notched: false }}
           >
             <MenuItem value="">Усі типи</MenuItem>
             {eventTypes.map(([v, label]) => (
@@ -386,6 +379,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
             value={filters.epoch}
             onChange={(e) => setFilters((f) => ({ ...f, epoch: e.target.value }))}
             className={styles.filterSelect}
+            InputProps={{ notched: false }}
           >
             <MenuItem value="all">Усі епохи</MenuItem>
             <MenuItem value="">
@@ -406,6 +400,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
               setFilters((f) => ({ ...f, participant: e.target.value || undefined }))
             }
             className={styles.filterSelect}
+            InputProps={{ notched: false }}
           >
             <MenuItem value="">Усі учасники</MenuItem>
             {knownParticipants.map((p) => (
@@ -414,32 +409,6 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
               </MenuItem>
             ))}
           </TextField>
-          <div className={styles.filterSwitches}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  size="small"
-                  checked={filters.importantOnly}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, importantOnly: e.target.checked }))
-                  }
-                />
-              }
-              label="Важливі"
-              className={styles.importantToggle}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={sortBy === 'game_day'}
-                  onChange={(e) => setSortBy(e.target.checked ? 'game_day' : 'date')}
-                />
-              }
-              label="Ігровий день"
-              className={styles.sortToggle}
-            />
-          </div>
         </div>
       </div>
 

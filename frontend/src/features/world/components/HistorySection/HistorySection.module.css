@@ -86,50 +86,54 @@
 .filterGroup {
   display: flex;
   justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-wrap: nowrap;
+  gap: 12px;
   align-items: center;
+  width: 100%;
 }
 
 .filterSelect {
-  min-width: 180px;
+  min-width: 0;
+  flex: 1 1 0;
 }
 
-.filterSelect :global(.MuiFormLabel-root) {
-  color: rgba(255, 255, 255, 0.75) !important;
-  font-size: 12px;
-}
-
-.filterSelect :global(.MuiInputBase-root) {
-  background: rgba(0, 0, 0, 0.18);
-  border-radius: 12px;
-  color: #ffffff;
-  font-size: 13.5px;
+.filterSelect :global(.MuiOutlinedInput-root) {
+  border-radius: 12px !important;
+  background: transparent !important;
 }
 
 .filterSelect :global(.MuiOutlinedInput-notchedOutline) {
-  border-color: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  transition: border-color 150ms linear !important;
+}
+
+.filterSelect :global(.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline) {
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.filterSelect :global(.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline) {
+  border-color: #ffffff !important;
+  border-width: 2px !important;
+}
+
+.filterSelect :global(.MuiOutlinedInput-input) {
+  color: #ffffff !important;
+}
+
+.filterSelect :global(.MuiInputBase-root) {
+  font-size: 13.5px;
+}
+
+.filterSelect :global(.MuiFormLabel-root) {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.filterSelect :global(.MuiFormLabel-root.Mui-focused) {
+  color: #ffffff !important;
 }
 
 .filterSelect :global(.MuiSvgIcon-root) {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.filterSwitches {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.importantToggle,
-.sortToggle {
-  margin: 0 !important;
-}
-
-.importantToggle :global(.MuiFormControlLabel-label),
-.sortToggle :global(.MuiFormControlLabel-label) {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.92);
+  color: #ffffff;
 }
 
 /* ---- Епохи ---- */
@@ -684,12 +688,7 @@
   .filterSelect {
     min-width: 0;
     width: 100%;
-  }
-
-  .filterSwitches {
-    margin-left: 0;
-    justify-content: flex-start;
-    gap: 4px;
+    flex: 1 1 100%;
   }
 
   .epochTimeline {

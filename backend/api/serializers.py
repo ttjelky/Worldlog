@@ -303,7 +303,11 @@ class HistoryEventSerializer(serializers.ModelSerializer):
         return obj.epoch.name if obj.epoch else None
 
     def get_image_url(self, obj):
-        return obj.image_url
+        url = obj.image_url
+        if not url:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(url) if request else url
 
     def get_coordinates(self, obj):
         return obj.coordinates
