@@ -16,6 +16,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import LocationBadgeText from '../shared/LocationBadgeText'
@@ -76,13 +77,14 @@ function NoteDetails({ note, worldId, locations, accent, onClose, onEdit, onDele
   )
 }
 
-export default function NotesSection({ worldId, accent }) {
+export default function NotesSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [activeTag, setActiveTag] = useState(null)
   const section = useExpandableCard()
+  const canEdit = userRole && userRole !== 'viewer'
 
   const { data: notes = [] } = useQuery({
     queryKey: ['notes', String(worldId)],
@@ -134,10 +136,19 @@ export default function NotesSection({ worldId, accent }) {
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>Нотатки ({notes.length})</h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Нова нотатка
-        </Button>
+        <h3 className={sharedStyles.sectionTitle}>
+          Нотатки ({notes.length})
+        </h3>
+        {canEdit && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={openNew}
+          >
+            Нова нотатка
+          </Button>
+        )}
       </div>
 
       {allTags.length > 0 && (
@@ -199,24 +210,35 @@ export default function NotesSection({ worldId, accent }) {
                 )}
               </div>
               <div className={styles.rowActions}>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    openEdit(n)
-                  }}
-                >
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteNote(n)
-                  }}
-                >
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
+                <RelationshipButton
+                  worldId={worldId}
+                  sourceType="note"
+                  sourceId={n.id}
+                  name={n.title}
+                  accent={accent}
+                />
+                {canEdit && (
+                  <>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEdit(n)
+                      }}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteNote(n)
+                      }}
+                    >
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
               </div>
             </div>
           </ExpandableCard>

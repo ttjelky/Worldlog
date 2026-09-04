@@ -9,6 +9,44 @@
   max-height: none;
 }
 
+.viewTabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  align-self: flex-start;
+}
+
+.viewTab {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.75);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: 999px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.viewTab:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.viewTabActive {
+  background: #ffffff;
+  color: var(--accent, #6f42c6);
+}
+
+.viewTabActive:hover {
+  background: #ffffff;
+  color: var(--accent, #6f42c6);
+}
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -21,37 +59,55 @@
   min-width: 200px;
 }
 
-.searchInput :global(.MuiOutlinedInput-root) {
+.sortSelect {
+  min-width: 190px;
+}
+
+.searchInput :global(.MuiOutlinedInput-root),
+.sortSelect :global(.MuiOutlinedInput-root) {
   border-radius: 12px !important;
   background: rgba(255, 255, 255, 0.12) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   color: #ffffff !important;
 }
 
-.searchInput :global(.MuiOutlinedInput-notchedOutline) {
+.searchInput :global(.MuiOutlinedInput-notchedOutline),
+.sortSelect :global(.MuiOutlinedInput-notchedOutline) {
   display: none !important;
 }
 
-.searchInput :global(.MuiOutlinedInput-root:hover) {
+.searchInput :global(.MuiOutlinedInput-root:hover),
+.sortSelect :global(.MuiOutlinedInput-root:hover) {
   border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
-.searchInput :global(.MuiOutlinedInput-root.Mui-focused) {
+.searchInput :global(.MuiOutlinedInput-root.Mui-focused),
+.sortSelect :global(.MuiOutlinedInput-root.Mui-focused) {
   border-color: #ffffff !important;
   border-width: 2px !important;
   margin: -1px !important;
 }
 
-.searchInput :global(.MuiInputLabel-root) {
+.searchInput :global(.MuiInputLabel-root),
+.sortSelect :global(.MuiInputLabel-root) {
   color: rgba(255, 255, 255, 0.6) !important;
 }
 
-.searchInput :global(.MuiInputLabel-root.Mui-focused) {
+.searchInput :global(.MuiInputLabel-root.Mui-focused),
+.sortSelect :global(.MuiInputLabel-root.Mui-focused) {
   color: #ffffff !important;
 }
 
 .searchInput :global(.MuiInputAdornment-root) {
   color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.sortSelect :global(.MuiSelect-icon) {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.sortSelect :global(.MuiMenuItem-root) {
+  color: #1a1a2e !important;
 }
 
 .filterChips {
@@ -69,7 +125,7 @@
   color: #ffffff;
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease, opacity 0.15s ease;
+  transition: background 0.15s ease;
   font-family: inherit;
   letter-spacing: -0.02em;
   white-space: nowrap;
@@ -95,26 +151,29 @@
 }
 
 .pageCard {
-  padding: 10px 12px;
+  padding: 12px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.12);
   cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-radius 0.25s ease-out;
+  transition: background 0.15s ease;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .pageCard:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.pageCardTitle {
-  font-weight: 600;
-  font-size: 18px;
-  color: #ffffff;
+.pageCardThumb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pageCardEmoji {
+  font-size: 34px;
+  line-height: 1;
 }
 
 .pageCardType {
@@ -126,15 +185,51 @@
   align-self: flex-start;
 }
 
+.pageCardTitle {
+  font-weight: 600;
+  font-size: 18px;
+  color: #ffffff;
+}
+
 .pageCardSnippet {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.65);
-  margin-top: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+.pageCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.pageCardUpdated {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+}
+
+.tagRow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
 }
 
 .pageDetail {
@@ -150,6 +245,17 @@
   align-items: flex-start;
 }
 
+.pageDetailHeadline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pageDetailEmoji {
+  font-size: 46px;
+  line-height: 1;
+}
+
 .pageDetailTitle {
   font-weight: 500;
   font-size: 28px;
@@ -161,6 +267,8 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
 }
 
 .pageDetailTypeChip {
@@ -175,9 +283,22 @@
   color: #ffffff;
 }
 
+.statusBadge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: -0.01em;
+}
+
+.pageDetailDate {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .pageDetailDates {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .pageDetailContent {
@@ -197,6 +318,17 @@
 
 .pageDetailLink:hover {
   text-decoration-style: solid;
+}
+
+.pageDetailLinkBroken {
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 2px;
+}
+
+.tokenSep {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .pageDetailActions {
@@ -230,14 +362,213 @@
   padding: 6px 10px;
   border-radius: 999px;
   transition: background 0.15s ease;
+  align-self: flex-start;
 }
 
 .backBtn:hover {
   background: rgba(255, 255, 255, 0.12);
 }
 
+.infobox {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.infoboxRow {
+  display: flex;
+  gap: 12px;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.infoboxRow + .infoboxRow {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.infoboxLabel {
+  flex: 0 0 170px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.infoboxValue {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.nestedBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.nestedBlockTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+}
+
+.nestedLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nestedLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.nestedLink:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nestedLinkLabel {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+
+.emojiRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emojiLabel {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.emojiPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.emojiBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.emojiBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.emojiBtnActive {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #ffffff;
+}
+
+.dateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 14px;
+}
+
+.timelineRail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timelineDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent, #6f42c6);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+  flex: 0 0 auto;
+  margin-top: 20px;
+}
+
+.timelineLine {
+  flex: 1;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.18);
+  min-height: 24px;
+}
+
+.timelineCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  margin-bottom: 10px;
+  align-self: flex-start;
+  min-width: 240px;
+}
+
+.timelineCard:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.timelineCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.timelineDate {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 .emptyState {
   text-align: center;
   padding: 40px;
   color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 560px) {
+  .dateRow {
+    grid-template-columns: 1fr;
+  }
 }

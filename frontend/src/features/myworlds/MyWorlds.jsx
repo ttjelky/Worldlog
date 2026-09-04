@@ -13,6 +13,7 @@ import AddIcon from '@mui/icons-material/Add'
 import SearchIcon from '@mui/icons-material/Search'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
+import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
 import { WorldForm, emptyWorld, PLACEHOLDER_COPY } from '../dashboard/Dashboard'
 import styles from './MyWorlds.module.css'
 
@@ -58,7 +59,7 @@ function WorldCard({ world, index }) {
       <h3 className={styles.cardTitle}>{world.name}</h3>
       <div className={styles.cardFooter}>
         <div className={styles.cardOwner}>
-          <div className={styles.ownerAvatar}>{(world.owner_username || '?')[0].toUpperCase()}</div>
+          <UserAvatar username={world.owner_username} avatarUrl={world.owner_avatar_url} size="xs" className={styles.ownerAvatarWrap} />
           <span className={styles.ownerName}>{world.owner_username}</span>
         </div>
         <div className={styles.cardProgressTrack}>
@@ -122,7 +123,12 @@ export default function MyWorlds() {
       <Navbar
         activePage={activePage}
         logoSrc="/worldlog-logo-white.png"
-        onNavigate={(id) => (id === 'home' ? navigate('/app') : setActivePage(id))}
+        onNavigate={(id) => {
+          if (id === 'home') navigate('/app')
+          else if (id === 'friends') navigate('/app/friends')
+          else if (id === 'search') navigate('/app/search')
+          else setActivePage(id)
+        }}
       />
 
       <div className={styles.page}>

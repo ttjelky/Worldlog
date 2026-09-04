@@ -16,7 +16,17 @@ export function AuthProvider({ children }) {
     api
       .get('/me/')
       .then((res) => {
-        setUser({ username: res.data.username, email: res.data.email, id: res.data.id })
+        setUser({
+          id: res.data.id,
+          username: res.data.username,
+          email: res.data.email,
+          display_name: res.data.display_name || '',
+          bio: res.data.bio || '',
+          avatar_url: res.data.avatar_url || null,
+          date_joined: res.data.date_joined,
+          worlds_count: res.data.worlds_count || 0,
+          friends_count: res.data.friends_count || 0,
+        })
       })
       .catch(() => {
         auth.clearAuth()
@@ -28,7 +38,17 @@ export function AuthProvider({ children }) {
     const res = await api.post('/auth/token/', { email, password })
     auth.setAuth(res.data.access, res.data.refresh)
     const me = await api.get('/me/')
-    setUser({ username: me.data.username, email: me.data.email, id: me.data.id })
+    setUser({
+      id: me.data.id,
+      username: me.data.username,
+      email: me.data.email,
+      display_name: me.data.display_name || '',
+      bio: me.data.bio || '',
+      avatar_url: me.data.avatar_url || null,
+      date_joined: me.data.date_joined,
+      worlds_count: me.data.worlds_count || 0,
+      friends_count: me.data.friends_count || 0,
+    })
     return me.data
   }, [])
 
@@ -53,9 +73,13 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
+  const updateUser = useCallback((newData) => {
+    setUser((prev) => (prev ? { ...prev, ...newData } : null))
+  }, [])
+
   const value = useMemo(
-    () => ({ user, login, register, logout, hydrating }),
-    [user, login, register, logout, hydrating],
+    () => ({ user, login, register, logout, hydrating, updateUser }),
+    [user, login, register, logout, hydrating, updateUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

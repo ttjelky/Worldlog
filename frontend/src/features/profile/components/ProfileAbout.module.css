@@ -1,0 +1,94 @@
+.aboutCard {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  padding: 32px;
+  transition: background 0.25s ease;
+}
+
+.aboutCardEditing {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 20px;
+}
+
+.aboutGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aboutItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.aboutItem:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.aboutLabel {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.aboutValue {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: right;
+  flex: 1;
+}
+
+.editField {
+  flex: 1;
+  max-width: 400px;
+}
+
+.inputField {
+  color: #ffffff !important;
+  border-radius: 12px !important;
+}
+
+.inputField fieldset {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.inputField:hover fieldset {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.inputField.Mui-focused fieldset {
+  border-color: #e8855a !important;
+}
+
+@media (max-width: 500px) {
+  .aboutCard {
+    padding: 24px 20px;
+  }
+
+  .aboutItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .aboutValue {
+    text-align: left;
+  }
+
+  .editField {
+    max-width: none;
+  }
+}

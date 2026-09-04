@@ -1,0 +1,79 @@
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 clamp(20px, 40px, 60px);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+}
+
+.coverSkeleton {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+
+.infoSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nameSkeleton {
+  width: 160px;
+  height: 20px;
+}
+
+.subSkeleton {
+  width: 120px;
+  height: 14px;
+}
+
+.statsSkeleton {
+  display: flex;
+  gap: 14px;
+}
+
+.statSkeleton {
+  width: 50px;
+  height: 14px;
+  border-radius: 8px;
+}
+
+.btnSkeleton {
+  width: 140px;
+  height: 36px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

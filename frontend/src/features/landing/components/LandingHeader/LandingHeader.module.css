@@ -1,72 +1,134 @@
 /* ─────────────────────────────────────────
-   LandingHeader – solid, no glass effect
+   LandingHeader – MD3 top app bar
+   MD3 surface + nav links + action buttons
    ───────────────────────────────────────── */
 
-.headerWrap {
-  position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+.header {
+  position: sticky;
+  top: 0;
   z-index: 100;
-  width: calc(100% - 32px);
-  max-width: 720px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(13, 13, 15, 0.08);
 }
 
-.headerBar {
+.inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 16px;
+  height: 64px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 8px 8px 16px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid rgba(13, 13, 15, 0.08);
+  gap: 24px;
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.logoImg {
+  flex-shrink: 0;
 }
 
 .nav {
   display: none;
   gap: 4px;
   align-items: center;
+  margin-right: auto;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 @media (min-width: 900px) {
   .nav {
     display: flex;
   }
+
+  .actions {
+    margin-left: 0;
+  }
 }
 
 .navLink {
   font-weight: 600;
-  font-size: 13px;
-  color: rgba(13, 13, 15, 0.55);
+  font-size: 16px;
+  color: rgba(13, 13, 15, 0.65);
   text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
   transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
 }
 
 .navLink:hover {
-  color: #9166c8;
-  background: rgba(145, 102, 200, 0.08);
+  color: #7C83F5;
+  background: rgba(124, 131, 245, 0.08);
 }
 
-.ctaBtn {
-  margin-left: auto;
-  padding: 8px 20px;
-  border-radius: 10px;
-  background: #9166c8;
-  color: #fff;
-  font-weight: 700;
-  font-size: 13px;
+/* MD3 outlined button – "Увійти" */
+.loginBtn {
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: transparent;
+  color: #5C63E0;
+  font-weight: 500;
+  font-size: 14px;
+  border: 1px solid rgba(13, 13, 15, 0.22);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.loginBtn:hover {
+  background: rgba(124, 131, 245, 0.08);
+  border-color: #7C83F5;
+}
+
+/* MD3 filled button – "Зареєструватися" */
+.signupBtn {
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: #7C83F5;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 14px;
   border: none;
   cursor: pointer;
   transition: background 0.15s;
   white-space: nowrap;
 }
 
-.ctaBtn:hover {
-  background: #7a52b0;
+.signupBtn:hover {
+  background: #5C63E0;
 }
 
-.logoImg {
-  flex-shrink: 0;
+@media (max-width: 599px) {
+  .inner {
+    height: 56px;
+    padding: 0 16px;
+    gap: 12px;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .actions {
+    gap: 6px;
+  }
+
+  .loginBtn,
+  .signupBtn {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
 }

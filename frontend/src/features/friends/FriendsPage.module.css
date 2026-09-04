@@ -1,0 +1,178 @@
+.appShell {
+  min-height: 100vh;
+  background: #434343;
+  color: #ffffff;
+  --nav-link-1: #ffffff;
+  --nav-link-2: #ffffff;
+  --nav-active-text: #434343;
+  --nav-profile: #d57c6a;
+}
+
+.page {
+  padding: clamp(20px, 3vw, 42px) clamp(5px, 3vw, 20px) 64px;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  margin-bottom: 4px;
+  margin-left: clamp(20px, 40px, 60px);
+}
+
+.heroGreeting {
+  font-size: 36px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.heroTitle {
+  font-size: clamp(80px, 12vw, 120px);
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+/* ---------- Tabs ---------- */
+
+.tabsWrap {
+  padding: 0 clamp(20px, 40px, 60px);
+  margin-top: 22px;
+  margin-bottom: 32px;
+}
+
+.tabs {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 4px;
+  display: inline-flex;
+}
+
+.tabs :global(.MuiTabs-indicator) {
+  background: #ffffff;
+  border-radius: 12px;
+  height: 100%;
+  position: absolute;
+  z-index: 0;
+}
+
+.tabs :global(.MuiTabs-flexContainer) {
+  position: relative;
+  z-index: 1;
+  gap: 4px;
+}
+
+.tab {
+  border-radius: 12px !important;
+  min-width: 0 !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+  padding: 10px 24px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  transition: color 0.18s ease !important;
+  z-index: 1;
+}
+
+.tab:hover {
+  color: #ffffff !important;
+}
+
+.tab :global(.MuiTab-iconWrapper) {
+  margin-right: 8px;
+}
+
+.tab :global(.MuiTab-iconWrapper svg) {
+  font-size: 20px;
+}
+
+/* ---------- Stats bar ---------- */
+
+.statsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px clamp(20px, 40px, 60px);
+  margin-bottom: 24px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.18);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.statsText {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ---------- Loader ---------- */
+
+.loader {
+  max-width: 320px;
+  margin: 0 auto 24px;
+}
+
+.loader :global(.MuiLinearProgress-bar) {
+  background-color: #ffffff;
+}
+
+.loader :global(.MuiLinearProgress-dashed) {
+  display: none;
+}
+
+/* ---------- Snackbar ---------- */
+
+.snackbarContent {
+  background: #2d2d2d;
+  color: #ffffff;
+  border-radius: 22px;
+  font-weight: 500;
+  font-size: 15px;
+  box-shadow: 0 8px 28px rgba(13, 13, 15, 0.35);
+}
+
+.searchWrap {
+  padding: 0 clamp(20px, 40px, 60px);
+  margin-bottom: 24px;
+}
+
+.searchField :global(.MuiOutlinedInput-root) {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.searchField :global(.MuiOutlinedInput-notchedOutline) {
+  display: none;
+}
+
+.searchResults {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.searchResult {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.searchResultInfo {
+  flex: 1;
+}
+
+.searchResultName {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

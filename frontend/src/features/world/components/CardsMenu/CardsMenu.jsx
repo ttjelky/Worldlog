@@ -14,92 +14,98 @@ import ProgressSection from '../ProgressSection/ProgressSection'
 import WikiSection from '../WikiSection/WikiSection'
 import styles from './CardsMenu.module.css'
 
-const RED = '#A63C39'
-const GREEN = '#247A57'
+const DEFAULT_RED = '#A63C39'
+const DEFAULT_GREEN = '#247A57'
 const PREVIEW_WORLD_ID = '0'
 
-const CARD_DEFS = [
-  {
-    id: 'players',
-    name: 'Гравці',
-    desc: 'Список гравців світу з аватарами та ролями',
-    accent: GREEN,
-    render: (accent) => <PlayersSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'locations',
-    name: 'Локації',
-    desc: 'Зберігай локації світу з координатами, фото та описом',
-    accent: RED,
-    render: (accent) => <LocationsSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'todos',
-    name: 'Todo-лист',
-    desc: 'Завдання та плани з пріоритетами та статусом виконання',
-    accent: GREEN,
-    render: (accent) => <TodosSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'history',
-    name: 'Історія',
-    desc: 'Хроніка подій світу у вигляді таймлайну',
-    accent: RED,
-    render: (accent) => <HistorySection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'wiki',
-    name: 'World Wiki',
-    desc: 'Повноцінна вікі-система для персонажів, фракцій та лора',
-    accent: GREEN,
-    render: (accent) => <WikiSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'notes',
-    name: 'Нотатки',
-    desc: 'Прості нотатки та ідеї з тегами',
-    accent: GREEN,
-    render: (accent) => <NotesSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'projects',
-    name: 'Проєкти',
-    desc: 'Великі цілі з автоматичним прогресом на основі задач',
-    accent: RED,
-    render: (accent) => <ProjectsSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'planner',
-    name: 'Планер',
-    desc: 'Планування майбутніх подій за датами',
-    accent: GREEN,
-    render: (accent) => <PlannerSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'bookmarks',
-    name: 'Закладки',
-    desc: 'Збереження корисних посилань та референсів',
-    accent: RED,
-    render: (accent) => <BookmarksSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'ideas',
-    name: 'Ідеї',
-    desc: 'Місце для ідей з можливістю перетворити на проєкт',
-    accent: GREEN,
-    render: (accent) => <IdeasSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-  {
-    id: 'progress',
-    name: 'Прогрес',
-    desc: 'Статистика твого WorldLog: кількість локацій, Wiki-сторінок, задач тощо',
-    accent: GREEN,
-    render: (accent) => <ProgressSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
-  },
-]
+function buildCardDefs(accents) {
+  const green = accents?.green || DEFAULT_GREEN
+  const red = accents?.red || DEFAULT_RED
 
-export default function CardsMenu({ open, onClose, layout, onToggle }) {
+  return [
+    {
+      id: 'players',
+      name: 'Гравці',
+      desc: 'Список гравців світу з аватарами та ролями',
+      accent: green,
+      render: (accent) => <PlayersSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'locations',
+      name: 'Локації',
+      desc: 'Зберігай локації світу з координатами, фото та описом',
+      accent: red,
+      render: (accent) => <LocationsSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'todos',
+      name: 'Todo-лист',
+      desc: 'Завдання та плани з пріоритетами та статусом виконання',
+      accent: green,
+      render: (accent) => <TodosSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'history',
+      name: 'Історія',
+      desc: 'Хроніка подій світу у вигляді таймлайну',
+      accent: red,
+      render: (accent) => <HistorySection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'wiki',
+      name: 'World Wiki',
+      desc: 'Повноцінна вікі-система для персонажів, фракцій та лора',
+      accent: green,
+      render: (accent) => <WikiSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'notes',
+      name: 'Нотатки',
+      desc: 'Прості нотатки та ідеї з тегами',
+      accent: green,
+      render: (accent) => <NotesSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'projects',
+      name: 'Проєкти',
+      desc: 'Великі цілі з автоматичним прогресом на основі задач',
+      accent: red,
+      render: (accent) => <ProjectsSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'planner',
+      name: 'Планер',
+      desc: 'Планування майбутніх подій за датами',
+      accent: green,
+      render: (accent) => <PlannerSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'bookmarks',
+      name: 'Закладки',
+      desc: 'Збереження корисних посилань та референсів',
+      accent: red,
+      render: (accent) => <BookmarksSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'ideas',
+      name: 'Ідеї',
+      desc: 'Місце для ідей з можливістю перетворити на проєкт',
+      accent: green,
+      render: (accent) => <IdeasSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'progress',
+      name: 'Прогрес',
+      desc: 'Статистика твого WorldLog: кількість локацій, Wiki-сторінок, задач тощо',
+      accent: green,
+      render: (accent) => <ProgressSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+  ]
+}
+
+export default function CardsMenu({ open, onClose, layout, onToggle, accentRed, accentGreen }) {
   const { cards } = layout
+  const CARD_DEFS = buildCardDefs({ red: accentRed, green: accentGreen })
 
   const getHidden = (id) => {
     const card = cards.find((c) => c.id === id)
@@ -134,7 +140,7 @@ export default function CardsMenu({ open, onClose, layout, onToggle }) {
               const hidden = getHidden(def.id)
               return (
                 <div key={def.id} className={styles.cell + (!hidden ? ' ' + styles.cellAdded : '')}>
-                  <div className={styles.preview} style={{ '--accent': def.accent || RED }}>
+                  <div className={styles.preview} style={{ '--accent': def.accent || accentRed }}>
                     {def.render ? (
                       <div className={styles.previewInner}>{def.render(def.accent)}</div>
                     ) : (

@@ -16,17 +16,19 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './BookmarksSection.module.css'
 
 const empty = { title: '', url: '', description: '' }
 
-export default function BookmarksSection({ worldId, accent }) {
+export default function BookmarksSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const canEdit = userRole && userRole !== 'viewer'
 
   const { data: bookmarks = [] } = useQuery({
     queryKey: ['bookmarks', String(worldId)],
@@ -70,10 +72,19 @@ export default function BookmarksSection({ worldId, accent }) {
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>Закладки ({bookmarks.length})</h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Нова закладка
-        </Button>
+        <h3 className={sharedStyles.sectionTitle}>
+          Закладки ({bookmarks.length})
+        </h3>
+        {canEdit && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={openNew}
+          >
+            Нова закладка
+          </Button>
+        )}
       </div>
 
       <div
@@ -95,24 +106,35 @@ export default function BookmarksSection({ worldId, accent }) {
               <div className={styles.bookmarkUrl}>{b.url}</div>
             </div>
             <div className={styles.rowActions}>
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  openEdit(b)
-                }}
-              >
-                <EditOutlinedIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  deleteBookmark(b)
-                }}
-              >
-                <DeleteOutlinedIcon fontSize="small" />
-              </IconButton>
+              <RelationshipButton
+                worldId={worldId}
+                sourceType="bookmark"
+                sourceId={b.id}
+                name={b.title}
+                accent={accent}
+              />
+              {canEdit && (
+                <>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openEdit(b)
+                    }}
+                  >
+                    <EditOutlinedIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteBookmark(b)
+                    }}
+                  >
+                    <DeleteOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </>
+              )}
             </div>
           </div>
         ))}

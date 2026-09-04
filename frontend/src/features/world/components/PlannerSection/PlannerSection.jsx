@@ -160,6 +160,7 @@ export default function PlannerSection({ worldId, accent }) {
             className={styles.filterBtnDeleteDone}
             onClick={deleteDone}
           >
+            <DeleteOutlinedIcon fontSize="small" />
             Видалити виконані
           </button>
         )}

@@ -17,6 +17,7 @@ import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
+import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
 import styles from './Dashboard.module.css'
 
 export const emptyWorld = {
@@ -195,7 +196,7 @@ function WorldCard({ world, index }) {
       <h3 className={styles.cardTitle}>{world.name}</h3>
       <div className={styles.cardFooter}>
         <div className={styles.cardOwner}>
-          <div className={styles.ownerAvatar}>{(world.owner_username || '?')[0].toUpperCase()}</div>
+          <UserAvatar username={world.owner_username} avatarUrl={world.owner_avatar_url} size="xs" className={styles.ownerAvatarWrap} />
           <span className={styles.ownerName}>{world.owner_username}</span>
         </div>
         <div className={styles.cardProgressTrack}>
@@ -277,7 +278,12 @@ export default function Dashboard() {
     <div className={styles.appShell}>
       <Navbar
         activePage={activePage}
-        onNavigate={(id) => (id === 'worlds' ? navigate('/app/worlds') : setActivePage(id))}
+        onNavigate={(id) => {
+          if (id === 'worlds') navigate('/app/worlds')
+          else if (id === 'friends') navigate('/app/friends')
+          else if (id === 'search') navigate('/app/search')
+          else setActivePage(id)
+        }}
       />
 
       <div className={styles.page}>

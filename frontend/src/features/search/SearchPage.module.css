@@ -1,0 +1,299 @@
+.appShell {
+  min-height: 100vh;
+  background: #434343;
+  color: #ffffff;
+  --nav-link-1: #ffffff;
+  --nav-link-2: #ffffff;
+  --nav-active-text: #434343;
+  --nav-profile: #d57c6a;
+}
+
+.page {
+  padding: clamp(20px, 3vw, 42px) clamp(5px, 3vw, 20px) 64px;
+}
+
+.hero {
+  margin-bottom: 4px;
+  margin-left: clamp(20px, 40px, 60px);
+}
+
+.heroGreeting {
+  font-size: 36px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.heroTitle {
+  font-size: clamp(80px, 12vw, 120px);
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.searchBar {
+  padding: 0 clamp(20px, 40px, 60px);
+  margin-top: 22px;
+  margin-bottom: 24px;
+}
+
+.searchInput {
+  width: 100% !important;
+}
+
+.searchInput :global(.MuiOutlinedInput-root) {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  transition: border-color 0.18s ease, background 0.18s ease !important;
+}
+
+.searchInput :global(.MuiOutlinedInput-root:hover) {
+  border-color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.searchInput :global(.MuiOutlinedInput-root.Mui-focused) {
+  border-color: #e8855a !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.searchInput :global(.MuiOutlinedInput-notchedOutline) {
+  display: none !important;
+}
+
+.searchInput :global(.MuiInputBase-input) {
+  color: #ffffff !important;
+  font-size: 16px !important;
+  padding: 14px 16px !important;
+}
+
+.searchInput :global(.MuiInputBase-input::placeholder) {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.searchIcon {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.searchSpinner {
+  color: #e8855a !important;
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.clearBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.resultsInfo {
+  padding: 0 clamp(20px, 40px, 60px);
+  margin-bottom: 16px;
+}
+
+.resultCount {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.resultsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 clamp(20px, 40px, 60px);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 80px 20px;
+  gap: 12px;
+}
+
+.emptyIcon {
+  font-size: 56px;
+  color: rgba(255, 255, 255, 0.15);
+  margin-bottom: 8px;
+}
+
+.emptyTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.emptyText {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 360px;
+}
+
+.worldCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.worldCard:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.worldCard:active {
+  transform: translateY(0);
+}
+
+.worldCardHeader {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.worldCover {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.worldCoverPlaceholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.worldInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.worldName {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.worldOwner {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.worldDescription {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.worldStats {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.worldStat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.worldStat svg {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.worldThemeBadge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e8855a;
+  background: rgba(232, 133, 90, 0.15);
+}
+
+.actionArea {
+  flex-shrink: 0;
+}
+
+.accessBtn {
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-transform: none !important;
+  padding: 8px 20px !important;
+  background: #e8855a !important;
+  color: #ffffff !important;
+  transition: all 0.18s ease !important;
+}
+
+.accessBtn:hover {
+  background: #d6754c !important;
+}
+
+@media (max-width: 500px) {
+  .worldCardHeader {
+    flex-wrap: wrap;
+  }
+
+  .actionArea {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .accessBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+
+  .worldCard:hover {
+    transform: none;
+  }
+}

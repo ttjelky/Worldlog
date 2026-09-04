@@ -1,0 +1,110 @@
+.card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.card:active {
+  transform: translateY(0);
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.displayName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.username {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.actionArea {
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-transform: none !important;
+  padding: 8px 20px !important;
+  background: #e8855a !important;
+  color: #ffffff !important;
+  transition: all 0.18s ease !important;
+}
+
+.actionBtn:hover {
+  background: #d6754c !important;
+}
+
+.acceptBtn {
+  background: #4caf7d !important;
+}
+
+.acceptBtn:hover {
+  background: #43a06c !important;
+}
+
+.pendingBadge {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.friendBadge {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4caf7d;
+  background: rgba(76, 175, 125, 0.15);
+}
+
+@media (max-width: 500px) {
+  .card {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .actionArea {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .actionBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover {
+    transform: none;
+  }
+}

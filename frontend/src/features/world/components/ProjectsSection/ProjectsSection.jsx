@@ -17,6 +17,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import LocationBadgeText from '../shared/LocationBadgeText'
@@ -181,6 +182,13 @@ function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, 
       </div>
 
       <div className={styles.detailsFooter}>
+        <RelationshipButton
+          worldId={worldId}
+          sourceType="project"
+          sourceId={project.id}
+          name={project.title}
+          accent={accent}
+        />
         <IconButton className={styles.actionBtn} aria-label="Редагувати проєкт" onClick={onEdit}>
           <EditOutlinedIcon fontSize="small" />
         </IconButton>
@@ -192,12 +200,13 @@ function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, 
   )
 }
 
-export default function ProjectsSection({ worldId, accent }) {
+export default function ProjectsSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const section = useExpandableCard()
+  const canEdit = userRole && userRole !== 'viewer'
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects', String(worldId)],
@@ -247,10 +256,19 @@ export default function ProjectsSection({ worldId, accent }) {
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>Проєкти ({projects.length})</h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Новий проєкт
-        </Button>
+        <h3 className={sharedStyles.sectionTitle}>
+          Проєкти ({projects.length})
+        </h3>
+        {canEdit && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={openNew}
+          >
+            Новий проєкт
+          </Button>
+        )}
       </div>
 
       <div
@@ -312,24 +330,35 @@ export default function ProjectsSection({ worldId, accent }) {
                   <div className={styles.progressText}>Завдань ще немає</div>
                 )}
                 <div className={styles.rowActions}>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openEdit(p)
-                    }}
-                  >
-                    <EditOutlinedIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      deleteProject(p)
-                    }}
-                  >
-                    <DeleteOutlinedIcon fontSize="small" />
-                  </IconButton>
+                  <RelationshipButton
+                    worldId={worldId}
+                    sourceType="project"
+                    sourceId={p.id}
+                    name={p.title}
+                    accent={accent}
+                  />
+                  {canEdit && (
+                    <>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openEdit(p)
+                        }}
+                      >
+                        <EditOutlinedIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteProject(p)
+                        }}
+                      >
+                        <DeleteOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </>
+                  )}
                 </div>
               </div>
             </ExpandableCard>

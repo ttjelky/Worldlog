@@ -1,0 +1,344 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 40px 36px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 28px;
+  margin-bottom: 20px;
+  transition: background 0.25s ease;
+}
+
+.headerEditing {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.35);
+}
+
+.avatarImg {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatarImg:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.35);
+}
+
+.avatarFileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.avatarEditOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 0;
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  border-radius: 0 0 60px 60px;
+  color: #ffffff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatarWrap:hover .avatarEditOverlay,
+.avatarEditOverlay:focus-visible {
+  opacity: 1;
+}
+
+.avatarEditLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.displayName {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.badge {
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8855a;
+  background: rgba(232, 133, 90, 0.15);
+}
+
+.username {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 2px;
+}
+
+.bio {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.joinDate {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 4px;
+}
+
+.quickStats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.statItem {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.statDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.actionArea {
+  flex-shrink: 0;
+}
+
+/* Edit mode fields */
+.editFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.editInput {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.inputField {
+  color: #ffffff !important;
+  border-radius: 12px !important;
+}
+
+.inputField fieldset {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.inputField:hover fieldset {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.inputField.Mui-focused fieldset {
+  border-color: #e8855a !important;
+}
+
+/* Action buttons */
+.editBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.editBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.editBtn:active {
+  transform: translateY(0);
+}
+
+.editActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cancelBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.cancelBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.saveBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #e8855a;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.saveBtn:hover {
+  background: #d6754c;
+  transform: translateY(-1px);
+}
+
+.saveBtn:active {
+  transform: translateY(0);
+}
+
+.saveBtn:disabled {
+  background: rgba(232, 133, 90, 0.4);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.saveSpinner {
+  color: #ffffff;
+}
+
+@media (max-width: 700px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    padding: 32px 24px;
+  }
+
+  .avatarWrap {
+    align-self: center;
+  }
+
+  .nameRow {
+    justify-content: center;
+  }
+
+  .quickStats {
+    justify-content: center;
+  }
+
+  .actionArea {
+    display: flex;
+    justify-content: center;
+  }
+
+  .displayName {
+    font-size: 26px;
+  }
+
+  .editActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .cancelBtn,
+  .saveBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar:hover,
+  .avatarImg:hover,
+  .editBtn:hover {
+    transform: none;
+  }
+
+  .editActions .cancelBtn:hover,
+  .editActions .saveBtn:hover {
+    transform: none;
+  }
+}

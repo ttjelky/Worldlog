@@ -140,19 +140,27 @@
 }
 
 .filterBtnDeleteDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   border: none;
   border-radius: 999px;
-  padding: 5px 14px;
+  padding: 6px 14px;
   font-family: inherit;
   font-size: 13px;
-  font-weight: 600;
-  color: #ff8a80;
-  background: rgba(255, 138, 128, 0.25);
+  font-weight: 700;
+  color: #c0392b;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .filterBtnDeleteDone:hover {
-  background: rgba(255, 138, 128, 0.45);
-  color: #ffffff;
+  background: #ffe3e0;
+  color: #a93226;
+}
+
+.filterBtnDeleteDone:active {
+  transform: scale(0.96);
 }

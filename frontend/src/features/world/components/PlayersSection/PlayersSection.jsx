@@ -16,15 +16,17 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
+import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import styles from './PlayersSection.module.css'
 
-export default function PlayersSection({ worldId, accent }) {
+export default function PlayersSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ nickname: '', role_note: '', avatar: null })
+  const canEdit = userRole && userRole !== 'viewer'
 
   const { data: players = [] } = useQuery({
     queryKey: ['players', String(worldId)],
@@ -73,9 +75,16 @@ export default function PlayersSection({ worldId, accent }) {
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>Гравці ({players.length})</h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Додати
-        </Button>
+        {canEdit && (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={openNew}
+          >
+            Додати
+          </Button>
+        )}
       </div>
 
       <div
@@ -93,12 +102,23 @@ export default function PlayersSection({ worldId, accent }) {
               <div className={styles.playerRole}>{p.role_note || 'Немає ролі'}</div>
             </div>
             <div className={styles.rowActions}>
-              <IconButton size="small" onClick={() => openEdit(p)}>
-                <EditOutlinedIcon fontSize="small" />
-              </IconButton>
-              <IconButton size="small" onClick={() => deletePlayer(p)}>
-                <DeleteOutlinedIcon fontSize="small" />
-              </IconButton>
+              <RelationshipButton
+                worldId={worldId}
+                sourceType="player"
+                sourceId={p.id}
+                name={p.nickname}
+                accent={accent}
+              />
+              {canEdit && (
+                <>
+                  <IconButton size="small" onClick={() => openEdit(p)}>
+                    <EditOutlinedIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => deletePlayer(p)}>
+                    <DeleteOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </>
+              )}
             </div>
           </div>
         ))}

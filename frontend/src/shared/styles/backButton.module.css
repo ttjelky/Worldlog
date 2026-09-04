@@ -7,7 +7,7 @@
   font-family: inherit !important;
   font-weight: 600 !important;
   font-size: 15px !important;
-  color: rgba(13, 13, 15, 0.9) !important;
+  color: var(--page-ink, rgba(13, 13, 15, 0.9)) !important;
   min-width: 0 !important;
   padding: 8px 16px !important;
   text-transform: none !important;
@@ -15,5 +15,5 @@
 }
 
 .backBtn:hover {
-  color: #0d0d0f !important;
+  color: var(--page-ink, #0d0d0f) !important;
 }

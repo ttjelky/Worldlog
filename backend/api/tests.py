@@ -2,8 +2,6 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
-
-
 @override_settings(
     ALLOWED_HOSTS=['testserver'],
     REST_FRAMEWORK={
@@ -367,3 +365,410 @@ class AuthFlowTests(TestCase):
             'password': 'Str0ng!Pass1',
         }, format='json')
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver'],
+    REST_FRAMEWORK={
+        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
+        'DEFAULT_THROTTLE_CLASSES': [],
+        'DEFAULT_THROTTLE_RATES': {},
+    },
+)
+class RelationshipTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='reluser', email='rel@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ зв\'язків')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        self.location = self.world.locations.create(name='Печера', x=1, y=1, z=1)
+        self.wiki = self.world.wiki_pages.create(title='Дракон', page_type='character')
+        self.note = self.world.notes.create(title='Легенда')
+
+    def url(self, path=''):
+        return f'/api/worlds/{self.world.pk}/relationships/{path}'
+
+    def test_create_relationship_between_any_types(self):
+        resp = self.client.post(self.url(), {
+            'source_type': 'wiki_page',
+            'source_id': self.wiki.pk,
+            'target_type': 'location',
+            'target_id': self.location.pk,
+            'label': 'мешкає в',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['source_name'], 'Дракон')
+        self.assertEqual(resp.data['target_name'], 'Печера')
+
+    def test_create_note_to_project(self):
+        project = self.world.projects.create(title='Будівництво')
+        resp = self.client.post(self.url(), {
+            'source_type': 'note',
+            'source_id': self.note.pk,
+            'target_type': 'project',
+            'target_id': project.pk,
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['target_name'], 'Будівництво')
+
+    def test_filtering_by_source_and_target(self):
+        self.world.relationships.create(
+            source_type='wiki_page',
+            source_id=self.wiki.pk,
+            target_type='location',
+            target_id=self.location.pk,
+        )
+        self.world.relationships.create(
+            source_type='note',
+            source_id=self.note.pk,
+            target_type='location',
+            target_id=self.location.pk,
+        )
+
+        resp = self.client.get(self.url(), {
+            'source_type': 'wiki_page', 'source_id': self.wiki.pk,
+        })
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['target_name'], 'Печера')
+
+        resp = self.client.get(self.url(), {
+            'target_type': 'location', 'target_id': self.location.pk,
+        })
+        self.assertEqual(len(resp.data), 2)
+
+    def test_rejects_link_to_missing_entity(self):
+        resp = self.client.post(self.url(), {
+            'source_type': 'wiki_page',
+            'source_id': self.wiki.pk,
+            'target_type': 'location',
+            'target_id': 99999,
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_link_to_other_world_entity(self):
+        other_world = self.user.worlds.create(name='Інший світ')
+        other_loc = other_world.locations.create(name='Чужак', x=0, y=0, z=0)
+        resp = self.client.post(self.url(), {
+            'source_type': 'wiki_page',
+            'source_id': self.wiki.pk,
+            'target_type': 'location',
+            'target_id': other_loc.pk,
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_self_link(self):
+        resp = self.client.post(self.url(), {
+            'source_type': 'wiki_page',
+            'source_id': self.wiki.pk,
+            'target_type': 'wiki_page',
+            'target_id': self.wiki.pk,
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_entities_endpoint_lists_all_types_and_searches(self):
+        resp = self.client.get('/api/worlds/{}/entities/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        types = {e['type'] for e in resp.data}
+        self.assertIn('wiki_page', types)
+        self.assertIn('location', types)
+        self.assertIn('note', types)
+
+        resp = self.client.get(
+            '/api/worlds/{}/entities/'.format(self.world.pk), {'q': 'ракон'}
+        )
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['name'], 'Дракон')
+
+        resp = self.client.get(
+            '/api/worlds/{}/entities/'.format(self.world.pk),
+            {'exclude_type': 'wiki_page', 'exclude_id': self.wiki.pk},
+        )
+        self.assertNotIn('Дракон', [e['name'] for e in resp.data])
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver'],
+    REST_FRAMEWORK={
+        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
+        'DEFAULT_THROTTLE_CLASSES': [],
+        'DEFAULT_THROTTLE_RATES': {},
+    },
+)
+class WikiTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='wikiuser', email='wiki@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ вікі')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_wiki_page_roundtrip_with_infobox(self):
+        resp = self.client.post('/api/worlds/{}/wiki/'.format(self.world.pk), {
+            'title': 'За́снована',
+            'page_type': 'character',
+            'emoji': '🧙',
+            'infobox': {'race': 'Ельф', 'status': 'alive', 'faction': 'Орден Світла'},
+            'tags': 'герой, рада',
+            'world_date': 'Рік 3',
+            'content': 'Згадка про [[Місто]]',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['infobox']['race'], 'Ельф')
+        self.assertEqual(resp.data['emoji'], '🧙')
+        self.assertEqual(resp.data['tags'], 'герой, рада')
+
+    def test_graph_endpoint_builds_nodes_and_edges(self):
+        a = self.world.wiki_pages.create(title='Дракон', page_type='character')
+        b = self.world.wiki_pages.create(title='Печера', page_type='location')
+        a.content = 'Дракон живе в [[Печера]]'
+        a.save()
+        self.world.relationships.create(
+            source_type='wiki_page',
+            source_id=b.pk,
+            target_type='wiki_page',
+            target_id=a.pk,
+            label='ворог',
+        )
+
+        resp = self.client.get('/api/worlds/{}/wiki/graph/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data['nodes']), 2)
+        self.assertEqual(len(resp.data['edges']), 2)
+        kinds = {e['kind'] for e in resp.data['edges']}
+        self.assertEqual(kinds, {'link', 'rel'})
+
+    def test_graph_ignores_broken_links(self):
+        self.world.wiki_pages.create(title='Дракон', page_type='character')
+        self.world.wiki_pages.create(
+            title='Сторінка', content='Згадка про [[Невідома]]', page_type='custom'
+        )
+        resp = self.client.get('/api/worlds/{}/wiki/graph/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['edges'], [])
+
+    def test_graph_includes_relationships_to_non_wiki_entities(self):
+        page = self.world.wiki_pages.create(title='Дракон', page_type='character')
+        loc = self.world.locations.create(name='Драконяча печера', x=1, y=1, z=1)
+        player = self.world.players.create(nickname='Альдар')
+        # Зв'язки, встановлені поза wiki (локація та гравець ↔ сторінка)
+        self.world.relationships.create(
+            source_type='location',
+            source_id=loc.pk,
+            target_type='wiki_page',
+            target_id=page.pk,
+            label='домівка',
+        )
+        self.world.relationships.create(
+            source_type='wiki_page',
+            source_id=page.pk,
+            target_type='player',
+            target_id=player.pk,
+            label='полює на',
+        )
+
+        resp = self.client.get('/api/worlds/{}/wiki/graph/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        node_ids = {n['id'] for n in resp.data['nodes']}
+        # сторінка + два зовнішні вузли (локація, гравець)
+        self.assertEqual(len(resp.data['nodes']), 3)
+        self.assertIn(page.pk, node_ids)
+        self.assertIn('location:{}'.format(loc.pk), node_ids)
+        self.assertIn('player:{}'.format(player.pk), node_ids)
+
+        self.assertEqual(len(resp.data['edges']), 2)
+        sources = {(e['source'], e['target']) for e in resp.data['edges']}
+        self.assertIn((page.pk, 'player:{}'.format(player.pk)), sources)
+        self.assertIn(('location:{}'.format(loc.pk), page.pk), sources)
+
+    def test_graph_includes_relationships_between_non_wiki_entities(self):
+        loc_a = self.world.locations.create(name='Печера', x=1, y=1, z=1)
+        loc_b = self.world.locations.create(name='Замок', x=2, y=2, z=2)
+        project = self.world.projects.create(title='Фортеця', status='active')
+        todo = self.world.todos.create(title='Побудувати стіну')
+
+        self.world.relationships.create(
+            source_type='location',
+            source_id=loc_a.pk,
+            target_type='location',
+            target_id=loc_b.pk,
+            label='поруч із',
+        )
+        self.world.relationships.create(
+            source_type='project',
+            source_id=project.pk,
+            target_type='todo',
+            target_id=todo.pk,
+            label='включає',
+        )
+
+        resp = self.client.get('/api/worlds/{}/wiki/graph/'.format(self.world.pk))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        node_ids = {n['id'] for n in resp.data['nodes']}
+        self.assertIn('location:{}'.format(loc_a.pk), node_ids)
+        self.assertIn('location:{}'.format(loc_b.pk), node_ids)
+        self.assertIn('project:{}'.format(project.pk), node_ids)
+        self.assertIn('todo:{}'.format(todo.pk), node_ids)
+        self.assertEqual(len(node_ids), 4)
+
+        sources = {(e['source'], e['target']) for e in resp.data['edges']}
+        self.assertIn(
+            ('location:{}'.format(loc_a.pk), 'location:{}'.format(loc_b.pk)), sources
+        )
+        self.assertIn(('project:{}'.format(project.pk), 'todo:{}'.format(todo.pk)), sources)
+        self.assertEqual(len(resp.data['edges']), 2)
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver'],
+    REST_FRAMEWORK={
+        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
+        'DEFAULT_THROTTLE_CLASSES': [],
+        'DEFAULT_THROTTLE_RATES': {},
+    },
+)
+class GameDayTests(TestCase):
+    """Розрахунок ігрового дня від дня старту світу."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='histuser', email='hist@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_game_day_from_world_start(self):
+        from datetime import date, timedelta
+        self.world.start_date = date(2026, 1, 1)
+        self.world.save()
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія', 'date': '2026-01-01'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['game_day'], 1)
+
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія 2', 'date': (date(2026, 1, 1) + timedelta(days=5)).isoformat()},
+            format='json'
+        )
+        self.assertEqual(resp.data['game_day'], 6)
+
+    def test_game_day_null_without_world_start(self):
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(resp.data['game_day'])
+
+    def test_game_day_can_be_overridden(self):
+        from datetime import date
+        self.world.start_date = date(2026, 1, 1)
+        self.world.save()
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія', 'date': '2026-01-01', 'game_day': 42}, format='json'
+        )
+        self.assertEqual(resp.data['game_day'], 42)
+
+    def test_new_event_defaults_to_other_type(self):
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія'}, format='json'
+        )
+        self.assertEqual(resp.data['event_type'], 'other')
+        self.assertFalse(resp.data['is_important'])
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver'],
+    REST_FRAMEWORK={
+        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
+        'DEFAULT_THROTTLE_CLASSES': [],
+        'DEFAULT_THROTTLE_RATES': {},
+    },
+)
+class EpochTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='epochuser', email='epoch@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def url(self, path=''):
+        return '/api/worlds/{}/epochs/{}'.format(self.world.pk, path)
+
+    def test_create_epoch(self):
+        resp = self.client.post(self.url(), {'name': 'Епоха перша'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(resp.data['is_active'])
+        self.assertIsNone(resp.data['end_date'])
+
+    def test_epoch_crud_and_list(self):
+        created = self.client.post(self.url(), {'name': 'Нова'}, format='json').data
+        pk = created['id']
+        resp = self.client.get(self.url())
+        self.assertEqual(len(resp.data), 1)
+
+        resp = self.client.patch(
+            self.url('{}/'.format(pk)), {'name': 'Перейменована'}, format='json'
+        )
+        self.assertEqual(resp.data['name'], 'Перейменована')
+
+        resp = self.client.delete(self.url('{}/'.format(pk)))
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_new_events_land_in_active_epoch(self):
+        epoch = self.world.epochs.create(name='Епоха')
+        resp = self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['epoch'], epoch.pk)
+        self.assertEqual(resp.data['epoch_name'], 'Епоха')
+
+    def test_close_epoch_creates_new(self):
+        epoch = self.world.epochs.create(name='Перша')
+        resp = self.client.post(
+            self.url('{}/close/'.format(epoch.pk)), {'name': 'Друга'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(resp.data['closed']['end_date'])
+        self.assertFalse(resp.data['closed']['is_active'])
+        self.assertEqual(resp.data['new']['name'], 'Друга')
+        self.assertTrue(resp.data['new']['is_active'])
+
+    def test_close_epoch_requires_name(self):
+        epoch = self.world.epochs.create(name='Перша')
+        resp = self.client.post(self.url('{}/close/'.format(epoch.pk)), {}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_close_already_closed_epoch_rejected(self):
+        from datetime import date
+        epoch = self.world.epochs.create(name='Закрита', end_date=date(2026, 2, 1))
+        resp = self.client.post(self.url('{}/close/'.format(epoch.pk)),
+                                {'name': 'Друга'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cannot_delete_epoch_with_events(self):
+        epoch = self.world.epochs.create(name='Епоха')
+        self.world.history.create(title='Подія', epoch=epoch)
+        resp = self.client.delete(self.url('{}/'.format(epoch.pk)))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.world.epochs.get(pk=epoch.pk)
+
+    def test_participants_split(self):
+        self.client.post(
+            '/api/worlds/{}/history/'.format(self.world.pk),
+            {'title': 'Подія', 'participants': 'Альдар, Грім,  Зоря'}, format='json'
+        )
+        resp = self.client.get('/api/worlds/{}/history/'.format(self.world.pk))
+        self.assertEqual(resp.data[0]['participants_list'], ['Альдар', 'Грім', 'Зоря'])

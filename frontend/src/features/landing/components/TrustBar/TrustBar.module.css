@@ -1,0 +1,61 @@
+.trustBar {
+  background: #f8f6f3;
+  padding: 28px 16px;
+  border-top: 1px solid rgba(13, 13, 15, 0.06);
+}
+
+.inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(13, 13, 15, 0.50);
+}
+
+.icon {
+  font-size: 18px !important;
+  color: rgba(13, 13, 15, 0.50);
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.link:hover {
+  color: #7C83F5;
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(13, 13, 15, 0.10);
+}
+
+.dijitalImg {
+  vertical-align: middle;
+}
+
+@media (max-width: 599px) {
+  .inner {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .divider {
+    display: none;
+  }
+}

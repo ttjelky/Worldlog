@@ -6,7 +6,10 @@ export default function LandingFooter() {
   return (
     <footer className={styles.footer}>
       <div className={styles.footerInner}>
-        <Logo />
+        <div className={styles.brand}>
+          <Logo />
+          <img src="/dijital-logo.png" alt="DiJital" height={20} className={styles.dijitalImg} />
+        </div>
         <span className={styles.copyright}>
           &copy; {new Date().getFullYear()} DiJital. Публічний open-source проєкт.
         </span>
