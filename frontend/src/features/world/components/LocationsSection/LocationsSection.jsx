@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
@@ -12,6 +12,8 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
@@ -40,6 +42,8 @@ const legacyCategoryLabels = {
   temple: categoryLabels.build,
 }
 const empty = { name: '', description: '', x: 0, y: 0, z: 0, category: 'other' }
+const CAROUSEL_PER_PAGE = 2
+const CAROUSEL_INTERVAL = 5000
 
 function LocationDetails({
   worldId,
@@ -164,6 +168,8 @@ export default function LocationsSection({ worldId, accent, userRole }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [pendingPhoto, setPendingPhoto] = useState(null)
+  const [page, setPage] = useState(0)
+  const [paused, setPaused] = useState(false)
   const attachInputRef = useRef(null)
   const canEdit = userRole && userRole !== 'viewer'
 
@@ -171,7 +177,115 @@ export default function LocationsSection({ worldId, accent, userRole }) {
     queryKey: ['locations', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/locations/`).then((r) => r.data),
   })
-  const visibleLocations = section.modal ? locations : locations.slice(0, 2)
+  // Мінімізована картка з понад 2 локаціями — карусель по 2 на слайд
+  const isCarousel = !section.modal && locations.length > CAROUSEL_PER_PAGE
+  const pageCount = Math.max(1, Math.ceil(locations.length / CAROUSEL_PER_PAGE))
+  const visibleLocations = section.modal
+    ? locations
+    : locations.slice(page * CAROUSEL_PER_PAGE, page * CAROUSEL_PER_PAGE + CAROUSEL_PER_PAGE)
+
+  useEffect(() => {
+    setPage((p) => Math.min(p, pageCount - 1))
+  }, [pageCount])
+
+  // Автогортання каруселі: пауза при наведенні, прихованій вкладці та reduced motion
+  useEffect(() => {
+    if (!isCarousel || paused) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const t = setInterval(() => {
+      if (document.hidden) return
+      setPage((p) => (p + 1) % pageCount)
+    }, CAROUSEL_INTERVAL)
+    return () => clearInterval(t)
+  }, [isCarousel, paused, page, pageCount])
+
+  const goToPage = (p) => setPage(((p % pageCount) + pageCount) % pageCount)
+
+  const chunks = useMemo(() => {
+    const out = []
+    for (let i = 0; i < locations.length; i += CAROUSEL_PER_PAGE) {
+      out.push(locations.slice(i, i + CAROUSEL_PER_PAGE))
+    }
+    return out
+  }, [locations])
+
+  const renderTile = (l) => (
+    <ExpandableCard
+      key={l.id}
+      clickOpens
+      showExpandBtn={false}
+      className={styles.locTileWrap}
+      expandedContent={({ close }) => (
+        <LocationDetails
+          worldId={worldId}
+          location={l}
+          accent={accent}
+          uploading={uploadPhotos.isPending}
+          onClose={close}
+          onEdit={() => openEdit(l)}
+          onDelete={() => {
+            deleteLocation(l)
+            close()
+          }}
+          onUpload={(file) => uploadPhotos.mutateAsync({ locationId: l.id, files: [file] })}
+          onDeleteShot={(shot) => deleteScreenshot.mutate({ location: l, shot })}
+          canEdit={canEdit}
+        />
+      )}
+    >
+      <article className={styles.locTile}>
+        <div className={styles.locThumbArea}>
+          {l.screenshots?.[0] ? (
+            <img className={styles.locThumb} src={l.screenshots[0].image} alt={l.name} />
+          ) : (
+            <div className={styles.locThumbPlaceholder}>
+              <PhotoCameraOutlinedIcon />
+            </div>
+          )}
+        </div>
+        <div className={styles.locBody}>
+          <div className={styles.locTopRow}>
+            <div className={styles.locName}>{l.name}</div>
+            <span className={styles.catPill}>
+              {legacyCategoryLabels[l.category] ||
+                categoryLabels[l.category] ||
+                categoryLabels.other}
+            </span>
+          </div>
+          <div className={styles.coords}>
+            {l.x} {l.y} {l.z}
+          </div>
+          {l.description && <div className={styles.desc}>{l.description}</div>}
+        </div>
+        <footer className={styles.locFooter}>
+          {canEdit && (
+            <>
+              <IconButton
+                className={styles.actionBtn}
+                aria-label="Редагувати локацію"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openEdit(l)
+                }}
+              >
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                className={styles.actionBtn}
+                aria-label="Видалити локацію"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  deleteLocation(l)
+                }}
+              >
+                <DeleteOutlinedIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
+        </footer>
+      </article>
+    </ExpandableCard>
+  )
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -257,9 +371,35 @@ export default function LocationsSection({ worldId, accent, userRole }) {
   }
 
   return (
-    <div className={sharedStyles.card} style={{ '--accent': accent }}>
+    <div
+      className={`${sharedStyles.card} ${isCarousel ? styles.cardCarousel : ''}`}
+      style={{ '--accent': accent }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>Локації ({locations.length})</h3>
+        <div className={styles.headerActions}>
+          {isCarousel && (
+            <div className={styles.carouselNav}>
+              <button
+                type="button"
+                className={styles.carouselArrow}
+                aria-label="Попередні локації"
+                onClick={() => goToPage(page - 1)}
+              >
+                <ChevronLeftIcon fontSize="small" />
+              </button>
+              <button
+                type="button"
+                className={styles.carouselArrow}
+                aria-label="Наступні локації"
+                onClick={() => goToPage(page + 1)}
+              >
+                <ChevronRightIcon fontSize="small" />
+              </button>
+            </div>
+          )}
         {canEdit && (
           <Button
             variant="contained"
@@ -270,94 +410,56 @@ export default function LocationsSection({ worldId, accent, userRole }) {
             Нова локація
           </Button>
         )}
+        </div>
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.locGrid} ${styles.gridFull}`}>
-        {visibleLocations.map((l) => (
-          <ExpandableCard
-            key={l.id}
-            clickOpens
-            showExpandBtn={false}
-            expandedContent={({ close }) => (
-              <LocationDetails
-                worldId={worldId}
-                location={l}
-                accent={accent}
-                uploading={uploadPhotos.isPending}
-                onClose={close}
-                onEdit={() => openEdit(l)}
-                onDelete={() => {
-                  deleteLocation(l)
-                  close()
-                }}
-                onUpload={(file) => uploadPhotos.mutateAsync({ locationId: l.id, files: [file] })}
-                onDeleteShot={(shot) => deleteScreenshot.mutate({ location: l, shot })}
-                canEdit={canEdit}
-              />
+      <div
+        className={`${sharedStyles.body} ${
+          isCarousel ? styles.carouselBody : `${styles.locGrid} ${styles.gridFull}`
+        }`}
+      >
+        {isCarousel ? (
+          <div className={styles.carouselViewport}>
+            <div
+              className={styles.carouselTrack}
+              style={{ transform: `translateX(-${page * 100}%)` }}
+            >
+              {chunks.map((chunk, i) => (
+                <div
+                  key={i}
+                  className={`${styles.locGrid} ${styles.carouselSlide}`}
+                  aria-hidden={i !== page}
+                  inert={i !== page}
+                >
+                  {chunk.map((l) => renderTile(l))}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {visibleLocations.map((l) => renderTile(l))}
+            {locations.length === 0 && (
+              <p className={sharedStyles.emptyMsg}>
+                Світ ще не досліджений. Додай першу локацію.
+              </p>
             )}
-          >
-            <article className={styles.locTile}>
-              <div className={styles.locThumbArea}>
-                {l.screenshots?.[0] ? (
-                  <img className={styles.locThumb} src={l.screenshots[0].image} alt={l.name} />
-                ) : (
-                  <div className={styles.locThumbPlaceholder}>
-                    <PhotoCameraOutlinedIcon />
-                  </div>
-                )}
-              </div>
-              <div className={styles.locBody}>
-                <div className={styles.locTopRow}>
-                  <div className={styles.locName}>{l.name}</div>
-                  <span className={styles.catPill}>
-                    {legacyCategoryLabels[l.category] ||
-                      categoryLabels[l.category] ||
-                      categoryLabels.other}
-                  </span>
-                </div>
-                <div className={styles.coords}>
-                  {l.x} {l.y} {l.z}
-                </div>
-                {l.description && <div className={styles.desc}>{l.description}</div>}
-              </div>
-              <footer className={styles.locFooter}>
-                {canEdit && (
-                  <>
-                    <IconButton
-                      className={styles.actionBtn}
-                      aria-label="Редагувати локацію"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        openEdit(l)
-                      }}
-                    >
-                      <EditOutlinedIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      className={styles.actionBtn}
-                      aria-label="Видалити локацію"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        deleteLocation(l)
-                      }}
-                    >
-                      <DeleteOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </>
-                )}
-              </footer>
-            </article>
-          </ExpandableCard>
-        ))}
-        {locations.length === 0 && (
-          <p className={sharedStyles.emptyMsg}>Світ ще не досліджений. Додай першу локацію.</p>
-        )}
-        {!section.modal && locations.length > 2 && (
-          <button type="button" className={styles.showAllBtn} onClick={section.open}>
-            Показати всі локації ({locations.length})
-          </button>
+          </>
         )}
       </div>
+      {isCarousel && (
+        <div className={styles.carouselDots}>
+          {Array.from({ length: pageCount }, (_, i) => (
+            <button
+              key={i}
+              type="button"
+              className={`${styles.carouselDot} ${i === page ? styles.carouselDotActive : ''}`}
+              aria-label={`Сторінка ${i + 1} з ${pageCount}`}
+              onClick={() => goToPage(i)}
+            />
+          ))}
+        </div>
+      )}
 
       <Dialog
         open={open}

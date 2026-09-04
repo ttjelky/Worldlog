@@ -17,6 +17,21 @@
   height: 100%;
 }
 
+/* Самотня картка в ряду (одна взагалі або остання непарна) — на всю ширину.
+   Картка обгорнута в ExpandableCard, тому цілимось в обгортку, а не в .locTile */
+.locGrid > .locTileWrap:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* Розтягнута картка майже вдвічі ширша за звичайну, тож обкладинці даємо
+   вдвічі «ширше» співвідношення — висота картки лишається як у сусідніх.
+   Лише для 2-колонкової сітки (на мобільному всі картки й так на всю ширину) */
+@media (min-width: 641px) {
+  .locGrid > .locTileWrap:last-child:nth-child(odd) .locThumbArea {
+    aspect-ratio: 5 / 1;
+  }
+}
+
 /* Знімаємо внутрішній ліміт висоти спільного body:
    у згорнутому вигляді рендериться рівно 2 картки (без скролу),
    у розгорнутому контент скролиться модалкою */
@@ -28,25 +43,109 @@
    класах нижче (раніше дублювалися через .gridCompact ... і
    перекривали правки через вищу специфічність) */
 
-/* Кнопка показу всіх локацій у згорнутому вигляді */
-.showAllBtn {
-  grid-column: 1 / -1;
-  align-self: center;
-  justify-self: center;
-  border: none;
-  cursor: pointer;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
-  padding: 10px 20px;
-  transition: background 0.15s ease;
+/* ---------- Карусель мінімізованої картки ---------- */
+
+/* Місце під крапки, щоб не вилазили за фон картки */
+.cardCarousel {
+  padding-bottom: 20px;
 }
 
-.showAllBtn:hover {
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carouselNav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.carouselArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.carouselArrow:hover {
   background: rgba(255, 255, 255, 0.26);
+}
+
+.carouselArrow:active {
+  transform: scale(0.94);
+}
+
+.carouselDots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  /* Компенсуємо нижній падінг body, щоб крапки були ближче до карток */
+  margin-top: -14px;
+  padding: 0;
+}
+
+/* ---------- Карусель: слайд-трек ---------- */
+
+.carouselBody {
+  overflow: hidden;
+}
+
+.carouselViewport {
+  overflow: hidden;
+}
+
+.carouselTrack {
+  display: flex;
+  height: 100%;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carouselSlide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carouselTrack {
+    transition: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .carouselArrow {
+    width: 33px;
+    height: 33px;
+  }
+}
+
+.carouselDot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.carouselDot:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.carouselDotActive {
+  background: #ffffff;
+  transform: scale(1.25);
 }
 
 /* ---------- Картка ---------- */
