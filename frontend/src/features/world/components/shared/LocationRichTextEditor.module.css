@@ -28,6 +28,7 @@
 
 .editable {
   flex: 1;
+  min-width: 0;
   outline: none;
   padding: 18px 14px 9px;
   font-family: inherit;
@@ -38,8 +39,7 @@
   overflow-wrap: break-word;
   word-break: break-word;
   min-height: 56px;
-  display: flex;
-  align-items: flex-start;
+  display: block;
 }
 
 .editable:focus,
@@ -105,6 +105,9 @@
   cursor: pointer;
   vertical-align: middle;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
