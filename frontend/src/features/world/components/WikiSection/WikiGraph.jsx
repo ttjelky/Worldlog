@@ -184,7 +184,12 @@ function wrapLabel(title, maxW, measurer) {
 function drawNode(simNodes, node, degree, measurer) {
   const isExternal = typeof node.id === 'string' && node.id.includes(':')
   const r = isExternal ? 24 : Math.min(34, 16 + degree * 2)
-  const g = make('g', { class: isExternal ? styles.nodeExternal : styles.node, tabindex: 0 })
+  const g = make('g', {
+    class: isExternal ? styles.nodeExternal : styles.node,
+    tabindex: 0,
+    role: 'button',
+    'aria-label': node.title,
+  })
 
   const circle = make('circle', {
     r,
@@ -226,6 +231,8 @@ export default function WikiGraph({ worldId, onOpen, height }) {
   const onOpenRef = useRef(onOpen)
   const fitRef = useRef(null)
   const interactionsRef = useRef(null)
+  const lastSizeRef = useRef({ w: 0, h: 0 })
+  const [sizeKey, setSizeKey] = useState(0)
   const [zoom, setZoom] = useState(1)
 
   const commitView = useCallback((v) => {
@@ -244,7 +251,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
     onOpenRef.current = onOpen
   })
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['wiki', String(worldId), 'graph'],
     queryFn: () => api.get(`/worlds/${worldId}/wiki/graph/`).then((r) => r.data),
   })
@@ -278,13 +285,43 @@ export default function WikiGraph({ worldId, onOpen, height }) {
       setZoom(viewRef.current.k)
     }
     fitRef.current()
-  }, [data, apply])
+
+    // Перебудова при зміні розміру полотна (ресайз вікна, модалка, висота)
+    const initialRect = canvas.getBoundingClientRect()
+    lastSizeRef.current = {
+      w: Math.round(initialRect.width),
+      h: Math.round(initialRect.height),
+    }
+    let resizeTimer = null
+    const ro = new ResizeObserver(() => {
+      if (resizeTimer) clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(() => {
+        const el = canvasRef.current
+        if (!el) return
+        const r = el.getBoundingClientRect()
+        const w = Math.round(r.width)
+        const h = Math.round(r.height)
+        const last = lastSizeRef.current
+        if (w !== last.w || h !== last.h) {
+          lastSizeRef.current = { w, h }
+          setSizeKey((k) => k + 1)
+        }
+      }, 150)
+    })
+    ro.observe(canvas)
+    return () => {
+      ro.disconnect()
+      if (resizeTimer) clearTimeout(resizeTimer)
+    }
+  }, [data, apply, sizeKey])
 
   // ——— Масштабування (колесо) ———
   useEffect(() => {
     const svg = svgRef.current
     if (!svg) return
     const onWheel = (e) => {
+      // Масштаб лише з Ctrl/Cmd — інакше колесо гортає сторінку, а не граф
+      if (!e.ctrlKey && !e.metaKey) return
       e.preventDefault()
       const v = viewRef.current
       const rect = svg.getBoundingClientRect()
@@ -292,9 +329,9 @@ export default function WikiGraph({ worldId, onOpen, height }) {
       const py = e.clientY - rect.top
       const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12
       const k = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v.k * factor))
-      const kw = v.k / k
-      const tx = px - (px - v.tx) * kw
-      const ty = py - (py - v.ty) * kw
+      const s = k / v.k
+      const tx = px - (px - v.tx) * s
+      const ty = py - (py - v.ty) * s
       commitView({ k, tx, ty })
       apply()
     }
@@ -350,7 +387,8 @@ export default function WikiGraph({ worldId, onOpen, height }) {
         const dx = e.clientX - drag.startX
         const dy = e.clientY - drag.startY
         if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true
-        const w = screenToWorld(drag.startX + dx, drag.startY + dy)
+        const rect = svg.getBoundingClientRect()
+        const w = screenToWorld(e.clientX - rect.left, e.clientY - rect.top)
         drag.node.x = w.x
         drag.node.y = w.y
         interactionPosition()
@@ -386,6 +424,12 @@ export default function WikiGraph({ worldId, onOpen, height }) {
         if (g.__handlers) return
         const node = g.__node
         g.addEventListener('pointerdown', (e) => onNodeDown(e, g, node))
+        g.addEventListener('keydown', (e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && typeof node.id === 'number') {
+            e.preventDefault()
+            onOpenRef.current?.(node.id)
+          }
+        })
         g.__handlers = true
       })
     }
@@ -393,8 +437,15 @@ export default function WikiGraph({ worldId, onOpen, height }) {
     const observer = new MutationObserver(attachNodeHandlers)
     observer.observe(svg, { childList: true, subtree: true })
 
+    const onDblClick = (e) => {
+      if (e.target !== svg && e.target !== canvas) return
+      if (fitRef.current) fitRef.current()
+    }
+    svg.addEventListener('dblclick', onDblClick)
+
     return () => {
       svg.removeEventListener('pointerdown', onBackgroundDown)
+      svg.removeEventListener('dblclick', onDblClick)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       observer.disconnect()
@@ -407,8 +458,8 @@ export default function WikiGraph({ worldId, onOpen, height }) {
     const rect = svgRef.current.getBoundingClientRect()
     const cx = rect.width / 2
     const cy = rect.height / 2
-    const kw = v.k / k
-    commitView({ k, tx: cx - (cx - v.tx) * kw, ty: cy - (cy - v.ty) * kw })
+    const s = k / v.k
+    commitView({ k, tx: cx - (cx - v.tx) * s, ty: cy - (cy - v.ty) * s })
     apply()
   }
   const zoomOut = () => {
@@ -417,8 +468,8 @@ export default function WikiGraph({ worldId, onOpen, height }) {
     const rect = svgRef.current.getBoundingClientRect()
     const cx = rect.width / 2
     const cy = rect.height / 2
-    const kw = v.k / k
-    commitView({ k, tx: cx - (cx - v.tx) * kw, ty: cy - (cy - v.ty) * kw })
+    const s = k / v.k
+    commitView({ k, tx: cx - (cx - v.tx) * s, ty: cy - (cy - v.ty) * s })
     apply()
   }
   const resetView = () => {
@@ -431,8 +482,9 @@ export default function WikiGraph({ worldId, onOpen, height }) {
     <div className={styles.graphWrap}>
       {nodeCount === 0 ? (
         <p className={styles.empty}>
-          Намалюй граф світу: додай сторінки й згадай одну в іншій через [[Назва]], або звʼяжи
-          елементи світу (персонажі, локації, проєкти…) — звʼязки зʼявляться тут.
+          {isLoading
+            ? 'Завантаження графа…'
+            : 'Намалюй граф світу: додай сторінки й згадай одну в іншій через [[Назва]], або звʼяжи елементи світу (персонажі, локації, проєкти…) — звʼязки зʼявляться тут.'}
         </p>
       ) : (
         <div className={styles.canvas} ref={canvasRef} style={height ? { height } : undefined}>
@@ -474,8 +526,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
               </button>
             </div>
           </div>
-          <svg ref={svgRef} className={styles.svg} />
-          <p className={styles.hint}>Колесо — масштаб · перетягни фон для прокрутки · вузол для переміщення</p>
+          <svg ref={svgRef} className={styles.svg} role="img" aria-label="Граф зв'язків світу" />
         </div>
       )}
     </div>
