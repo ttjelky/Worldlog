@@ -1,106 +1,46 @@
 /* ─────────────────────────────────────────
-   Hero – Trial Chambers biome
-   Dominant: Copper #d67b5b · Oxidized #59b292
-   Background: warm dark copper
+   Hero – Solid blue primary fill (M3 Expressive)
+   Primary accent: #7C83F5, white text, centered column
    ───────────────────────────────────────── */
 
 .heroSection {
-  padding: 88px 24px 48px;
-  background: linear-gradient(180deg, #3a2e28 0%, #f8f6f3 100%);
+  background: #7C83F5;
+  color: #ffffff;
+  padding: 160px 16px 96px;
 }
 
-@media (min-width: 900px) {
+@media (max-width: 899px) {
   .heroSection {
-    padding: 100px 32px 48px;
+    padding: 110px 12px 56px;
   }
 }
 
-.heroCard {
-  position: relative;
-  max-width: 1340px;
+.heroInner {
+  max-width: 1280px;
   margin: 0 auto;
-  border-radius: 24px;
-  overflow: hidden;
-  background: #434343;
-  z-index: 0;
-}
-
-.heroContent {
-  position: relative;
-  z-index: 1;
-}
-
-.heroTop {
   display: flex;
   flex-direction: column;
-  gap: 0;
 }
 
-@media (min-width: 900px) {
-  .heroTop {
-    flex-direction: row;
-    align-items: stretch;
-    min-height: 440px;
-  }
-}
-
-.heroText {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 40px 32px 32px;
-}
-
-@media (min-width: 900px) {
-  .heroText {
-    flex: 0 0 50%;
-    max-width: 560px;
-    padding: 56px 52px;
-  }
-}
-
-.heroBadge {
-  display: inline-block;
-  align-self: flex-start;
-  padding: 5px 12px;
-  border-radius: 8px;
-  background: rgba(214, 123, 91, 0.22);
-  color: #d67b5b;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-bottom: 24px;
-}
+/* ── Text ── */
 
 .heroTitle {
-  font-weight: 900;
-  font-size: 52px;
-  line-height: 0.98;
+  font-weight: 500;
+  font-size: clamp(100px, 8vw, 1800px);
+  line-height: 1.05;
+  letter-spacing: -0.06em;
   color: #ffffff;
-  letter-spacing: -0.04em;
   margin-bottom: 20px;
-}
-
-@media (min-width: 900px) {
-  .heroTitle {
-    font-size: 88px;
-    letter-spacing: -0.045em;
-  }
+  max-width: 1020px;
 }
 
 .heroSubtitle {
-  font-size: 17px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.55);
-  margin-bottom: 32px;
-  max-width: 380px;
-}
-
-@media (min-width: 900px) {
-  .heroSubtitle {
-    font-size: 18px;
-  }
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.88);
+  margin-bottom: 36px;
+  max-width: 520px;
 }
 
 .heroButtons {
@@ -109,298 +49,62 @@
   flex-wrap: wrap;
 }
 
-.heroButtonPrimary {
-  border-radius: 14px !important;
-  padding: 14px 32px !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  background: #d67b5b !important;
-  color: #ffffff !important;
-  transition: background 1.2s ease !important;
-}
-
-.heroButtonPrimary:hover {
-  background: #59b292 !important;
-}
-
-.heroButtonSecondary {
-  border-radius: 14px !important;
-  padding: 14px 28px !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  background: transparent !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(214, 123, 91, 0.40) !important;
-  transition: background 1.2s ease, border-color 1.2s ease, color 1.2s ease !important;
-}
-
-.heroButtonSecondary:hover {
-  background: rgba(89, 178, 146, 0.15) !important;
-  border-color: rgba(89, 178, 146, 0.55) !important;
-  color: #59b292 !important;
-}
-
-.heroVisual {
-  display: none;
-}
-
-@media (min-width: 900px) {
-  .heroVisual {
-    display: block;
-    flex: 0 0 52%;
-    position: relative;
-  }
-}
-
-.heroCollage {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.heroNav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 18px 32px 22px;
-  border-top: 1px solid rgba(214, 123, 91, 0.12);
-}
-
-@media (min-width: 900px) {
-  .heroNav {
-    flex-direction: row;
-    align-items: center;
-    gap: 14px;
-    padding: 16px 52px 20px;
-  }
-}
-
-.heroNavLabel {
-  font-weight: 700;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.30);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-.heroNavPills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.heroNavPill {
+.heroCtaPrimary {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  background: rgba(214, 123, 91, 0.10);
-  border: 1px solid rgba(214, 123, 91, 0.15);
-  color: rgba(255, 255, 255, 0.70);
-  font-weight: 600;
-  font-size: 12px;
+  gap: 4px;
+  border: none;
   cursor: pointer;
-  transition: background 1.2s ease, border-color 1.2s ease, color 1.2s ease;
-}
-
-.heroNavPill:hover {
-  background: rgba(89, 178, 146, 0.18);
-  border-color: rgba(89, 178, 146, 0.40);
-  color: #59b292;
-}
-
-.heroNavPillIcon {
-  font-size: 14px !important;
-}
-
-/* ─────────────────────────────────────────
-   Mockup cards
-   ───────────────────────────────────────── */
-
-.collageCard {
-  position: absolute;
-  background: #5a5550;
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid rgba(214, 123, 91, 0.15);
-}
-
-.collagePlayers {
-  width: 340px;
-  top: 0;
-  left: 0;
-  z-index: 3;
-  transform: rotate(-2deg);
-}
-
-.collageTodos {
-  width: 300px;
-  top: 8%;
-  right: 0;
-  z-index: 2;
-  transform: rotate(3deg);
-}
-
-.collageLocations {
-  width: 400px;
-  top: 48%;
-  left: 5%;
-  z-index: 4;
-  transform: rotate(1.5deg);
-}
-
-.collageTimeline {
-  width: 320px;
-  top: 50%;
-  right: 2%;
-  z-index: 5;
-  transform: rotate(-2.5deg);
-}
-
-.mockupHeader {
-  background: rgba(214, 123, 91, 0.10);
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-}
-
-.mockupHeaderLabel {
+  font-family: inherit;
+  border-radius: 999px;
+  padding: 14px 32px;
+  font-size: 15px;
   font-weight: 700;
-  font-size: 10px;
-  color: #d67b5b;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  background: #ffffff;
+  color: #7C83F5;
+  transition: background 0.15s ease;
 }
 
-.mockupBody {
-  padding: 10px 12px 12px;
+.heroCtaPrimary:hover {
+  background: rgba(255, 255, 255, 0.9);
 }
 
-.mockupRow {
-  display: flex;
+.heroCtaSecondary {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 0;
-}
-
-.mockupRow + .mockupRow {
-  border-top: 1px solid rgba(214, 123, 91, 0.10);
-}
-
-.mockupRowText {
-  min-width: 0;
-}
-
-.mockupRowName {
+  gap: 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 15px;
   font-weight: 700;
-  font-size: 12px;
   color: #ffffff;
+  background: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.mockupRowSub {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.45);
+.heroCtaSecondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
-.mockupRowCoords {
-  font-size: 9px;
-  color: rgba(255, 255, 255, 0.45);
-}
+/* ── Mobile refinements ── */
 
-.mockupRowDate {
-  font-weight: 700;
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #d67b5b;
-}
-
-.mockupAvatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.mockupLocDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.mockupCheckbox {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 2px solid rgba(214, 123, 91, 0.40);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mockupCheckSvg {
-  width: 12px;
-  height: 12px;
-}
-
-.mockupTodoDone {
-  text-decoration: line-through;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.mockupTimelineNode {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  background: #d67b5b;
-  flex-shrink: 0;
-}
-
-@media (max-width: 899px) {
-  .heroSection {
-    padding: 80px 16px 40px;
-  }
-
-  .heroCard {
-    border-radius: 18px;
-  }
-
-  .heroText {
-    padding: 32px 24px 24px;
-  }
-
+@media (max-width: 599px) {
   .heroTitle {
     font-size: 40px;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.03em;
   }
 
   .heroSubtitle {
     font-size: 15px;
   }
 
-  .heroNav {
-    padding: 14px 24px 18px;
-  }
-
-  .heroNavPills {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .heroNavPills::-webkit-scrollbar {
-    display: none;
-  }
-
-  .collagePlayers,
-  .collageLocations,
-  .collageTodos,
-  .collageTimeline {
-    display: none;
+  .heroCtaPrimary,
+  .heroCtaSecondary {
+    width: 100%;
+    justify-content: center;
   }
 }
