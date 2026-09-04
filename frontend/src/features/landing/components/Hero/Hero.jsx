@@ -11,28 +11,24 @@ function scrollTo(id) {
 export default function Hero({ onStart }) {
   return (
     <section className={styles.heroSection} id="top">
-      <div className={styles.heroInner}>
-        <h1 className={styles.heroTitle}>Ваші світи. <br/> В одному місці.</h1>
-        <p className={styles.heroSubtitle}>
-          Паспорт для твого Minecraft та RPG світу. Гравці, локації, вікі та історія — все в
-          одному місці.
-        </p>
-        <div className={styles.heroButtons}>
-          <button
-            onClick={onStart}
-            className={styles.heroCtaPrimary}
-          >
-            Створити перший світ
-            <ArrowForwardIcon style={{ fontSize: 18, marginLeft: 4 }} />
-          </button>
-          <button
-            onClick={() => scrollTo('how-it-works')}
-            className={styles.heroCtaSecondary}
-          >
-            Як це працює
-            <ExploreOutlinedIcon style={{ fontSize: 18, marginLeft: 4 }} />
-          </button>
+      <div className={styles.heroGrid}>
+        <div className={styles.heroCardLeft}>
+          <h1 className={styles.heroTitle}>Ваші світи. <br/> В одному місці.</h1>
+          <p className={styles.heroSubtitle}>
+            Паспорт для твого Minecraft та RPG світу. Гравці, локації, вікі та історія — все в
+            одному місці.
+          </p>
+          <div className={styles.heroButtons}>
+            <button
+              onClick={onStart}
+              className={styles.heroCtaPrimary}
+            >
+              Створити перший світ
+              <ArrowForwardIcon style={{ fontSize: 18, marginLeft: 4 }} />
+            </button>
+          </div>
         </div>
+        <div className={styles.heroCardRight} />
       </div>
     </section>
   )
