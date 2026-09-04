@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ClearIcon from '@mui/icons-material/Clear'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SearchIcon from '@mui/icons-material/Search'
@@ -136,7 +137,21 @@ const STATUS_COLORS = {
   finished: '#8FE3A0',
 }
 
+const SORT_OPTIONS = [
+  { value: 'updated', label: 'Спочатку оновлені' },
+  { value: 'alpha', label: 'За назвою' },
+  { value: 'created', label: 'Спочатку створені' },
+]
+
+const SNIPPET_MAX = 300
+
 const WIKI_LINK_RE = /\[\[(?:wiki:)?([^\]|]+)\]\]/g
+
+function formatDate(value) {
+  if (!value) return ''
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('uk-UA')
+}
 
 function extractTitles(text) {
   if (!text) return []
@@ -187,7 +202,6 @@ const empty = {
   infobox: {},
   tags: '',
   world_date: '',
-  world_date_order: '',
   content: '',
 }
 
@@ -203,7 +217,6 @@ export default function WikiSection({ worldId, accent, userRole }) {
   const [activeTypes, setActiveTypes] = useState([])
   const [sort, setSort] = useState('updated')
   const [view, setView] = useState('list')
-  const [activeFilter, setActiveFilter] = useState(null)
   const canEdit = userRole && userRole !== 'viewer'
   const prevModal = useRef(section.modal)
 
@@ -222,7 +235,9 @@ export default function WikiSection({ worldId, accent, userRole }) {
       editingPage
         ? api.patch(`/worlds/${worldId}/wiki/${editingPage.id}/`, payload)
         : api.post(`/worlds/${worldId}/wiki/`, payload),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      const saved = res?.data
+      if (saved && editingPage && selectedPage?.id === editingPage.id) setSelectedPage(saved)
       qc.invalidateQueries(['wiki', String(worldId)])
       setDialogOpen(false)
       setEditingPage(null)
@@ -244,7 +259,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
     })
 
   const titleIndex = useMemo(
-    () => new Map(pages.map((p) => [p.title.toLowerCase(), p])),
+    () => new Map(pages.map((p) => [(p.title || '').toLowerCase(), p])),
     [pages],
   )
 
@@ -265,19 +280,6 @@ export default function WikiSection({ worldId, accent, userRole }) {
       return new Date(b.updated_at) - new Date(a.updated_at)
     })
   }, [pages, activeTypes, search, sort])
-
-  const timelinePages = useMemo(
-    () =>
-      pages
-        .filter((p) => ['event', 'war'].includes(p.page_type))
-        .sort((a, b) => {
-          const ao = a.world_date_order ?? Number.MAX_SAFE_INTEGER
-          const bo = b.world_date_order ?? Number.MAX_SAFE_INTEGER
-          if (ao !== bo) return ao - bo
-          return a.id - b.id
-        }),
-    [pages],
-  )
 
   const referencedBy = useMemo(() => {
     if (!selectedPage) return []
@@ -323,7 +325,6 @@ export default function WikiSection({ worldId, accent, userRole }) {
       infobox: page.infobox || {},
       tags: page.tags || '',
       world_date: page.world_date || '',
-      world_date_order: page.world_date_order != null ? page.world_date_order : '',
       content: page.content || '',
     })
     setDialogOpen(true)
@@ -341,10 +342,6 @@ export default function WikiSection({ worldId, accent, userRole }) {
       infobox,
       tags: form.tags,
       world_date: form.world_date,
-      world_date_order:
-        form.world_date_order !== '' && form.world_date_order != null
-          ? Number(form.world_date_order)
-          : null,
       content: form.content,
     }
     mutation.mutateAsync(payload)
@@ -364,6 +361,12 @@ export default function WikiSection({ worldId, accent, userRole }) {
     setActiveTypes((cur) =>
       cur.includes(value) ? cur.filter((t) => t !== value) : [...cur, value],
     )
+
+  const hasActiveFilters = activeTypes.length > 0 || search.trim() !== ''
+  const resetFilters = () => {
+    setActiveTypes([])
+    setSearch('')
+  }
 
   const renderTitles = (text) =>
     String(text || '')
@@ -406,7 +409,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
 
     return (
       <div className={styles.pageDetail}>
-        <button className={styles.backBtn} onClick={goBack}>
+        <button type="button" className={styles.backBtn} onClick={goBack}>
           <ArrowBackIcon sx={{ fontSize: 18 }} />
           Назад
         </button>
@@ -423,7 +426,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
                 {statusColor && (
                   <span
                     className={styles.statusBadge}
-                    style={{ backgroundColor: `${statusColor}26`, color: statusColor }}
+                    style={{ backgroundColor: `${statusColor}30`, color: '#ffffff' }}
                   >
                     {STATUS_OPTIONS[statusValue]}
                   </span>
@@ -431,9 +434,9 @@ export default function WikiSection({ worldId, accent, userRole }) {
                 {selectedPage.world_date && (
                   <span className={styles.pageDetailDate}>📅 {selectedPage.world_date}</span>
                 )}
-                {selectedPage.updated_at && (
+                {selectedPage.updated_at && formatDate(selectedPage.updated_at) && (
                   <span className={styles.pageDetailDates}>
-                    Оновлено: {new Date(selectedPage.updated_at).toLocaleDateString('uk-UA')}
+                    Оновлено: {formatDate(selectedPage.updated_at)}
                   </span>
                 )}
               </div>
@@ -491,6 +494,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
               {nestedChildren.map(({ page, label }) => (
                 <button
                   key={`${page.id}-${label}`}
+                  type="button"
                   className={styles.nestedLink}
                   onClick={() => openPage(page)}
                 >
@@ -507,7 +511,12 @@ export default function WikiSection({ worldId, accent, userRole }) {
             <h4 className={styles.nestedBlockTitle}>Згадується у ({referencedBy.length})</h4>
             <div className={styles.nestedLinks}>
               {referencedBy.map((page) => (
-                <button key={page.id} className={styles.nestedLink} onClick={() => openPage(page)}>
+                <button
+                  key={page.id}
+                  type="button"
+                  className={styles.nestedLink}
+                  onClick={() => openPage(page)}
+                >
                   {pageEmoji(page)} {page.title}
                 </button>
               ))}
@@ -545,13 +554,17 @@ export default function WikiSection({ worldId, accent, userRole }) {
               label="Тип"
               select
               value={form.page_type}
-              onChange={(e) =>
+              onChange={(e) => {
+                const nextType = e.target.value
                 setForm((f) => ({
                   ...f,
-                  page_type: e.target.value,
-                  emoji: f.emoji || EMOJI_BY_TYPE[e.target.value],
+                  page_type: nextType,
+                  emoji:
+                    !f.emoji || f.emoji === EMOJI_BY_TYPE[f.page_type]
+                      ? EMOJI_BY_TYPE[nextType]
+                      : f.emoji,
                 }))
-              }
+              }}
             >
               {PAGE_TYPES.map(([value, label]) => (
                 <MenuItem key={value} value={value}>
@@ -620,20 +633,12 @@ export default function WikiSection({ worldId, accent, userRole }) {
               value={form.tags}
               onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
             />
-            <div className={styles.dateRow}>
-              <TextField
-                label="Дата в ігровому світі"
-                placeholder="Рік 3, Весна"
-                value={form.world_date}
-                onChange={(e) => setForm((f) => ({ ...f, world_date: e.target.value }))}
-              />
-              <TextField
-                label="Порядок на таймлайні"
-                type="number"
-                value={form.world_date_order}
-                onChange={(e) => setForm((f) => ({ ...f, world_date_order: e.target.value }))}
-              />
-            </div>
+            <TextField
+              label="Дата в ігровому світі"
+              placeholder="Рік 3, Весна"
+              value={form.world_date}
+              onChange={(e) => setForm((f) => ({ ...f, world_date: e.target.value }))}
+            />
             <TextField
               label="Зміст"
               value={form.content}
@@ -675,20 +680,20 @@ return (
           renderPageDetail()
         ) : (
           <>
-            <div className={styles.viewTabs}>
+            <div className={styles.viewTabs} role="tablist" aria-label="Вигляд вікі">
               <button
+                type="button"
+                role="tab"
+                aria-selected={view === 'list'}
                 className={`${styles.viewTab} ${view === 'list' ? styles.viewTabActive : ''}`}
                 onClick={() => setView('list')}
               >
                 Сторінки
               </button>
               <button
-                className={`${styles.viewTab} ${view === 'timeline' ? styles.viewTabActive : ''}`}
-                onClick={() => setView('timeline')}
-              >
-                Таймлайн
-              </button>
-              <button
+                type="button"
+                role="tab"
+                aria-selected={view === 'graph'}
                 className={`${styles.viewTab} ${view === 'graph' ? styles.viewTabActive : ''}`}
                 onClick={() => setView('graph')}
               >
@@ -699,37 +704,55 @@ return (
             {view === 'list' && (
               <>
                 <div className={styles.toolbar}>
-                  <TextField
-                    className={styles.searchInput}
-                    size="small"
-                    placeholder="Пошук у вікі…"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    slotProps={{
-                      input: {
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <SearchIcon />
-                          </InputAdornment>
-                        ),
-                      },
-                    }}
-                  />
-                  <TextField
-                    className={styles.sortSelect}
-                    select
-                    size="small"
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value)}
-                  >
-                    <MenuItem value="updated">Спочатку оновлені</MenuItem>
-                    <MenuItem value="alpha">За назвою</MenuItem>
-                    <MenuItem value="created">Спочатку створені</MenuItem>
-                  </TextField>
-                  <div className={styles.filterChips}>
+                  <div className={styles.toolbarRow}>
+                    <TextField
+                      className={styles.searchInput}
+                      size="small"
+                      placeholder="Пошук у вікі…"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      slotProps={{
+                        input: {
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                          endAdornment: search ? (
+                            <InputAdornment position="end">
+                              <IconButton
+                                size="small"
+                                aria-label="Очистити пошук"
+                                onClick={() => setSearch('')}
+                              >
+                                <ClearIcon fontSize="small" />
+                              </IconButton>
+                            </InputAdornment>
+                          ) : null,
+                        },
+                      }}
+                    />
+                    <TextField
+                      className={styles.sortSelect}
+                      select
+                      size="small"
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value)}
+                      aria-label="Сортування сторінок"
+                    >
+                      {SORT_OPTIONS.map((o) => (
+                        <MenuItem key={o.value} value={o.value}>
+                          {o.label}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </div>
+                  <div className={styles.filterChips} role="group" aria-label="Фільтр за типом">
                     {PAGE_TYPES.map(([value, label]) => (
                       <button
                         key={value}
+                        type="button"
+                        aria-pressed={activeTypes.includes(value)}
                         className={`${styles.filterChip} ${
                           activeTypes.includes(value) ? styles.filterChipActive : ''
                         }`}
@@ -738,6 +761,15 @@ return (
                         {label}
                       </button>
                     ))}
+                    {hasActiveFilters && (
+                      <button
+                        type="button"
+                        className={styles.resetChip}
+                        onClick={resetFilters}
+                      >
+                        Скинути ✕
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -753,7 +785,11 @@ return (
                       <div className={styles.pageCardTitle}>{page.title}</div>
                       {page.content && (
                         <div className={styles.pageCardSnippet}>
-                          {renderContent(page.content, titleIndex, openPage)}
+                          {renderContent(
+                            page.content.slice(0, SNIPPET_MAX),
+                            titleIndex,
+                            openPage,
+                          )}
                         </div>
                       )}
                       <div className={styles.pageCardFooter}>
@@ -772,7 +808,7 @@ return (
                           </span>
                         )}
                         <span className={styles.pageCardUpdated}>
-                          {new Date(page.updated_at).toLocaleDateString('uk-UA')}
+                          {formatDate(page.updated_at)}
                         </span>
                       </div>
                     </div>
@@ -780,48 +816,35 @@ return (
                   {filteredPages.length === 0 && (
                     <p className={styles.emptyState}>
                       {pages.length === 0
-                        ? 'Вікі ще порожня. Додай першу сторінку.'
+                        ? canEdit
+                          ? 'Вікі ще порожня. Додай першу сторінку.'
+                          : 'Вікі ще порожня.'
                         : 'Нічого не знайдено.'}
+                      {pages.length > 0 && hasActiveFilters && (
+                        <button
+                          type="button"
+                          className={styles.emptyReset}
+                          onClick={resetFilters}
+                        >
+                          Скинути пошук і фільтри
+                        </button>
+                      )}
                     </p>
                   )}
                 </div>
 
                 {!section.modal && filteredPages.length > 4 && (
-                  <button type="button" className={styles.filterChip} onClick={section.open}>
-                    Показати всі ({filteredPages.length})
-                  </button>
+                  <div className={styles.showAllWrap}>
+                    <button
+                      type="button"
+                      className={styles.showAllBtn}
+                      onClick={section.open}
+                    >
+                      Показати всі ({filteredPages.length})
+                    </button>
+                  </div>
                 )}
               </>
-            )}
-
-            {view === 'timeline' && (
-              <div className={styles.timeline}>
-                {timelinePages.length === 0 ? (
-                  <p className={styles.emptyState}>
-                    Додай сторінки типу «Подія» чи «Війна», щоб вони вишикувались на таймлайні.
-                  </p>
-                ) : (
-                  timelinePages.map((page, i) => (
-                    <div key={page.id} className={styles.timelineItem}>
-                      <div className={styles.timelineRail}>
-                        <span className={styles.timelineDot} />
-                        {i < timelinePages.length - 1 && <span className={styles.timelineLine} />}
-                      </div>
-                      <button className={styles.timelineCard} onClick={() => openPage(page)}>
-                        <div className={styles.timelineCardTitle}>
-                          {pageEmoji(page)} {page.title}
-                          <span className={styles.pageCardType}>
-                            {PAGE_TYPE_LABELS[page.page_type] || page.page_type}
-                          </span>
-                        </div>
-                        <div className={styles.timelineDate}>
-                          {page.world_date || 'Дата не вказана'}
-                        </div>
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
             )}
 
             {view === 'graph' && <WikiGraph worldId={worldId} onOpen={openPageById} />}

@@ -104,6 +104,11 @@
   --expanded-w: min(860px, calc(100vw - 48px));
 }
 
+.modalExtraWide {
+  --expanded-w: min(1080px, calc(100vw - 48px));
+  --expanded-h: min(720px, calc(100vh - 48px));
+}
+
 .modalClosing {
   animation: modalCollapse 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

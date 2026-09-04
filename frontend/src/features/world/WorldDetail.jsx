@@ -481,7 +481,7 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
       </ExpandableCard>
     ),
     wiki: () => (
-      <ExpandableCard wide>
+      <ExpandableCard extraWide>
         <WikiSection worldId={worldId} accent={green} userRole={userRole} />
       </ExpandableCard>
     ),

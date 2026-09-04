@@ -15,6 +15,7 @@ export const ExpandableCardContext = createContext({ expanded: false, open: () =
  * - expandedContent — контент модалки; якщо функція, викликається як
  *                     expandedContent({ close }), де close закриває модалку
  * - wide            — ширша розгорнута модалка (для секції локацій)
+ * - extraWide       — ще просторіша модалка (для секції вікі)
  */
 export default function ExpandableCard({
   children,
@@ -23,6 +24,7 @@ export default function ExpandableCard({
   showExpandBtn = true,
   expandedContent = null,
   wide = false,
+  extraWide = false,
 }) {
   const cardRef = useRef(null)
   const modalRef = useRef(null)
@@ -150,6 +152,8 @@ export default function ExpandableCard({
                 ref={modalRef}
                 tabIndex={-1}
                 className={`${styles.modal} ${wide ? styles.modalWide : ''} ${
+                  extraWide ? styles.modalExtraWide : ''
+                } ${
                   closing ? styles.modalClosing : ''
                 } ${fading ? styles.modalFadingOut : ''}`}
                 style={{
