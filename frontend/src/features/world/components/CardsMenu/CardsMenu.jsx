@@ -12,6 +12,7 @@ import BookmarksSection from '../BookmarksSection/BookmarksSection'
 import IdeasSection from '../IdeasSection/IdeasSection'
 import ProgressSection from '../ProgressSection/ProgressSection'
 import WikiSection from '../WikiSection/WikiSection'
+import RelationshipsSection from '../RelationshipsSection/RelationshipsSection'
 import styles from './CardsMenu.module.css'
 
 const DEFAULT_RED = '#A63C39'
@@ -99,6 +100,13 @@ function buildCardDefs(accents) {
       desc: 'Статистика твого WorldLog: кількість локацій, Wiki-сторінок, задач тощо',
       accent: green,
       render: (accent) => <ProgressSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
+    },
+    {
+      id: 'relationships',
+      name: "Зв'язки",
+      desc: 'Граф звʼязків між сторінками вікі та елементами світу',
+      accent: green,
+      render: (accent) => <RelationshipsSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
   ]
 }

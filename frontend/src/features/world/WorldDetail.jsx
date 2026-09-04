@@ -35,6 +35,7 @@ import BookmarksSection from './components/BookmarksSection/BookmarksSection'
 import IdeasSection from './components/IdeasSection/IdeasSection'
 import ProgressSection from './components/ProgressSection/ProgressSection'
 import WikiSection from './components/WikiSection/WikiSection'
+import RelationshipsSection from './components/RelationshipsSection/RelationshipsSection'
 import CardsMenu from './components/CardsMenu/CardsMenu'
 import sharedStyles from './components/shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from './components/shared/ExpandableCard'
@@ -60,6 +61,7 @@ const CARD_META = {
   ideas:         { row: 5, slotClass: 'slotTypeIdeas' },
   wiki:          { row: 6, slotClass: 'slotTypeWiki' },
   progress:      { row: 6, slotClass: 'slotTypeProgress' },
+  relationships: { row: 7, slotClass: 'slotTypeRelationships' },
 }
 
 const DEFAULT_CARDS = [
@@ -77,6 +79,7 @@ const DEFAULT_CARDS = [
   { id: 'ideas', row: 5 },
   { id: 'wiki', row: 6 },
   { id: 'progress', row: 6 },
+  { id: 'relationships', row: 7 },
 ]
 
 function mergeWithDefaults(saved) {
@@ -490,6 +493,11 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
         <ProgressSection worldId={worldId} accent={green} userRole={userRole} />
       </ExpandableCard>
     ),
+    relationships: () => (
+      <ExpandableCard extraWide>
+        <RelationshipsSection worldId={worldId} accent={green} />
+      </ExpandableCard>
+    ),
   }
 }
 
@@ -870,7 +878,7 @@ export default function WorldDetail({ onBack }) {
         </div>
 
         <div className={styles.board}>
-          {[0, 1, 2, 3, 4, 5, 6].map((rowIndex) => (
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((rowIndex) => (
             <div key={rowIndex} className={styles.rowWrapper}>
               {editMode && rowIndex > 0 && (
                 <div className={styles.rowControls}>

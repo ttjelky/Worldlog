@@ -9,44 +9,6 @@
   max-height: none;
 }
 
-.viewTabs {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  align-self: flex-start;
-}
-
-.viewTab {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: rgba(255, 255, 255, 0.75);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px 16px;
-  border-radius: 999px;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.viewTab:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
-.viewTabActive {
-  background: #ffffff;
-  color: var(--accent, #6f42c6);
-}
-
-.viewTabActive:hover {
-  background: #ffffff;
-  color: var(--accent, #6f42c6);
-}
-
 .toolbar {
   display: flex;
   flex-direction: column;

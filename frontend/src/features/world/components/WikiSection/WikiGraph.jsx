@@ -218,7 +218,7 @@ function drawNode(simNodes, node, degree, measurer) {
   return g
 }
 
-export default function WikiGraph({ worldId, onOpen }) {
+export default function WikiGraph({ worldId, onOpen, height }) {
   const svgRef = useRef(null)
   const canvasRef = useRef(null)
   const viewportRef = useRef(null)
@@ -435,7 +435,7 @@ export default function WikiGraph({ worldId, onOpen }) {
           елементи світу (персонажі, локації, проєкти…) — звʼязки зʼявляться тут.
         </p>
       ) : (
-        <div className={styles.canvas} ref={canvasRef}>
+        <div className={styles.canvas} ref={canvasRef} style={height ? { height } : undefined}>
           <div className={styles.controls}>
             <div className={styles.controlsGroup}>
               <button

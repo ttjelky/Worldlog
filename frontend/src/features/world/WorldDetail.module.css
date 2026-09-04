@@ -194,6 +194,7 @@
 .slotTypeIdeas     { flex: 1; }
 .slotTypeWiki      { flex: 2; }
 .slotTypeProgress  { flex: 1; }
+.slotTypeRelationships { flex: 1; }
 
 .resizing .slot {
   transition: none !important;

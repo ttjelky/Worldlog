@@ -31,7 +31,7 @@ import sharedStyles from '../shared/section.module.css'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import RelationshipList from '../shared/RelationshipList'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
-import WikiGraph from './WikiGraph'
+import { OPEN_WIKI_PAGE_EVENT } from '../RelationshipsSection/RelationshipsSection'
 import styles from './WikiSection.module.css'
 
 const PAGE_TYPES = [
@@ -216,7 +216,6 @@ export default function WikiSection({ worldId, accent, userRole }) {
   const [search, setSearch] = useState('')
   const [activeTypes, setActiveTypes] = useState([])
   const [sort, setSort] = useState('updated')
-  const [view, setView] = useState('list')
   const canEdit = userRole && userRole !== 'viewer'
   const prevModal = useRef(section.modal)
 
@@ -351,11 +350,18 @@ export default function WikiSection({ worldId, accent, userRole }) {
     setSelectedPage(page)
     if (!section.modal) section.open()
   }
-  const openPageById = (id) => {
-    const page = pages.find((p) => p.id === id)
-    if (page) setSelectedPage(page)
-  }
   const goBack = () => setSelectedPage(null)
+
+  // Клік по вузлу графа в картці «Зв'язки» відкриває сторінку тут.
+  useEffect(() => {
+    const handler = (e) => {
+      const page = pages.find((p) => p.id === e.detail)
+      if (page) openPage(page)
+    }
+    window.addEventListener(OPEN_WIKI_PAGE_EVENT, handler)
+    return () => window.removeEventListener(OPEN_WIKI_PAGE_EVENT, handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages, section])
 
   const toggleType = (value) =>
     setActiveTypes((cur) =>
@@ -680,30 +686,7 @@ return (
           renderPageDetail()
         ) : (
           <>
-            <div className={styles.viewTabs} role="tablist" aria-label="Вигляд вікі">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === 'list'}
-                className={`${styles.viewTab} ${view === 'list' ? styles.viewTabActive : ''}`}
-                onClick={() => setView('list')}
-              >
-                Сторінки
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === 'graph'}
-                className={`${styles.viewTab} ${view === 'graph' ? styles.viewTabActive : ''}`}
-                onClick={() => setView('graph')}
-              >
-                Зв&apos;язки
-              </button>
-            </div>
-
-            {view === 'list' && (
-              <>
-                <div className={styles.toolbar}>
+            <div className={styles.toolbar}>
                   <div className={styles.toolbarRow}>
                     <TextField
                       className={styles.searchInput}
@@ -844,10 +827,6 @@ return (
                     </button>
                   </div>
                 )}
-              </>
-            )}
-
-            {view === 'graph' && <WikiGraph worldId={worldId} onOpen={openPageById} />}
           </>
         )}
       </div>
