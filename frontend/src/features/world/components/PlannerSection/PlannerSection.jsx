@@ -135,9 +135,25 @@ export default function PlannerSection({ worldId, accent }) {
         <h3 className={sharedStyles.sectionTitle}>
           Планер ({done}/{planned.length})
         </h3>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-          Нове завдання
-        </Button>
+        <div className={styles.headerActions}>
+          {done > 0 && (
+            <button
+              type="button"
+              className={styles.filterBtnDeleteDone}
+              onClick={deleteDone}
+              title="Видалити виконані"
+              aria-label="Видалити виконані"
+            >
+              <span className={styles.deleteDoneIcon}>
+                <DeleteOutlinedIcon fontSize="small" />
+                <CheckIcon className={styles.deleteDoneCheck} />
+              </span>
+            </button>
+          )}
+          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
+            Нове завдання
+          </Button>
+        </div>
       </div>
 
       <div className={styles.filters}>
@@ -155,20 +171,6 @@ export default function PlannerSection({ worldId, accent }) {
             {label}
           </button>
         ))}
-        {done > 0 && (
-          <button
-            type="button"
-            className={styles.filterBtnDeleteDone}
-            onClick={deleteDone}
-            title="Видалити виконані"
-            aria-label="Видалити виконані"
-          >
-            <span className={styles.deleteDoneIcon}>
-              <DeleteOutlinedIcon fontSize="small" />
-              <CheckIcon className={styles.deleteDoneCheck} />
-            </span>
-          </button>
-        )}
       </div>
 
       <div

@@ -10,7 +10,6 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
@@ -36,7 +35,7 @@ const ROLE_CHIP_CLASS = {
   viewer: styles.roleViewer,
 }
 
-export default function ParticipantsSection({ worldId, accent, userRole, world }) {
+export function WorldAccessList({ worldId, userRole, world }) {
   const qc = useQueryClient()
   const isOwner = userRole === 'owner'
   const isEditor = userRole === 'editor' || isOwner
@@ -56,24 +55,21 @@ export default function ParticipantsSection({ worldId, accent, userRole, world }
   })
 
   return (
-    <div className={sharedStyles.card} style={{ '--accent': accent }}>
-      <div className={sharedStyles.sectionHeader}>
-        <h3 className={sharedStyles.sectionTitle}>
-          Учасники ({participants.length + 1})
-        </h3>
+    <div className={styles.access}>
+      <div className={styles.accessHeader}>
+        <span className={styles.accessTitle}>Доступ ({participants.length + 1})</span>
         {isEditor && (
-          <Button
-            variant="contained"
+          <IconButton
             size="small"
-            startIcon={<AddIcon />}
+            aria-label="Додати учасника"
             onClick={() => setAddOpen(true)}
           >
-            Додати
-          </Button>
+            <PersonAddIcon fontSize="small" />
+          </IconButton>
         )}
       </div>
 
-      <div className={`${sharedStyles.body} ${styles.list}`}>
+      <div className={styles.list}>
         <div className={`${styles.row} ${styles.ownerRow}`}>
           <UserAvatar username={world.owner_username} avatarUrl={world.owner_avatar_url} size="sm" />
           <div className={styles.info}>
@@ -102,11 +98,6 @@ export default function ParticipantsSection({ worldId, accent, userRole, world }
             )}
           </div>
         ))}
-        {participants.length === 0 && !isOwner && (
-          <p className={sharedStyles.emptyMsg}>
-            Поки немає інших учасників.
-          </p>
-        )}
       </div>
 
       <AddParticipantDialog

@@ -4,6 +4,38 @@
   gap: 8px;
 }
 
+/* Компактний ростер доступу всередині інфо-картки світу */
+.access {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.accessHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.accessTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.accessHeader :global(.MuiIconButton-root) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  width: 30px;
+  height: 30px;
+}
+
+.accessHeader :global(.MuiIconButton-root:hover) {
+  background: rgba(255, 255, 255, 0.26);
+}
+
 .row {
   display: flex;
   align-items: center;

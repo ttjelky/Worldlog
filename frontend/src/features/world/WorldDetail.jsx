@@ -23,7 +23,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api'
 import backBtnStyles from '../../shared/styles/backButton.module.css'
 import { useUndo } from '../../shared/undo/UndoProvider'
-import ParticipantsSection from './components/ParticipantsSection/ParticipantsSection'
+import { WorldAccessList } from './components/ParticipantsSection/ParticipantsSection'
 import PlayersSection from './components/PlayersSection/PlayersSection'
 import LocationsSection from './components/LocationsSection/LocationsSection'
 import TodosSection from './components/TodosSection/TodosSection'
@@ -50,7 +50,6 @@ const CARD_META = {
   info:          { row: 0, slotClass: 'slotTypeInfo' },
   cover:         { row: 0, slotClass: 'slotTypeCover' },
   players:       { row: 1, slotClass: 'slotTypePlayers' },
-  participants:  { row: 1, slotClass: 'slotTypeParticipants' },
   locations:     { row: 1, slotClass: 'slotTypeLocations' },
   todos:         { row: 2, slotClass: 'slotTypeTodos' },
   history:       { row: 2, slotClass: 'slotTypeHistory' },
@@ -68,7 +67,6 @@ const DEFAULT_CARDS = [
   { id: 'info', row: 0 },
   { id: 'cover', row: 0 },
   { id: 'players', row: 1 },
-  { id: 'participants', row: 1 },
   { id: 'locations', row: 1 },
   { id: 'todos', row: 2 },
   { id: 'history', row: 2 },
@@ -109,13 +107,19 @@ function saveLayout(worldId, data) {
   } catch {}
 }
 
-function InfoCard({ world, accent }) {
+function InfoCard({ world, worldId, userRole, accent }) {
   const stats = [
     ['Гравці', world.players_count],
     ['Локації', world.locations_count],
     ['Todo', `${world.todos_done}/${world.todos_count}`],
     ['Події', world.history_count],
   ]
+
+  // Той самий ключ, що й у WorldAccessList, — дані беруться з кешу без дубля запиту
+  const { data: members = [] } = useQuery({
+    queryKey: ['memberships', String(worldId)],
+    queryFn: () => api.get(`/worlds/${worldId}/memberships/`).then((r) => r.data),
+  })
 
   const { open, modal } = useExpandableCard()
   const cardRef = useRef(null)
@@ -144,6 +148,7 @@ function InfoCard({ world, accent }) {
         {world.seed && <span className={styles.metaChip}>Сід: {world.seed}</span>}
         {world.start_date && <span className={styles.metaChip}>Початок: {world.start_date}</span>}
         <span className={styles.metaChip}>Власник: {world.owner_username}</span>
+        <span className={styles.metaChip}>Мають доступ: {members.length + 1}</span>
       </div>
       <div className={styles.statsMini}>
         {stats.map(([label, value]) => (
@@ -153,6 +158,7 @@ function InfoCard({ world, accent }) {
           </div>
         ))}
       </div>
+      <WorldAccessList worldId={worldId} userRole={userRole} world={world} />
       {!modal && overflowing && (
         <div className={styles.showMoreFade}>
           <button
@@ -424,23 +430,13 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
   return {
     info: () => (
       <ExpandableCard>
-        <InfoCard world={world} accent={red} />
+        <InfoCard world={world} worldId={worldId} userRole={userRole} accent={red} />
       </ExpandableCard>
     ),
     cover: () => <CoverImageCard world={world} worldId={worldId} accent={cover} userRole={userRole} />,
     players: () => (
       <ExpandableCard>
         <PlayersSection worldId={worldId} accent={green} userRole={userRole} />
-      </ExpandableCard>
-    ),
-    participants: () => (
-      <ExpandableCard>
-        <ParticipantsSection
-          worldId={worldId}
-          accent={green}
-          userRole={userRole}
-          world={world}
-        />
       </ExpandableCard>
     ),
     locations: () => (
