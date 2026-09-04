@@ -12,6 +12,7 @@ import {
   TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import CheckIcon from '@mui/icons-material/Check'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
@@ -159,9 +160,13 @@ export default function PlannerSection({ worldId, accent }) {
             type="button"
             className={styles.filterBtnDeleteDone}
             onClick={deleteDone}
+            title="Видалити виконані"
+            aria-label="Видалити виконані"
           >
-            <DeleteOutlinedIcon fontSize="small" />
-            Видалити виконані
+            <span className={styles.deleteDoneIcon}>
+              <DeleteOutlinedIcon fontSize="small" />
+              <CheckIcon className={styles.deleteDoneCheck} />
+            </span>
           </button>
         )}
       </div>

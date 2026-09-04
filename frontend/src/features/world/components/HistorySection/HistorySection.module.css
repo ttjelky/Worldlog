@@ -57,83 +57,31 @@
 
 /* ---- Фільтри ---- */
 .filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
-.filterToggle {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.filterIconBtn {
+.epochFilterButton {
+  border-radius: 999px !important;
+  border-color: color-mix(in srgb, var(--accent, #1d1a22) 55%, #000000) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  background: color-mix(in srgb, var(--accent, #1d1a22) 38%, #000000) !important;
+  text-transform: none !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
 }
 
-.filterIconBtnOpen {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border-color: rgba(255, 255, 255, 0.7) !important;
+.epochFilterButton:hover {
+  border-color: color-mix(in srgb, var(--accent, #1d1a22) 68%, #000000) !important;
+  background: color-mix(in srgb, var(--accent, #1d1a22) 50%, #000000) !important;
 }
 
-.filterToggleLabel {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.filterGroup {
-  display: flex;
-  justify-content: flex-start;
-  flex-wrap: nowrap;
-  gap: 12px;
-  align-items: center;
-  width: 100%;
-}
-
-.filterSelect {
-  min-width: 0;
-  flex: 1 1 0;
-}
-
-.filterSelect :global(.MuiOutlinedInput-root) {
-  border-radius: 12px !important;
-  background: transparent !important;
-}
-
-.filterSelect :global(.MuiOutlinedInput-notchedOutline) {
-  border-color: rgba(255, 255, 255, 0.55) !important;
-  transition: border-color 150ms linear !important;
-}
-
-.filterSelect :global(.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline) {
-  border-color: rgba(255, 255, 255, 0.85) !important;
-}
-
-.filterSelect :global(.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline) {
-  border-color: #ffffff !important;
-  border-width: 2px !important;
-}
-
-.filterSelect :global(.MuiOutlinedInput-input) {
+.epochFilterButtonActive {
+  border-color: color-mix(in srgb, var(--accent, var(--page-active-bg, #1d1a22)) 72%, #000000) !important;
   color: #ffffff !important;
-}
-
-.filterSelect :global(.MuiInputBase-root) {
-  font-size: 13.5px;
-}
-
-.filterSelect :global(.MuiFormLabel-root) {
-  color: rgba(255, 255, 255, 0.78) !important;
-}
-
-.filterSelect :global(.MuiFormLabel-root.Mui-focused) {
-  color: #ffffff !important;
-}
-
-.filterSelect :global(.MuiSvgIcon-root) {
-  color: #ffffff;
+  background: color-mix(in srgb, var(--accent, var(--page-active-bg, #1d1a22)) 72%, #000000) !important;
 }
 
 /* ---- Епохи ---- */
@@ -159,7 +107,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #6f42c6, #9a6bb8);
+  background: var(--accent, var(--page-active-bg, #1d1a22));
   opacity: 0.55;
 }
 
@@ -669,26 +617,6 @@
 
   .statValue {
     font-size: 24px;
-  }
-
-  .filterToggle {
-    display: flex;
-  }
-
-  .filterGroup {
-    display: none;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .filterGroupOpen {
-    display: flex;
-  }
-
-  .filterSelect {
-    min-width: 0;
-    width: 100%;
-    flex: 1 1 100%;
   }
 
   .epochTimeline {

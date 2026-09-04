@@ -25,7 +25,6 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import MenuBookIcon from '@mui/icons-material/MenuBook'
 import FlagIcon from '@mui/icons-material/Flag'
-import FilterAltIcon from '@mui/icons-material/FilterAlt'
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import SportsMmaIcon from '@mui/icons-material/SportsMma'
@@ -115,8 +114,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   const [form, setForm] = useState(empty)
   const [pendingImage, setPendingImage] = useState(null)
   const [lightbox, setLightbox] = useState(null)
-  const [filters, setFilters] = useState({ epoch: '', type: '' })
-  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [epochFilter, setEpochFilter] = useState('current')
   const [epochDialog, setEpochDialog] = useState(false)
   const [closeEpoch, setCloseEpoch] = useState(null)
   const canEdit = userRole && userRole !== 'viewer'
@@ -263,16 +261,13 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
 
   const filtered = useMemo(() => {
     let list = [...events]
-    if (filters.type) list = list.filter((e) => e.event_type === filters.type)
-    let epochId = filters.epoch
-    if (epochId === '') epochId = activeEpochObj ? String(activeEpochObj.id) : ''
+    const epochId = epochFilter === 'current' && activeEpochObj ? String(activeEpochObj.id) : ''
     if (epochId && epochId !== 'all') list = list.filter((e) => String(e.epoch) === String(epochId))
-    if (filters.participant) list = list.filter((e) => (e.participants_list || []).includes(filters.participant))
     list.sort((a, b) => {
       return new Date(a.date) - new Date(b.date)
     })
     return list
-  }, [events, filters, activeEpochObj])
+  }, [events, epochFilter, activeEpochObj])
 
   const grouped = useMemo(() => {
     const byEpoch = new Map()
@@ -340,76 +335,26 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       </div>
 
       <div className={styles.filters}>
-        <div className={styles.filterToggle}>
-          <IconButton
-            size="small"
-            onClick={() => setFiltersOpen((v) => !v)}
-            className={`${styles.filterIconBtn} ${filtersOpen ? styles.filterIconBtnOpen : ''}`}
-            aria-label="Фільтри"
-          >
-            <FilterAltIcon />
-          </IconButton>
-          <span className={styles.filterToggleLabel}>Фільтри</span>
-        </div>
-        <div
-          className={`${styles.filterGroup} ${
-            filtersOpen ? styles.filterGroupOpen : ''
+        <Button
+          size="small"
+          variant={epochFilter === 'all' ? 'contained' : 'outlined'}
+          onClick={() => setEpochFilter('all')}
+          className={`${styles.epochFilterButton} ${
+            epochFilter === 'all' ? styles.epochFilterButtonActive : ''
           }`}
         >
-          <TextField
-            select
-            size="small"
-            label="Тип події"
-            value={filters.type}
-            onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))}
-            className={styles.filterSelect}
-            InputProps={{ notched: false }}
-          >
-            <MenuItem value="">Усі типи</MenuItem>
-            {eventTypes.map(([v, label]) => (
-              <MenuItem key={v} value={v}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Епоха"
-            value={filters.epoch}
-            onChange={(e) => setFilters((f) => ({ ...f, epoch: e.target.value }))}
-            className={styles.filterSelect}
-            InputProps={{ notched: false }}
-          >
-            <MenuItem value="all">Усі епохи</MenuItem>
-            <MenuItem value="">
-              {activeEpochObj ? `Поточна (${activeEpochObj.name})` : 'Без епохи'}
-            </MenuItem>
-            {epochs.map((ep) => (
-              <MenuItem key={ep.id} value={String(ep.id)}>
-                {ep.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Учасник"
-            value={filters.participant || ''}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, participant: e.target.value || undefined }))
-            }
-            className={styles.filterSelect}
-            InputProps={{ notched: false }}
-          >
-            <MenuItem value="">Усі учасники</MenuItem>
-            {knownParticipants.map((p) => (
-              <MenuItem key={p} value={p}>
-                {p}
-              </MenuItem>
-            ))}
-          </TextField>
-        </div>
+          Усі епохи
+        </Button>
+        <Button
+          size="small"
+          variant={epochFilter === 'current' ? 'contained' : 'outlined'}
+          onClick={() => setEpochFilter('current')}
+          className={`${styles.epochFilterButton} ${
+            epochFilter === 'current' ? styles.epochFilterButtonActive : ''
+          }`}
+        >
+          Поточна епоха
+        </Button>
       </div>
 
       <div

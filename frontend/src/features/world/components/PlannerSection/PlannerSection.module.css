@@ -174,16 +174,15 @@
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border: none;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 50%;
   color: #c0392b;
   background: #ffffff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  box-shadow: none;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
@@ -193,6 +192,40 @@
   color: #a93226;
 }
 
+.filterBtnDeleteDone:hover .deleteDoneCheck {
+  background-color: #ffe3e0;
+}
+
+.deleteDoneIcon {
+  position: relative;
+  display: inline-flex;
+  line-height: 0;
+}
+
+.deleteDoneIcon :global(.MuiSvgIcon-root) {
+  font-size: 20px;
+}
+
+.deleteDoneCheck:global(.MuiSvgIcon-root) {
+  position: absolute;
+  right: -3px;
+  bottom: 0;
+  font-size: 13px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  padding: 1px;
+  stroke: currentColor;
+  stroke-width: 2px;
+  transition: background-color 0.15s ease;
+}
+
 .filterBtnDeleteDone:active {
   transform: scale(0.96);
+}
+
+@media (max-width: 900px) {
+  .filterBtnDeleteDone {
+    width: 33px;
+    height: 33px;
+  }
 }
