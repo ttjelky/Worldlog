@@ -43,7 +43,7 @@ const legacyCategoryLabels = {
 }
 const empty = { name: '', description: '', x: 0, y: 0, z: 0, category: 'other' }
 const CAROUSEL_PER_PAGE = 2
-const CAROUSEL_INTERVAL = 5000
+const CAROUSEL_INTERVAL = 10000
 
 function LocationDetails({
   worldId,
@@ -168,8 +168,11 @@ export default function LocationsSection({ worldId, accent, userRole }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [pendingPhoto, setPendingPhoto] = useState(null)
-  const [page, setPage] = useState(0)
+  const [pos, setPos] = useState(1)
+  const [instant, setInstant] = useState(false)
   const [paused, setPaused] = useState(false)
+  const snapTimer = useRef(null)
+  const pendingTarget = useRef(null)
   const attachInputRef = useRef(null)
   const canEdit = userRole && userRole !== 'viewer'
 
@@ -182,11 +185,103 @@ export default function LocationsSection({ worldId, accent, userRole }) {
   const pageCount = Math.max(1, Math.ceil(locations.length / CAROUSEL_PER_PAGE))
   const visibleLocations = section.modal
     ? locations
-    : locations.slice(page * CAROUSEL_PER_PAGE, page * CAROUSEL_PER_PAGE + CAROUSEL_PER_PAGE)
+    : locations.slice(0, CAROUSEL_PER_PAGE)
+  // Справжня сторінка (0..pageCount-1) для крапок-індикаторів
+  const realPage = ((pos - 1) % pageCount + pageCount) % pageCount
+
+  // Трек: [клон останньої, ...chunks, клон першої], pos=1 => перша сторінка.
+  // Клони з обох боків дають безшовний рух у будь-який бік, а повернення
+  // з клона на справжній слайд відбувається тихо (вміст ідентичний).
+  const cloneCounterpart = (p) => {
+    if (p === 0) return pageCount
+    if (p === pageCount + 1) return 1
+    return null
+  }
+  // Трек-позицію в справжню (1..pageCount)
+  const toRealPos = (p) => ((p - 1) % pageCount + pageCount) % pageCount + 1
+
+  const cancelSnap = () => {
+    if (snapTimer.current) {
+      clearTimeout(snapTimer.current)
+      snapTimer.current = null
+    }
+  }
+
+  const step = (d) => {
+    cancelSnap()
+    const c = cloneCounterpart(pos)
+    if (c !== null) {
+      // Клік під час стоянки на клоні (рідкісне вікно ~0.5с) — тихо,
+      // зате одразу в цільову справжню позицію
+      setInstant(true)
+      setPos(toRealPos(c + d))
+      return
+    }
+    if (instant) {
+      // Transition щойно вимкнено — рух поїде наступним кадром,
+      // інакше браузер склеїть зміну transition і transform в один рендер
+      // та анімація не запуститься
+      pendingTarget.current = pos + d
+      return
+    }
+    setPos(pos + d)
+  }
+
+  const jump = (i) => {
+    cancelSnap()
+    if (cloneCounterpart(pos) !== null) {
+      setInstant(true)
+      setPos(i + 1)
+      return
+    }
+    if (i + 1 === pos && !instant) return
+    if (instant) {
+      pendingTarget.current = i + 1
+      return
+    }
+    setPos(i + 1)
+  }
 
   useEffect(() => {
-    setPage((p) => Math.min(p, pageCount - 1))
+    setPos((p) => Math.min(Math.max(p, 1), pageCount))
   }, [pageCount])
+
+  useEffect(
+    () => () => {
+      if (snapTimer.current) clearTimeout(snapTimer.current)
+    },
+    [],
+  )
+
+  // Доїхали до клона — непомітно повертаємось на справжній слайд
+  useEffect(() => {
+    if (pos !== 0 && pos !== pageCount + 1) return
+    snapTimer.current = setTimeout(() => {
+      snapTimer.current = null
+      setInstant(true)
+      setPos(cloneCounterpart(pos))
+    }, 300)
+    return () => {
+      if (snapTimer.current) clearTimeout(snapTimer.current)
+    }
+  }, [pos, pageCount])
+
+  // Після телепорту вмикаємо transition окремим кадром, без зміни transform —
+  // інакше наступний рух склеїться в один рендер і анімація не запуститься
+  useEffect(() => {
+    if (!instant) return
+    const id = requestAnimationFrame(() => setInstant(false))
+    return () => cancelAnimationFrame(id)
+  }, [instant])
+
+  // Відкладений рух (клік у той самий кадр, що й телепорт) — їде після
+  // переозброєння transition, тому анімація завжди програється
+  useEffect(() => {
+    if (instant || pendingTarget.current === null) return
+    const t = pendingTarget.current
+    pendingTarget.current = null
+    setPos(t)
+  }, [instant, pos])
 
   // Автогортання каруселі: пауза при наведенні, прихованій вкладці та reduced motion
   useEffect(() => {
@@ -194,12 +289,11 @@ export default function LocationsSection({ worldId, accent, userRole }) {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     const t = setInterval(() => {
       if (document.hidden) return
-      setPage((p) => (p + 1) % pageCount)
+      step(1)
     }, CAROUSEL_INTERVAL)
     return () => clearInterval(t)
-  }, [isCarousel, paused, page, pageCount])
-
-  const goToPage = (p) => setPage(((p % pageCount) + pageCount) % pageCount)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCarousel, paused, pos, pageCount])
 
   const chunks = useMemo(() => {
     const out = []
@@ -386,7 +480,7 @@ export default function LocationsSection({ worldId, accent, userRole }) {
                 type="button"
                 className={styles.carouselArrow}
                 aria-label="Попередні локації"
-                onClick={() => goToPage(page - 1)}
+                onClick={() => step(-1)}
               >
                 <ChevronLeftIcon fontSize="small" />
               </button>
@@ -394,7 +488,7 @@ export default function LocationsSection({ worldId, accent, userRole }) {
                 type="button"
                 className={styles.carouselArrow}
                 aria-label="Наступні локації"
-                onClick={() => goToPage(page + 1)}
+                onClick={() => step(1)}
               >
                 <ChevronRightIcon fontSize="small" />
               </button>
@@ -422,14 +516,17 @@ export default function LocationsSection({ worldId, accent, userRole }) {
           <div className={styles.carouselViewport}>
             <div
               className={styles.carouselTrack}
-              style={{ transform: `translateX(-${page * 100}%)` }}
+              style={{
+                transform: `translateX(-${pos * 100}%)`,
+                transition: instant ? 'none' : undefined,
+              }}
             >
-              {chunks.map((chunk, i) => (
+              {[chunks[pageCount - 1], ...chunks, chunks[0]].map((chunk, i) => (
                 <div
                   key={i}
                   className={`${styles.locGrid} ${styles.carouselSlide}`}
-                  aria-hidden={i !== page}
-                  inert={i !== page}
+                  aria-hidden={i !== pos}
+                  inert={i !== pos}
                 >
                   {chunk.map((l) => renderTile(l))}
                 </div>
@@ -453,9 +550,11 @@ export default function LocationsSection({ worldId, accent, userRole }) {
             <button
               key={i}
               type="button"
-              className={`${styles.carouselDot} ${i === page ? styles.carouselDotActive : ''}`}
+              className={`${styles.carouselDot} ${
+                i === realPage ? styles.carouselDotActive : ''
+              }`}
               aria-label={`Сторінка ${i + 1} з ${pageCount}`}
-              onClick={() => goToPage(i)}
+              onClick={() => jump(i)}
             />
           ))}
         </div>
