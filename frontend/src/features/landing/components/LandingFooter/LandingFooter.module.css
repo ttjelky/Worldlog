@@ -1,62 +1,71 @@
-/* ─────────────────────────────────────────
-   LandingFooter – surface background
-   ───────────────────────────────────────── */
-
 .footer {
-  background: #f8f6f3;
-  padding: 40px 0;
-  border-top: 1px solid rgba(13, 13, 15, 0.06);
+  background: #ffffff;
+  padding: 14px 12px 12px;
 }
 
 .footerInner {
-  max-width: 1400px;
+  max-width: var(--wl-max);
   margin: 0 auto;
-  padding: 0 16px;
+  background: var(--wl-peach);
+  border-radius: 999px;
+  padding: 14px 16px 14px 28px;
   display: flex;
-  flex-direction: column;
-  gap: 24px;
   align-items: center;
-  justify-content: space-between;
-}
-
-@media (min-width: 900px) {
-  .footerInner {
-    flex-direction: row;
-  }
+  gap: 18px;
 }
 
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 12px;
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.wordmark {
+  font-weight: 900;
+  font-size: 26px;
+  letter-spacing: -0.05em;
+  color: var(--wl-ink);
+  line-height: 1;
 }
 
 .dijitalImg {
-  vertical-align: middle;
+  display: block;
 }
 
 .copyright {
   font-size: 14px;
-  color: rgba(13, 13, 15, 0.40);
+  color: var(--wl-ink-soft);
 }
 
 .gitHubBtn {
-  font-weight: 700;
-  font-size: 14px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(13, 13, 15, 0.12);
-  background: transparent;
-  color: #0d0d0f;
-  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
   text-decoration: none;
-  transition: background 0.15s, border-color 0.15s;
+  border-radius: 999px;
+  padding: 10px 22px;
+  background: var(--wl-brown);
+  color: #ffffff;
+  transition: background 0.15s ease;
 }
 
 .gitHubBtn:hover {
-  background: rgba(13, 13, 15, 0.04);
-  border-color: rgba(13, 13, 15, 0.2);
+  background: var(--wl-brown-hover);
+}
+
+@media (max-width: 899px) {
+  .footerInner {
+    border-radius: 24px;
+    flex-wrap: wrap;
+  }
+
+  .copyright {
+    order: 3;
+    width: 100%;
+    text-align: center;
+  }
 }

@@ -1,19 +1,24 @@
 .section {
   background: #ffffff;
-  padding: 64px 12px 0;
+  padding: 14px 12px 0;
 }
 
 .inner {
   max-width: var(--wl-max);
   margin: 0 auto;
+  background: var(--wl-cream);
+  border-radius: var(--wl-radius);
+  padding: 56px 56px 64px;
 }
 
 .heading {
-  margin: 0 0 32px;
-  font-weight: 800;
-  font-size: clamp(32px, 4vw, 56px);
-  letter-spacing: -0.04em;
+  margin: 0 0 36px;
+  font-weight: 700;
+  font-size: clamp(34px, 4.5vw, 68px);
+  line-height: 1.02;
+  letter-spacing: -0.06em;
   color: var(--wl-ink);
+  max-width: 30ch;
 }
 
 .grid {
@@ -23,23 +28,24 @@
 }
 
 .card {
-  background: var(--wl-gray-soft);
+  background: var(--wl-gray);
   border-radius: 22px;
   padding: 30px 28px;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.iconContainer {
+.iconBadge {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: var(--wl-brown);
+  background: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--wl-brown);
 }
 
 .icon {
@@ -48,7 +54,7 @@
 
 .cardTitle {
   margin: 0;
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--wl-ink);
@@ -62,11 +68,15 @@
 }
 
 @media (max-width: 899px) {
-  .section {
-    padding-top: 48px;
+  .inner {
+    padding: 36px 24px 40px;
   }
 
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .card {
+    min-height: 0;
   }
 }

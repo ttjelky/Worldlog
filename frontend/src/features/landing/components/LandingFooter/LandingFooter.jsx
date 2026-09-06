@@ -1,15 +1,14 @@
 import GitHubIcon from '@mui/icons-material/GitHub'
-import Logo from '../../../../shared/components/Logo/Logo'
 import styles from './LandingFooter.module.css'
 
 export default function LandingFooter() {
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} id="contact">
       <div className={styles.footerInner}>
-        <div className={styles.brand}>
-          <Logo />
+        <a href="#top" className={styles.brand} aria-label="WorldLog — на початок">
+          <span className={styles.wordmark}>WL</span>
           <img src="/dijital-logo.png" alt="DiJital" height={20} className={styles.dijitalImg} />
-        </div>
+        </a>
         <span className={styles.copyright}>
           &copy; {new Date().getFullYear()} DiJital. Публічний open-source проєкт.
         </span>

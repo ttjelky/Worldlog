@@ -1,52 +1,44 @@
 import { useNavigate } from 'react-router-dom'
-import Logo from '../../../../shared/components/Logo/Logo'
 import styles from './LandingHeader.module.css'
+
+const links = [
+  ['Про нас', '#top'],
+  ['Функціонал', '#functionality'],
+  ['FAQ', '#faq'],
+  ['Контакти', '#contact'],
+]
 
 export default function LandingHeader({ onStart }) {
   const navigate = useNavigate()
 
   return (
-    <header className={styles.header}>
-      <div className={styles.inner}>
-        <a href="#top" className={styles.logoLink} aria-label="WorldLog">
-          <Logo className={styles.logoImg} />
+    <div className={styles.barWrap}>
+      <header className={styles.bar}>
+        <a href="#top" className={styles.logo} aria-label="WorldLog — на початок">
+          WL
         </a>
 
-        <nav className={styles.nav}>
-          <a href="#features" className={styles.navLink}>
-            Можливості
-          </a>
-          <a href="#how-it-works" className={styles.navLink}>
-            Як це працює
-          </a>
-          <a href="#faq" className={styles.navLink}>
-            FAQ
-          </a>
-          <a
-            href="https://github.com/ttjelky/Worldlog"
-            className={styles.navLink}
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
+        <nav className={styles.nav} aria-label="Навігація">
+          {links.map(([label, href]) => (
+            <a key={href} href={href} className={styles.navLink}>
+              {label}
+            </a>
+          ))}
         </nav>
 
         <div className={styles.actions}>
+          <button type="button" className={styles.signupBtn} onClick={onStart}>
+            Зареєструватися
+          </button>
           <button
-            className={styles.loginBtn}
+            type="button"
+            className={styles.signinBtn}
             onClick={() => navigate('/login')}
           >
             Увійти
           </button>
-          <button
-            className={styles.signupBtn}
-            onClick={onStart}
-          >
-            Зареєструватися
-          </button>
         </div>
-      </div>
-    </header>
+      </header>
+    </div>
   )
 }

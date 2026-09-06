@@ -1,0 +1,33 @@
+/* Спільні токени редизайну лендінгу (персиковий / жовтий / кремовий) */
+
+.wlPage {
+  --wl-peach: #f4c69c;
+  --wl-yellow: #f5b83d;
+  --wl-squiggle: #ee7b1e;
+  --wl-brown: #6b4a3a;
+  --wl-brown-hover: #5a3d2f;
+  --wl-orange: #e8734a;
+  --wl-orange-hover: #d96236;
+  --wl-cream: #fce0ac;
+  --wl-gray: #d9d9d9;
+  --wl-gray-soft: #ececec;
+  --wl-ink: #141414;
+  --wl-ink-soft: rgba(20, 20, 20, 0.66);
+  --wl-radius: 28px;
+  --wl-max: 1600px;
+
+  background: #ffffff;
+  color: var(--wl-ink);
+  font-family: inherit;
+}
+
+/* Плавний скрол і відступ під липкий навбар для якірних секцій */
+html {
+  scroll-behavior: smooth;
+}
+
+.wlPage section[id],
+.wlPage footer[id],
+.wlPage div[id] {
+  scroll-margin-top: 96px;
+}

@@ -47,17 +47,13 @@ const features = [
 
 export default function FeatureGrid() {
   return (
-    <section className={styles.section} id="features">
+    <section className={styles.section} id="functionality">
       <div className={styles.inner}>
-        <h2 className={styles.heading}>Все для твого світу</h2>
+        <h2 className={styles.heading}>Функціонал для твого світу</h2>
 
         <div className={styles.grid}>
           {features.map((f) => (
-            <div
-              key={f.title}
-              className={styles.card}
-              style={{ '--card-accent': f.accent }}
-            >
+            <div key={f.title} className={styles.card}>
               <div className={styles.iconContainer}>
                 <f.Icon className={styles.icon} />
               </div>
