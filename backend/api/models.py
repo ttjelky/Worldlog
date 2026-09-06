@@ -21,7 +21,7 @@ class World(models.Model):
         SULFUR_CAVES = 'sulfur_caves', 'Сіркові печери'
         AMETHYST = 'amethyst', 'Аметистовий кристал'
         TRIAL_PALACE = 'trial_palace', 'Палац випробувань'
-        HONEYCOMB = 'honeycomb', 'Медові соти'
+        DAPPLED_FOREST = 'dappled_forest', 'Строкатий ліс'
         CHERRY_GROVE = 'cherry_grove', 'Вишнева роща'
         SKIES = 'skies', 'Небеса'
         DESERT = 'desert', 'Пустеля'

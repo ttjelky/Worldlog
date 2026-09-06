@@ -503,6 +503,14 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
 
 export default function WorldDetail({ onBack }) {
   const { worldId } = useParams()
+  const navigate = useNavigate()
+  // Назад — туди, звідки прийшли (світ відкривають з багатьох вкладок).
+  // Прямий захід за посиланням (історія порожня) — фолбек на головну.
+  const handleBack = useCallback(() => {
+    if (window.history.state && window.history.state.idx > 0) navigate(-1)
+    else if (onBack) onBack()
+    else navigate('/app')
+  }, [navigate, onBack])
   const {
     data: world,
     isLoading,
@@ -774,7 +782,7 @@ export default function WorldDetail({ onBack }) {
             >
               Спробувати ще
             </Button>
-            <Button className={styles.worldEditBtn} onClick={onBack}>
+            <Button className={styles.worldEditBtn} onClick={handleBack}>
               <ArrowBackIcon fontSize="small" />
               Назад
             </Button>
@@ -871,7 +879,7 @@ export default function WorldDetail({ onBack }) {
         }}
       >
         <div className={styles.topBar}>
-          <Button className={backBtnStyles.backBtn} onClick={onBack}>
+          <Button className={backBtnStyles.backBtn} onClick={handleBack}>
             <ArrowBackIcon fontSize="small" />
             Назад
           </Button>

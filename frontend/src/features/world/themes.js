@@ -77,9 +77,9 @@ export const WORLD_THEMES = {
     dialogMuted: 'rgba(255, 255, 255, 0.72)',
     dialogOutline: 'rgba(255, 255, 255, 0.35)',
   },
-  honeycomb: {
-    id: 'honeycomb',
-    name: 'Медові соти',
+  dappled_forest: {
+    id: 'dappled_forest',
+    name: 'Строкатий ліс',
     pageBg: '#FAE9C6',
     accentRed: '#E8734A',
     accentGreen: '#6B4A3A',

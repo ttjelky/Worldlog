@@ -11,7 +11,7 @@
 }
 
 .page {
-  padding: clamp(8px, 2vw, 20px) clamp(12px, 3vw, 32px) 64px;
+  padding: 0 clamp(12px, 3vw, 32px) 64px;
 }
 
 /* ---------- Toolbar: пошук / сортування / фільтр ---------- */
