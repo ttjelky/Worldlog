@@ -5,8 +5,10 @@
 export function goSection(id, navigate) {
   switch (id) {
     case 'home':
-    case 'overview':
       navigate('/app')
+      break
+    case 'overview':
+      navigate('/app?tab=overview')
       break
     case 'worlds':
       navigate('/app/worlds')

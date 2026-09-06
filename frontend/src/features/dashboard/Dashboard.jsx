@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
@@ -14,7 +14,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
 import { goSection } from '../../shared/utils/navigation'
@@ -238,8 +238,11 @@ function OverviewPanel({ worlds, onOpenWorlds }) {
 export default function Dashboard() {
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [open, setOpen] = useState(false)
-  const [activePage, setActivePage] = useState('home')
+  const [activePage, setActivePage] = useState(
+    searchParams.get('tab') === 'overview' ? 'overview' : 'home',
+  )
 
   const { data: worlds = [], isLoading } = useQuery({
     queryKey: ['worlds'],
@@ -255,6 +258,17 @@ export default function Dashboard() {
     setOpen(true)
   }
 
+  // Вкладка живе і в URL (?tab=overview), щоб «Огляд» відкривався
+  // з будь-якої сторінки, а не лише з Головної
+  const switchTab = (id) => {
+    setActivePage(id)
+    setSearchParams(id === 'overview' ? { tab: 'overview' } : {}, { replace: true })
+  }
+
+  useEffect(() => {
+    setActivePage(searchParams.get('tab') === 'overview' ? 'overview' : 'home')
+  }, [searchParams])
+
   const totalProgress = worlds.length
     ? Math.round(worlds.reduce((sum, w) => sum + getCompletionPercent(w), 0) / worlds.length)
     : 0
@@ -264,7 +278,7 @@ export default function Dashboard() {
       <Navbar
         activePage={activePage}
         onNavigate={(id) => {
-          if (id === 'home' || id === 'overview') setActivePage(id)
+          if (id === 'home' || id === 'overview') switchTab(id)
           else goSection(id, navigate)
         }}
       />
