@@ -10,6 +10,8 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material'
+import CheckIcon from '@mui/icons-material/Check'
+import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
@@ -49,10 +51,28 @@ export function WorldAccessList({ worldId, userRole, world }) {
     queryFn: () => api.get(`/worlds/${worldId}/memberships/`).then((r) => r.data),
   })
 
+  // Черга вхідних запитів на доступ — лише для власника
+  const { data: accessRequests = [] } = useQuery({
+    queryKey: ['access-requests', String(worldId)],
+    queryFn: () => api.get(`/worlds/${worldId}/access-requests/`).then((r) => r.data),
+    enabled: isOwner,
+  })
+  const pendingRequests = accessRequests.filter((r) => r.status === 'pending')
+
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/worlds/${worldId}/memberships/${id}/`),
     onSuccess: () => qc.invalidateQueries(['memberships', String(worldId)]),
   })
+
+  const reviewAccess = (id, action) =>
+    api.post(`/world-access-requests/${id}/${action}/`).then(() => {
+      qc.invalidateQueries(['access-requests', String(worldId)])
+      qc.invalidateQueries(['memberships', String(worldId)])
+      qc.invalidateQueries(['notifications'])
+    })
+  const acceptAccessReq = useMutation({ mutationFn: (id) => reviewAccess(id, 'accept') })
+  const rejectAccessReq = useMutation({ mutationFn: (id) => reviewAccess(id, 'reject') })
+  const reviewBusy = acceptAccessReq.isPending || rejectAccessReq.isPending
 
   return (
     <div className={styles.access}>
@@ -99,6 +119,47 @@ export function WorldAccessList({ worldId, userRole, world }) {
           </div>
         ))}
       </div>
+
+      {isOwner && pendingRequests.length > 0 && (
+        <div className={styles.requestsBlock}>
+          <span className={styles.accessTitle}>
+            Вхідні запити ({pendingRequests.length})
+          </span>
+          <div className={styles.list}>
+            {pendingRequests.map((r) => (
+              <div key={r.id} className={styles.row}>
+                <UserAvatar
+                  username={r.username}
+                  avatarUrl={r.avatar_url}
+                  size="sm"
+                />
+                <div className={styles.info}>
+                  <div className={styles.name}>{r.display_name || r.username}</div>
+                  <div className={styles.roleChip}>Просить доступ</div>
+                </div>
+                <div className={styles.actions}>
+                  <IconButton
+                    size="small"
+                    aria-label={`Прийняти ${r.username}`}
+                    disabled={reviewBusy}
+                    onClick={() => acceptAccessReq.mutate(r.id)}
+                  >
+                    <CheckIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    aria-label={`Відхилити ${r.username}`}
+                    disabled={reviewBusy}
+                    onClick={() => rejectAccessReq.mutate(r.id)}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <AddParticipantDialog
         open={addOpen}

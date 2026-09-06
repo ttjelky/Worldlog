@@ -674,7 +674,7 @@ class WorldAccessRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorldAccessRequest
         fields = ('id', 'world', 'world_name', 'requester', 'username', 'display_name', 'avatar_url', 'status', 'status_display', 'created_at')
-        read_only_fields = ('requester', 'status')
+        read_only_fields = ('requester', 'status', 'world')
 
     def get_avatar_url(self, obj):
         profile = getattr(obj.requester, 'profile', None)
@@ -692,7 +692,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notification
-        fields = ('id', 'notification_type', 'from_user', 'from_user_username', 'from_user_avatar_url', 'message', 'is_read', 'created_at')
+        fields = ('id', 'notification_type', 'from_user', 'from_user_username', 'from_user_avatar_url', 'access_request', 'message', 'is_read', 'created_at')
 
     def get_from_user_avatar_url(self, obj):
         if not obj.from_user:

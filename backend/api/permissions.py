@@ -1,6 +1,6 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from .models import Membership
+from .models import Membership, World
 
 
 def _get_world(obj):
@@ -10,6 +10,14 @@ def _get_world(obj):
     if world is None and hasattr(obj, 'location'):
         world = obj.location.world
     return world
+
+
+def _get_world_from_view(view):
+    """Світ із URL (.../worlds/<world_id>/...). None — поза контекстом світу."""
+    world_id = getattr(view, 'kwargs', {}).get('world_id')
+    if not world_id:
+        return None
+    return World.objects.filter(pk=world_id).first()
 
 
 def get_user_role(user, world):
@@ -42,7 +50,16 @@ class IsWorldOwner(BasePermission):
         return world.owner_id == request.user.id
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated
+        if not request.user.is_authenticated:
+            return False
+        if request.method in SAFE_METHODS:
+            return True
+        world = _get_world_from_view(view)
+        if world is None:
+            # Поза контекстом світу (або світ не існує) — детальні
+            # перевірки лишаються за has_object_permission / в'ю
+            return True
+        return world.owner_id == request.user.id
 
 
 class IsWorldEditorOrAbove(BasePermission):
@@ -54,7 +71,15 @@ class IsWorldEditorOrAbove(BasePermission):
         return role in (Membership.Role.OWNER, Membership.Role.EDITOR)
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated
+        if not request.user.is_authenticated:
+            return False
+        if request.method in SAFE_METHODS:
+            return True
+        world = _get_world_from_view(view)
+        if world is None:
+            return True
+        role = get_user_role(request.user, world)
+        return role in (Membership.Role.OWNER, Membership.Role.EDITOR)
 
 
 class IsWorldViewerOrAbove(BasePermission):

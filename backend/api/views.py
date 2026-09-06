@@ -4,6 +4,7 @@ from django.db.models import Q
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -119,6 +120,12 @@ class WorldViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrMember]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
+    def get_permissions(self):
+        # Змінювати/видаляти світ може лише власник; читати — будь-який учасник
+        if self.action in ('update', 'partial_update', 'destroy'):
+            return [permissions.IsAuthenticated(), IsWorldOwner()]
+        return [permissions.IsAuthenticated(), IsOwnerOrMember()]
+
     def get_queryset(self):
         return (World.objects.filter(
             owner=self.request.user
@@ -146,7 +153,10 @@ class RelatedViewSetMixin:
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(world_id=self.kwargs['world_id'])
+        world_id = self.kwargs['world_id']
+        if not World.objects.filter(pk=world_id).exists():
+            raise NotFound('World not found.')
+        serializer.save(world_id=world_id)
 
 
 class PlayerViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
@@ -165,6 +175,11 @@ class LocationScreenshotViewSet(viewsets.ModelViewSet):
     serializer_class = LocationScreenshotSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrMember]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [permissions.IsAuthenticated(), IsOwnerOrMember()]
+        return [permissions.IsAuthenticated(), IsWorldEditorOrAbove()]
 
     def get_queryset(self):
         return LocationScreenshot.objects.filter(
@@ -275,7 +290,9 @@ class MembershipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         world_id = self.kwargs['world_id']
-        world = World.objects.get(pk=world_id)
+        world = World.objects.filter(pk=world_id).first()
+        if world is None:
+            raise NotFound('World not found.')
         user = serializer.validated_data['user']
         if world.owner_id == user.id:
             from rest_framework.exceptions import PermissionDenied
@@ -811,14 +828,45 @@ class WorldAccessRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         world_id = self.kwargs.get('world_id')
-        if world_id:
-            return WorldAccessRequest.objects.filter(world_id=world_id).select_related('requester', 'requester__profile', 'world')
-        return WorldAccessRequest.objects.none()
+        if not world_id:
+            return WorldAccessRequest.objects.none()
+        world = World.objects.filter(pk=world_id).first()
+        # Чергу вхідних бачить лише власник світу
+        if world is None or world.owner_id != self.request.user.id:
+            return WorldAccessRequest.objects.none()
+        return WorldAccessRequest.objects.filter(world_id=world_id).select_related('requester', 'requester__profile', 'world')
 
     def perform_create(self, serializer):
         world_id = self.kwargs['world_id']
-        world = World.objects.get(pk=world_id)
-        serializer.save(requester=self.request.user, world=world)
+        world = World.objects.filter(pk=world_id).first()
+        if world is None:
+            raise NotFound('World not found.')
+        user = self.request.user
+        if world.owner_id == user.id:
+            raise ValidationError('You already own this world.')
+        if Membership.objects.filter(
+            world=world, user=user, status=Membership.Status.ACTIVE
+        ).exists():
+            raise ValidationError('You already have access to this world.')
+        if WorldAccessRequest.objects.filter(
+            world=world, requester=user, status=WorldAccessRequest.Status.PENDING
+        ).exists():
+            raise ValidationError('Access request already pending.')
+        # Повторний запит після відхилення: старий термінальний видаляємо
+        WorldAccessRequest.objects.filter(
+            world=world, requester=user, status=WorldAccessRequest.Status.REJECTED
+        ).delete()
+        try:
+            instance = serializer.save(requester=user, world=world)
+        except IntegrityError:
+            raise ValidationError('Access request already exists.')
+        Notification.objects.create(
+            user=world.owner,
+            notification_type=Notification.Type.WORLD_ACCESS_REQUEST,
+            from_user=user,
+            message=f'«{user.username}» просить доступ до світу «{world.name}»',
+            access_request=instance,
+        )
 
 
 class AcceptWorldAccessRequestView(APIView):
@@ -851,6 +899,7 @@ class AcceptWorldAccessRequestView(APIView):
             notification_type=Notification.Type.WORLD_ACCESS_ACCEPTED,
             from_user=request.user,
             message=f'Ваш запит на доступ до світу "{world.name}" прийнято',
+            access_request=access_request,
         )
 
         return Response(WorldAccessRequestSerializer(access_request, context={'request': request}).data)
@@ -880,6 +929,7 @@ class RejectWorldAccessRequestView(APIView):
             notification_type=Notification.Type.WORLD_ACCESS_REJECTED,
             from_user=request.user,
             message=f'Ваш запит на доступ до світу "{world.name}" відхилено',
+            access_request=access_request,
         )
 
         return Response(WorldAccessRequestSerializer(access_request, context={'request': request}).data)

@@ -129,8 +129,12 @@ export default function NotificationsPage() {
                 key={n.id}
                 notification={n}
                 onClick={handleClick}
-                onAcceptAccess={(id) => acceptAccess.mutate(id)}
-                onRejectAccess={(id) => rejectAccess.mutate(id)}
+                onAcceptAccess={(accessId) =>
+                  acceptAccess.mutate(accessId, { onSuccess: () => markRead.mutate(n.id) })
+                }
+                onRejectAccess={(accessId) =>
+                  rejectAccess.mutate(accessId, { onSuccess: () => markRead.mutate(n.id) })
+                }
                 loading={acceptAccess.isPending || rejectAccess.isPending}
               />
             ))}
@@ -162,7 +166,13 @@ export default function NotificationsPage() {
 }
 
 function NotificationItem({ notification, onClick, onAcceptAccess, onRejectAccess, loading }) {
-  const isPendingAccess = notification.notification_type === 'world_access_request' && !notification.is_read
+  const meta = TYPE_META[notification.notification_type] || { label: 'Сповіщення' }
+  // Кнопки — лише коли є прив'язана заявка (старі сповіщення її не мають)
+  const accessId = notification.access_request ?? null
+  const isPendingAccess =
+    notification.notification_type === 'world_access_request' &&
+    !notification.is_read &&
+    accessId !== null
 
   return (
     <div
@@ -191,28 +201,28 @@ function NotificationItem({ notification, onClick, onAcceptAccess, onRejectAcces
       </div>
       {isPendingAccess && (
         <div className={styles.itemActions}>
-          <Button
-            className={styles.acceptBtn}
-            onClick={(e) => {
-              e.stopPropagation()
-              onAcceptAccess(notification.id)
-            }}
-            disabled={loading}
-            startIcon={<CheckIcon />}
-          >
-            Прийняти
-          </Button>
-          <Button
-            className={styles.rejectBtn}
-            onClick={(e) => {
-              e.stopPropagation()
-              onRejectAccess(notification.id)
-            }}
-            disabled={loading}
-            startIcon={<CloseIcon />}
-          >
-            Відхилити
-          </Button>
+            <Button
+              className={styles.acceptBtn}
+              onClick={(e) => {
+                e.stopPropagation()
+                onAcceptAccess(accessId)
+              }}
+              disabled={loading}
+              startIcon={<CheckIcon />}
+            >
+              Прийняти
+            </Button>
+            <Button
+              className={styles.rejectBtn}
+              onClick={(e) => {
+                e.stopPropagation()
+                onRejectAccess(accessId)
+              }}
+              disabled={loading}
+              startIcon={<CloseIcon />}
+            >
+              Відхилити
+            </Button>
         </div>
       )}
     </div>
