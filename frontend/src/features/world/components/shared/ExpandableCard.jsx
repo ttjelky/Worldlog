@@ -5,7 +5,12 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen'
 import styles from './ExpandableCard.module.css'
 
 // Дозволяє вкладеному контенту знати стан розгортання та відкрити модалку
-export const ExpandableCardContext = createContext({ expanded: false, open: () => {} })
+export const ExpandableCardContext = createContext({
+  expanded: false,
+  open: () => {},
+  modal: false,
+  full: false,
+})
 
 /**
  * Обгортка з анімацією розгортання картки на весь екран.
@@ -146,8 +151,14 @@ export default function ExpandableCard({
 
   // Прихована копія (wrapper) і копія в модалці отримують різний контекст:
   // modal=true означає «це справжній розгорнутий вигляд»
-  const collapsedCtx = useMemo(() => ({ expanded, open, modal: false }), [expanded, open])
-  const modalCtx = useMemo(() => ({ expanded: true, open, modal: true }), [open])
+  const collapsedCtx = useMemo(
+    () => ({ expanded, open, modal: false, full: false }),
+    [expanded, open],
+  )
+  const modalCtx = useMemo(
+    () => ({ expanded: true, open, modal: true, full }),
+    [open, full],
+  )
 
   return (
     <>

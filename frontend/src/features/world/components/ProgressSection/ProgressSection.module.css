@@ -4,6 +4,10 @@
   gap: 10px;
 }
 
+.statsGridWide {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
 .statTile {
   background: rgba(255, 255, 255, 0.14);
   border-radius: 16px;

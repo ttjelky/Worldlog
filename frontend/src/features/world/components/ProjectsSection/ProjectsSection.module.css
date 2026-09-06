@@ -12,6 +12,42 @@
   max-height: none;
 }
 
+.projectListWide {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+
+.statusChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.statusChip {
+  border: none;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.statusChip:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.statusChipActive {
+  background: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
 .projectItem {
   display: flex;
   flex-direction: column;

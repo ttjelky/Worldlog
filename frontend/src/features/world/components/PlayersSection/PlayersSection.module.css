@@ -8,6 +8,12 @@
   max-height: none;
 }
 
+.playerListWide {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+
 .playerRow {
   display: flex;
   align-items: center;

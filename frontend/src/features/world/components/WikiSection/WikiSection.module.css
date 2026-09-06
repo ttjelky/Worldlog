@@ -149,6 +149,11 @@
   gap: 10px;
 }
 
+/* Повноекранний режим — три колонки */
+.pagesGridWide {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 /* Самотня картка в ряду (одна взагалі або остання непарна) — на всю ширину */
 .pagesGrid > .pageCard:last-child:nth-child(odd) {
   grid-column: 1 / -1;

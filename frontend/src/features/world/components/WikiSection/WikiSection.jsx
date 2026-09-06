@@ -756,7 +756,7 @@ return (
                   </div>
                 </div>
 
-                <div className={styles.pagesGrid}>
+                <div className={`${styles.pagesGrid} ${section.full ? styles.pagesGridWide : ''}`}>
                   {visiblePages.map((page) => (
                     <div key={page.id} className={styles.pageCard} onClick={() => openPage(page)}>
                       <div className={styles.pageCardThumb}>

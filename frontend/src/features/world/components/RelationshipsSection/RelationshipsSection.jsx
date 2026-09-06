@@ -22,7 +22,7 @@ export default function RelationshipsSection({ worldId, accent }) {
         <WikiGraph
           worldId={worldId}
           onOpen={openWikiPage}
-          height={section.modal ? 560 : 340}
+          height={section.full ? 640 : section.modal ? 560 : 340}
         />
       </div>
     </div>

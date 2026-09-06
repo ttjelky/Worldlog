@@ -83,6 +83,7 @@ export default function NotesSection({ worldId, accent, userRole }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [activeTag, setActiveTag] = useState(null)
+  const [search, setSearch] = useState('')
   const section = useExpandableCard()
   const canEdit = userRole && userRole !== 'viewer'
 
@@ -129,9 +130,14 @@ export default function NotesSection({ worldId, accent, userRole }) {
   }
 
   const allTags = [...new Set(notes.flatMap((n) => parseTags(n.tags)))]
-  const filteredNotes = activeTag
-    ? notes.filter((n) => parseTags(n.tags).includes(activeTag))
-    : notes
+  const filteredNotes = notes.filter((n) => {
+    if (activeTag && !parseTags(n.tags).includes(activeTag)) return false
+    const q = search.trim().toLowerCase()
+    if (section.full && q) {
+      return `${n.title || ''} ${n.content || ''} ${n.tags || ''}`.toLowerCase().includes(q)
+    }
+    return true
+  })
 
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
@@ -166,8 +172,21 @@ export default function NotesSection({ worldId, accent, userRole }) {
         </div>
       )}
 
+      {section.full && (
+        <input
+          type="search"
+          className={sharedStyles.wideSearch}
+          placeholder="Знайти нотатку…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Пошук нотатки"
+        />
+      )}
+
       <div
-        className={`${sharedStyles.body} ${styles.noteList} ${section.modal ? styles.noteListFull : ''}`}
+        className={`${sharedStyles.body} ${styles.noteList} ${section.modal ? styles.noteListFull : ''} ${
+          section.full ? styles.noteListWide : ''
+        }`}
       >
         {filteredNotes.map((n) => (
           <ExpandableCard

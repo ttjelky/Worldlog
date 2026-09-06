@@ -28,12 +28,21 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const [search, setSearch] = useState('')
   const canEdit = userRole && userRole !== 'viewer'
 
   const { data: bookmarks = [] } = useQuery({
     queryKey: ['bookmarks', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/bookmarks/`).then((r) => r.data),
   })
+  const visibleBookmarks =
+    section.full && search.trim()
+      ? bookmarks.filter((b) =>
+          `${b.title || ''} ${b.url || ''} ${b.description || ''}`
+            .toLowerCase()
+            .includes(search.trim().toLowerCase()),
+        )
+      : bookmarks
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -87,12 +96,23 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
         )}
       </div>
 
+      {section.full && (
+        <input
+          type="search"
+          className={sharedStyles.wideSearch}
+          placeholder="Знайти закладку…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Пошук закладки"
+        />
+      )}
+
       <div
         className={`${sharedStyles.body} ${styles.bookmarkList} ${
           section.modal ? styles.bookmarkListFull : ''
-        }`}
+        } ${section.full ? styles.bookmarkListWide : ''}`}
       >
-        {bookmarks.map((b) => (
+        {visibleBookmarks.map((b) => (
           <div
             key={b.id}
             className={styles.bookmarkItem}
@@ -138,8 +158,10 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
             </div>
           </div>
         ))}
-        {bookmarks.length === 0 && (
-          <p className={sharedStyles.emptyMsg}>Закладок поки немає. Додай першу.</p>
+        {visibleBookmarks.length === 0 && (
+          <p className={sharedStyles.emptyMsg}>
+            {bookmarks.length === 0 ? 'Закладок поки немає. Додай першу.' : 'Нічого не знайдено.'}
+          </p>
         )}
       </div>
 

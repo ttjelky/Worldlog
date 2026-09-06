@@ -205,6 +205,7 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const [statusFilter, setStatusFilter] = useState(null)
   const section = useExpandableCard()
   const canEdit = userRole && userRole !== 'viewer'
 
@@ -213,6 +214,11 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
     queryFn: () => api.get(`/worlds/${worldId}/projects/`).then((r) => r.data),
   })
   const { data: locations = [] } = useLocations(worldId)
+  const visibleProjects = statusFilter
+    ? projects.filter(
+        (p) => calcStatus(p.todos_count ?? 0, p.todos_done ?? 0) === statusFilter,
+      )
+    : projects
 
   const mutation = useMutation({
     mutationFn: (payload) =>
@@ -271,10 +277,28 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
         )}
       </div>
 
+      {section.full && (
+        <div className={styles.statusChips} role="group" aria-label="Фільтр за статусом">
+          {Object.entries(statusLabels).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={statusFilter === value}
+              className={`${styles.statusChip} ${statusFilter === value ? styles.statusChipActive : ''}`}
+              onClick={() => setStatusFilter((cur) => (cur === value ? null : value))}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div
-        className={`${sharedStyles.body} ${styles.projectList} ${section.modal ? styles.projectListFull : ''}`}
+        className={`${sharedStyles.body} ${styles.projectList} ${section.modal ? styles.projectListFull : ''} ${
+          section.full ? styles.projectListWide : ''
+        }`}
       >
-        {projects.map((p) => {
+        {visibleProjects.map((p) => {
           const pStatus = calcStatus(p.todos_count ?? 0, p.todos_done ?? 0)
           return (
             <ExpandableCard
@@ -364,8 +388,10 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
             </ExpandableCard>
           )
         })}
-        {projects.length === 0 && (
-          <p className={sharedStyles.emptyMsg}>Проєктів ще немає. Створіть перший.</p>
+        {visibleProjects.length === 0 && (
+          <p className={sharedStyles.emptyMsg}>
+            {projects.length === 0 ? 'Проєктів ще немає. Створіть перший.' : 'Нічого не знайдено.'}
+          </p>
         )}
       </div>
 

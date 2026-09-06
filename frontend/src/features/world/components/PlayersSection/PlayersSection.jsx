@@ -26,12 +26,18 @@ export default function PlayersSection({ worldId, accent, userRole }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ nickname: '', role_note: '', avatar: null })
+  const [search, setSearch] = useState('')
   const canEdit = userRole && userRole !== 'viewer'
 
   const { data: players = [] } = useQuery({
     queryKey: ['players', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/players/`).then((r) => r.data),
   })
+  const visiblePlayers = section.full && search.trim()
+    ? players.filter((p) =>
+        `${p.nickname || ''} ${p.role_note || ''}`.toLowerCase().includes(search.trim().toLowerCase()),
+      )
+    : players
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -87,12 +93,23 @@ export default function PlayersSection({ worldId, accent, userRole }) {
         )}
       </div>
 
+      {section.full && (
+        <input
+          type="search"
+          className={sharedStyles.wideSearch}
+          placeholder="Знайти гравця…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Пошук гравця"
+        />
+      )}
+
       <div
         className={`${sharedStyles.body} ${styles.playerList} ${
           section.modal ? styles.playerListFull : ''
-        }`}
+        } ${section.full ? styles.playerListWide : ''}`}
       >
-        {players.map((p) => (
+        {visiblePlayers.map((p) => (
           <div key={p.id} className={styles.playerRow}>
             <Avatar src={p.avatar || undefined} className={styles.avatar}>
               {(p.nickname || '?')[0].toUpperCase()}
@@ -122,9 +139,11 @@ export default function PlayersSection({ worldId, accent, userRole }) {
             </div>
           </div>
         ))}
-        {players.length === 0 && (
+        {visiblePlayers.length === 0 && (
           <p className={sharedStyles.emptyMsg}>
-            Тут поки нікого немає. Додай першого гравця світу.
+            {players.length === 0
+              ? 'Тут поки нікого немає. Додай першого гравця світу.'
+              : 'Нічого не знайдено.'}
           </p>
         )}
       </div>

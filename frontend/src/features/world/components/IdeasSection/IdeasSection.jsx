@@ -30,6 +30,7 @@ export default function IdeasSection({ worldId, accent, userRole }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const [search, setSearch] = useState('')
   const canEdit = userRole && userRole !== 'viewer'
 
   const { data: ideas = [] } = useQuery({
@@ -37,6 +38,12 @@ export default function IdeasSection({ worldId, accent, userRole }) {
     queryFn: () => api.get(`/worlds/${worldId}/ideas/`).then((r) => r.data),
   })
   const { data: locations = [] } = useLocations(worldId)
+  const visibleIdeas =
+    section.full && search.trim()
+      ? ideas.filter((t) =>
+          `${t.title || ''} ${t.content || ''}`.toLowerCase().includes(search.trim().toLowerCase()),
+        )
+      : ideas
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -106,12 +113,23 @@ export default function IdeasSection({ worldId, accent, userRole }) {
         )}
       </div>
 
+      {section.full && (
+        <input
+          type="search"
+          className={sharedStyles.wideSearch}
+          placeholder="Знайти ідею…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Пошук ідеї"
+        />
+      )}
+
       <div
         className={`${sharedStyles.body} ${styles.ideaList} ${
           section.modal ? styles.ideaListFull : ''
-        }`}
+        } ${section.full ? styles.ideaListWide : ''}`}
       >
-        {ideas.map((t) => (
+        {visibleIdeas.map((t) => (
           <div key={t.id} className={styles.ideaItem}>
             <div className={styles.ideaContent}>
               <div className={styles.ideaTitle}>
@@ -148,8 +166,10 @@ export default function IdeasSection({ worldId, accent, userRole }) {
             </div>
           </div>
         ))}
-        {ideas.length === 0 && (
-          <p className={sharedStyles.emptyMsg}>Ідей поки немає. Додай першу ідею.</p>
+        {visibleIdeas.length === 0 && (
+          <p className={sharedStyles.emptyMsg}>
+            {ideas.length === 0 ? 'Ідей поки немає. Додай першу ідею.' : 'Нічого не знайдено.'}
+          </p>
         )}
       </div>
 

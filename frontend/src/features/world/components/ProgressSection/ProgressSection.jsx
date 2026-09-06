@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
+import { useExpandableCard } from '../shared/ExpandableCard'
 import styles from './ProgressSection.module.css'
 
 function useCount(url, worldId, queryKey, enabled = true) {
@@ -13,6 +14,7 @@ function useCount(url, worldId, queryKey, enabled = true) {
 }
 
 export default function ProgressSection({ worldId, accent }) {
+  const section = useExpandableCard()
   const { data: world } = useQuery({
     queryKey: ['world', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/`).then((r) => r.data),
@@ -49,7 +51,7 @@ export default function ProgressSection({ worldId, accent }) {
       </div>
 
       <div className={sharedStyles.body}>
-        <div className={styles.statsGrid}>
+        <div className={`${styles.statsGrid} ${section.full ? styles.statsGridWide : ''}`}>
           {stats.map(({ value, label }) => (
             <div key={label} className={styles.statTile}>
               <span className={styles.statValue}>{value}</span>

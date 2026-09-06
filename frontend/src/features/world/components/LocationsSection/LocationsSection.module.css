@@ -39,6 +39,40 @@
   max-height: none;
 }
 
+.locGridWide {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.catChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.catChip {
+  border: none;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.catChip:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.catChipActive {
+  background: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
 /* Компактні розміри карток локацій тепер задані прямо в базових
    класах нижче (раніше дублювалися через .gridCompact ... і
    перекривали правки через вищу специфічність) */

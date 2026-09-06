@@ -170,8 +170,72 @@ export default function PlannerSection({ worldId, accent }) {
 
   const done = planned.filter((t) => t.is_done).length
 
+  const renderCalendar = () => (
+    <div className={styles.calendar}>
+      <div className={styles.calHeader}>
+        <button
+          type="button"
+          className={styles.calNavBtn}
+          aria-label="Попередній місяць"
+          onClick={() => setMonth((m) => addMonths(m, -1))}
+        >
+          <ChevronLeftIcon fontSize="small" />
+        </button>
+        <span className={styles.calTitle}>{monthLabel(month)}</span>
+        <button
+          type="button"
+          className={styles.calNavBtn}
+          aria-label="Наступний місяць"
+          onClick={() => setMonth((m) => addMonths(m, 1))}
+        >
+          <ChevronRightIcon fontSize="small" />
+        </button>
+        <button
+          type="button"
+          className={styles.calTodayBtn}
+          onClick={() => {
+            setMonth(startOfMonth(new Date()))
+            setFilter(null)
+          }}
+        >
+          Сьогодні
+        </button>
+      </div>
+      <div className={styles.calGrid} role="grid" aria-label="Календар завдань">
+        {WEEKDAYS.map((d) => (
+          <span key={d} className={styles.calWeekday}>
+            {d}
+          </span>
+        ))}
+        {monthCells.map((date, i) => {
+          if (!date) return <span key={`e${i}`} className={styles.calEmpty} />
+          const iso = toISODate(date)
+          const count = countsByDate[iso] || 0
+          return (
+            <button
+              key={iso}
+              type="button"
+              className={`${styles.calDay} ${iso === localToday ? styles.calToday : ''} ${
+                filter === iso ? styles.calSelected : ''
+              } ${count > 0 ? styles.calHasTodos : ''}`}
+              onClick={() => pickDay(iso)}
+              aria-pressed={filter === iso}
+              aria-label={`${iso}, завдань: ${count}`}
+            >
+              <span className={styles.calNum}>{date.getDate()}</span>
+              {count > 0 && <span className={styles.calCount}>{count}</span>}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+
   return (
-    <div className={sharedStyles.card} style={{ '--accent': accent }}>
+    <div
+      className={`${sharedStyles.card} ${section.full ? styles.plannerFullCard : ''}`}
+      style={{ '--accent': accent }}
+    >
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>
           Планер ({done}/{planned.length})
@@ -214,66 +278,7 @@ export default function PlannerSection({ worldId, accent }) {
         ))}
       </div>
 
-      {section.modal && (
-        <div className={styles.calendar}>
-          <div className={styles.calHeader}>
-            <button
-              type="button"
-              className={styles.calNavBtn}
-              aria-label="Попередній місяць"
-              onClick={() => setMonth((m) => addMonths(m, -1))}
-            >
-              <ChevronLeftIcon fontSize="small" />
-            </button>
-            <span className={styles.calTitle}>{monthLabel(month)}</span>
-            <button
-              type="button"
-              className={styles.calNavBtn}
-              aria-label="Наступний місяць"
-              onClick={() => setMonth((m) => addMonths(m, 1))}
-            >
-              <ChevronRightIcon fontSize="small" />
-            </button>
-            <button
-              type="button"
-              className={styles.calTodayBtn}
-              onClick={() => {
-                setMonth(startOfMonth(new Date()))
-                setFilter(null)
-              }}
-            >
-              Сьогодні
-            </button>
-          </div>
-          <div className={styles.calGrid} role="grid" aria-label="Календар завдань">
-            {WEEKDAYS.map((d) => (
-              <span key={d} className={styles.calWeekday}>
-                {d}
-              </span>
-            ))}
-            {monthCells.map((date, i) => {
-              if (!date) return <span key={`e${i}`} className={styles.calEmpty} />
-              const iso = toISODate(date)
-              const count = countsByDate[iso] || 0
-              return (
-                <button
-                  key={iso}
-                  type="button"
-                  className={`${styles.calDay} ${iso === localToday ? styles.calToday : ''} ${
-                    filter === iso ? styles.calSelected : ''
-                  } ${count > 0 ? styles.calHasTodos : ''}`}
-                  onClick={() => pickDay(iso)}
-                  aria-pressed={filter === iso}
-                  aria-label={`${iso}, завдань: ${count}`}
-                >
-                  <span className={styles.calNum}>{date.getDate()}</span>
-                  {count > 0 && <span className={styles.calCount}>{count}</span>}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {section.modal && renderCalendar()}
 
       <div
         className={`${sharedStyles.body} ${styles.todoList} ${

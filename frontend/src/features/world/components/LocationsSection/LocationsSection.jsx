@@ -171,6 +171,8 @@ export default function LocationsSection({ worldId, accent, userRole }) {
   const [pos, setPos] = useState(1)
   const [instant, setInstant] = useState(false)
   const [paused, setPaused] = useState(false)
+  const [search, setSearch] = useState('')
+  const [catFilter, setCatFilter] = useState(null)
   const snapTimer = useRef(null)
   const pendingTarget = useRef(null)
   const attachInputRef = useRef(null)
@@ -183,8 +185,16 @@ export default function LocationsSection({ worldId, accent, userRole }) {
   // Мінімізована картка з понад 2 локаціями — карусель по 2 на слайд
   const isCarousel = !section.modal && locations.length > CAROUSEL_PER_PAGE
   const pageCount = Math.max(1, Math.ceil(locations.length / CAROUSEL_PER_PAGE))
+  const modalLocations = locations.filter((l) => {
+    if (catFilter && l.category !== catFilter) return false
+    const q = search.trim().toLowerCase()
+    if (section.full && q) {
+      return `${l.name || ''} ${l.description || ''}`.toLowerCase().includes(q)
+    }
+    return true
+  })
   const visibleLocations = section.modal
-    ? locations
+    ? modalLocations
     : locations.slice(0, CAROUSEL_PER_PAGE)
   // Справжня сторінка (0..pageCount-1) для крапок-індикаторів
   const realPage = ((pos - 1) % pageCount + pageCount) % pageCount
@@ -507,9 +517,37 @@ export default function LocationsSection({ worldId, accent, userRole }) {
         </div>
       </div>
 
+      {section.full && (
+        <>
+          <input
+            type="search"
+            className={sharedStyles.wideSearch}
+            placeholder="Знайти локацію…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Пошук локації"
+          />
+          <div className={styles.catChips} role="group" aria-label="Фільтр за категорією">
+            {categories.map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={catFilter === value}
+                className={`${styles.catChip} ${catFilter === value ? styles.catChipActive : ''}`}
+                onClick={() => setCatFilter((cur) => (cur === value ? null : value))}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       <div
         className={`${sharedStyles.body} ${
-          isCarousel ? styles.carouselBody : `${styles.locGrid} ${styles.gridFull}`
+          isCarousel
+            ? styles.carouselBody
+            : `${styles.locGrid} ${styles.gridFull} ${section.full ? styles.locGridWide : ''}`
         }`}
       >
         {isCarousel ? (
@@ -536,9 +574,11 @@ export default function LocationsSection({ worldId, accent, userRole }) {
         ) : (
           <>
             {visibleLocations.map((l) => renderTile(l))}
-            {locations.length === 0 && (
+            {visibleLocations.length === 0 && (
               <p className={sharedStyles.emptyMsg}>
-                Світ ще не досліджений. Додай першу локацію.
+                {locations.length === 0
+                  ? 'Світ ще не досліджений. Додай першу локацію.'
+                  : 'Нічого не знайдено.'}
               </p>
             )}
           </>

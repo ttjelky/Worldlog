@@ -102,6 +102,7 @@ export default function TodosSection({ worldId, accent, userRole }) {
     mutation.mutateAsync(payload).then(() => setOpen(false))
   }
   const done = todos.filter((t) => t.is_done).length
+  const percent = todos.length ? Math.round((done / todos.length) * 100) : 0
 
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
@@ -137,10 +138,21 @@ export default function TodosSection({ worldId, accent, userRole }) {
         </div>
       </div>
 
+      {section.full && todos.length > 0 && (
+        <div className={styles.summary}>
+          <div className={styles.summaryBar}>
+            <div className={styles.summaryFill} style={{ width: `${percent}%` }} />
+          </div>
+          <span className={styles.summaryText}>
+            Виконано {done} з {todos.length} ({percent}%)
+          </span>
+        </div>
+      )}
+
       <div
         className={`${sharedStyles.body} ${styles.todoList} ${
           section.modal ? styles.todoListFull : ''
-        }`}
+        } ${section.full ? styles.todoListWide : ''}`}
       >
         {todos.map((t) => {
           const [dot, label] = priorities[t.priority]
