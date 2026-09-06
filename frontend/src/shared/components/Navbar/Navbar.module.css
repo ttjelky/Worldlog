@@ -76,6 +76,95 @@
   background: #ffffff !important;
 }
 
+/* ---------- Пошук у навбарі ---------- */
+
+.searchToggle {
+  padding: 10px 14px !important;
+  display: inline-flex !important;
+  align-items: center;
+}
+
+.searchToggle svg {
+  font-size: 20px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 170px;
+  max-width: 340px;
+  background: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 8px 7px 14px;
+  animation: search-expand 0.22s ease;
+}
+
+@keyframes search-expand {
+  from {
+    opacity: 0;
+    transform: scaleX(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.searchBoxIcon {
+  color: rgba(29, 26, 34, 0.45);
+  font-size: 20px !important;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1d1a22;
+  padding: 0;
+}
+
+.searchInput:focus-visible {
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: rgba(29, 26, 34, 0.45);
+}
+
+@media (max-width: 700px) {
+  .searching .navGroup {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .searching .navLinks {
+    flex: 1;
+  }
+
+  .searching .navLinks > :not(.searchBox) {
+    display: none;
+  }
+
+  .searchBox {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .searchBox {
+    animation: none;
+  }
+}
+
 .navRight {
   display: flex;
   align-items: center;

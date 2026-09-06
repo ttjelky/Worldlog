@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button, Menu, MenuItem, Badge } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import NotificationsIcon from '@mui/icons-material/Notifications'
-import { useNavigate } from 'react-router-dom'
+import SearchIcon from '@mui/icons-material/Search'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../../auth'
 import { useNotifications } from '../../notifications/NotificationProvider'
 import UserAvatar from '../UserAvatar/UserAvatar'
@@ -13,7 +14,6 @@ const NAV_ITEMS = [
   { id: 'overview', label: 'Огляд' },
   { id: 'worlds', label: 'Мої світи' },
   { id: 'friends', label: 'Друзі' },
-  { id: 'search', label: 'Пошук' },
 ]
 
 function NavLinkButton({ item, activePage, onNavigate }) {
@@ -34,6 +34,47 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
   const { user, logout } = useAuth()
   const { unreadCount } = useNotifications()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [params, setParams] = useSearchParams()
+
+  // Пошук у навбарі: іконка розгортається в інпут, запит живе в ?q=
+  const onSearchPage = location.pathname === '/app/search'
+  const [searchOpen, setSearchOpen] = useState(activePage === 'search')
+  const [value, setValue] = useState(params.get('q') || '')
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (activePage === 'search') setSearchOpen(true)
+  }, [activePage])
+
+  useEffect(() => {
+    setValue(params.get('q') || '')
+  }, [params])
+
+  const commitSearch = (v) => {
+    const t = v.trim()
+    if (location.pathname !== '/app/search') {
+      if (t) navigate(`/app/search?q=${encodeURIComponent(t)}`)
+    } else if ((params.get('q') || '') !== t) {
+      setParams(t ? { q: t } : {}, { replace: true })
+    }
+  }
+
+  useEffect(() => {
+    if (!searchOpen) return
+    const timer = setTimeout(() => commitSearch(value), 300)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, searchOpen])
+
+  const openSearch = () => {
+    if (onSearchPage) {
+      inputRef.current?.focus()
+      return
+    }
+    setSearchOpen(true)
+    navigate('/app/search')
+  }
 
   const handleNav = (id) => {
     if (id === 'home') navigate('/app')
@@ -45,7 +86,7 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
   }
 
   return (
-    <nav className={styles.navbar}>
+    <nav className={`${styles.navbar} ${searchOpen ? styles.searching : ''}`}>
       <div className={styles.navGroup}>
         <img
           src={logoSrc}
@@ -63,6 +104,38 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
               onNavigate={handleNav}
             />
           ))}
+          {searchOpen ? (
+            <div className={styles.searchBox}>
+              <SearchIcon className={styles.searchBoxIcon} />
+              <input
+                ref={inputRef}
+                autoFocus
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setValue('')
+                    commitSearch('')
+                  }
+                }}
+                onBlur={() => {
+                  if (!value && location.pathname !== '/app/search') setSearchOpen(false)
+                }}
+                placeholder="Пошук…"
+                aria-label="Пошук"
+                className={styles.searchInput}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              aria-label="Пошук"
+              className={`${styles.navLink} ${styles.searchToggle}`}
+              onClick={openSearch}
+            >
+              <SearchIcon />
+            </button>
+          )}
         </div>
       </div>
 

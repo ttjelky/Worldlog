@@ -291,6 +291,7 @@ export default function FriendsPage() {
 
 function handleNav(id, navigate) {
   if (id === 'home') navigate('/app')
+  else if (id === 'overview') navigate('/app')
   else if (id === 'worlds') navigate('/app/worlds')
   else if (id === 'friends') navigate('/app/friends')
   else if (id === 'search') navigate('/app/search')

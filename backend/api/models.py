@@ -23,6 +23,7 @@ class World(models.Model):
         TRIAL_PALACE = 'trial_palace', 'Палац випробувань'
         HONEYCOMB = 'honeycomb', 'Медові соти'
         CHERRY_GROVE = 'cherry_grove', 'Вишнева роща'
+        SKIES = 'skies', 'Небеса'
 
     theme = models.CharField(
         max_length=20, choices=Theme.choices, default=Theme.SULFUR_CAVES
