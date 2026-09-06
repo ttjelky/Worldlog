@@ -6,7 +6,7 @@ import MailOutlineIcon from '@mui/icons-material/MailOutline'
 import UserAvatar from '../../../shared/components/UserAvatar/UserAvatar'
 import styles from './FriendRequestsList.module.css'
 
-export default function FriendRequestsList({ received, sent, onAccept, onReject, loading }) {
+export default function FriendRequestsList({ received, sent, onAccept, onReject, onCancel, loading }) {
   const navigate = useNavigate()
 
   if (received.length === 0 && sent.length === 0) {
@@ -51,23 +51,25 @@ export default function FriendRequestsList({ received, sent, onAccept, onReject,
             Вихідні запити
             <span className={styles.sectionCount}>{sent.length}</span>
           </h3>
-          <div className={styles.list}>
-            {sent.map((f) => (
-              <RequestCard
-                key={f.id}
-                friendship={f}
-                type="sent"
-                onNavigate={navigate}
-              />
-            ))}
-          </div>
+            <div className={styles.list}>
+              {sent.map((f) => (
+                <RequestCard
+                  key={f.id}
+                  friendship={f}
+                  type="sent"
+                  onCancel={() => onCancel(f.id)}
+                  loading={loading}
+                  onNavigate={navigate}
+                />
+              ))}
+            </div>
         </section>
       )}
     </div>
   )
 }
 
-function RequestCard({ friendship, type, onAccept, onReject, loading, onNavigate }) {
+function RequestCard({ friendship, type, onAccept, onReject, onCancel, loading, onNavigate }) {
   const other = friendship.other_user
   if (!other) return null
 
@@ -112,7 +114,17 @@ function RequestCard({ friendship, type, onAccept, onReject, loading, onNavigate
       )}
 
       {type === 'sent' && (
-        <span className={styles.pendingBadge}>Очікує</span>
+        <div className={styles.sentActions}>
+          <span className={styles.pendingBadge}>Очікує</span>
+          <button
+            type="button"
+            className={styles.cancelLink}
+            onClick={onCancel}
+            disabled={loading}
+          >
+            Скасувати
+          </button>
+        </div>
       )}
     </div>
   )

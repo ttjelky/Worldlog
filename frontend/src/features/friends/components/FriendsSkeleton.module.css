@@ -6,9 +6,9 @@
 .skeleton {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.06) 25%,
-    rgba(255, 255, 255, 0.12) 50%,
-    rgba(255, 255, 255, 0.06) 75%
+    rgba(90, 74, 82, 0.07) 25%,
+    rgba(90, 74, 82, 0.14) 50%,
+    rgba(90, 74, 82, 0.07) 75%
   );
   background-size: 400px 100%;
   animation: shimmer 1.5s ease-in-out infinite;
@@ -18,16 +18,15 @@
 .container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  padding: 0 clamp(20px, 40px, 60px);
+  gap: 12px;
 }
 
 .card {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.06);
+  padding: 14px 16px;
+  background: #ffffff;
   border-radius: 20px;
 }
 

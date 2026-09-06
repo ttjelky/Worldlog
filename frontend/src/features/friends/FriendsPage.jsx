@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Button, LinearProgress, Snackbar, Tab, Tabs, TextField } from '@mui/material'
+import { LinearProgress, Snackbar, TextField } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/People'
 import MailIcon from '@mui/icons-material/Mail'
 import SearchIcon from '@mui/icons-material/Search'
@@ -31,15 +31,30 @@ export default function FriendsPage() {
     staleTime: 5000,
   })
 
+  const refresh = () => {
+    qc.invalidateQueries(['friends'])
+    qc.invalidateQueries(['userSearch'])
+  }
+
   const sendRequest = useMutation({
     mutationFn: (userId) => api.post('/friends/send/', { user_id: userId }),
     onSuccess: () => {
-      qc.invalidateQueries(['friends'])
-      setUserSearch('')
+      refresh()
       setSnackbar({ open: true, message: 'Запит надіслано' })
     },
     onError: (err) => {
       setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося надіслати запит' })
+    },
+  })
+
+  const cancelRequest = useMutation({
+    mutationFn: (id) => api.post(`/friends/${id}/cancel/`),
+    onSuccess: () => {
+      refresh()
+      setSnackbar({ open: true, message: 'Запит скасовано' })
+    },
+    onError: (err) => {
+      setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося скасувати запит' })
     },
   })
 
@@ -61,7 +76,7 @@ export default function FriendsPage() {
   const acceptRequest = useMutation({
     mutationFn: (id) => api.post(`/friends/${id}/accept/`),
     onSuccess: () => {
-      qc.invalidateQueries(['friends'])
+      refresh()
       setSnackbar({ open: true, message: 'Запит прийнято' })
     },
     onError: (err) => {
@@ -75,7 +90,7 @@ export default function FriendsPage() {
   const rejectRequest = useMutation({
     mutationFn: (id) => api.post(`/friends/${id}/reject/`),
     onSuccess: () => {
-      qc.invalidateQueries(['friends'])
+      refresh()
       setSnackbar({ open: true, message: 'Запит відхилено' })
     },
     onError: (err) => {
@@ -89,7 +104,7 @@ export default function FriendsPage() {
   const removeFriend = useMutation({
     mutationFn: (id) => api.delete(`/friends/${id}/`),
     onSuccess: () => {
-      qc.invalidateQueries(['friends'])
+      refresh()
       setSnackbar({ open: true, message: 'Користувача видалено з друзів' })
     },
     onError: (err) => {
@@ -108,37 +123,60 @@ export default function FriendsPage() {
     (f) => f.status === 'pending' && f.user_a === currentUser?.id,
   )
 
+  // Стан кнопки в результатах пошуку за наявною дружбою
+  const searchAction = (u) => {
+    const f = u.friendship
+    if (!f) return { kind: 'add' }
+    if (f.status === 'accepted') return { kind: 'friends' }
+    if (f.status === 'pending') {
+      return f.user_a === currentUser?.id
+        ? { kind: 'cancel', id: f.id }
+        : { kind: 'await' }
+    }
+    return { kind: 'none' }
+  }
+
+  const searchBusy = sendRequest.isPending || cancelRequest.isPending
+
   return (
     <div className={styles.appShell}>
       <Navbar
         activePage={activePage}
-        logoSrc="/worldlog-logo-white.png"
+        logoSrc="/worldlog-logo.png"
         onNavigate={(id) => handleNav(id, navigate)}
       />
 
       <div className={styles.page}>
-        <section className={styles.hero}>
-          <p className={styles.heroGreeting}>Ваші зв'язки</p>
-          <h1 className={styles.heroTitle}>Друзі</h1>
-        </section>
+        <div className={styles.topBlock}>
+          <section className={styles.hero}>
+            <p className={styles.heroGreeting}>Ваші зв'язки</p>
+            <h1 className={styles.heroTitle}>Друзі</h1>
+          </section>
 
-        <div className={styles.tabsWrap}>
-          <Tabs
-            value={tab}
-            onChange={(_, v) => setTab(v)}
-            className={styles.tabs}
-          >
-            <Tab
-              icon={<PeopleIcon />}
-              label={`Друзі (${friends.length})`}
-              className={styles.tab}
-            />
-            <Tab
-              icon={<MailIcon />}
-              label={`Запити (${receivedRequests.length})`}
-              className={styles.tab}
-            />
-          </Tabs>
+          <div className={styles.tabsWrap}>
+            <div className={styles.tabs} role="tablist" aria-label="Розділи друзів">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tab === 0}
+                className={`${styles.tab} ${tab === 0 ? styles.tabActive : ''}`}
+                onClick={() => setTab(0)}
+              >
+                <PeopleIcon className={styles.tabIcon} />
+                Друзі ({friends.length})
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tab === 1}
+                className={`${styles.tab} ${tab === 1 ? styles.tabActive : ''}`}
+                onClick={() => setTab(1)}
+              >
+                <MailIcon className={styles.tabIcon} />
+                Запити ({receivedRequests.length})
+              </button>
+            </div>
+          </div>
         </div>
 
         {isLoading ? (
@@ -156,28 +194,57 @@ export default function FriendsPage() {
                 onChange={(e) => setUserSearch(e.target.value)}
                 slotProps={{
                   input: {
-                    startAdornment: <SearchIcon sx={{ color: 'rgba(255,255,255,0.5)', mr: 1 }} />,
+                    startAdornment: <SearchIcon className={styles.searchIcon} />,
                   },
                 }}
                 className={styles.searchField}
               />
+              {userSearch.length === 1 && (
+                <p className={styles.searchHint}>Введи мінімум 2 символи</p>
+              )}
               {userSearch.length >= 2 && (
                 <div className={styles.searchResults}>
-                  {searchUsers.map((u) => (
-                    <div key={u.id} className={styles.searchResult}>
-                      <UserAvatar username={u.username} avatarUrl={u.avatar_url} size="sm" />
-                      <div className={styles.searchResultInfo}>
-                        <span className={styles.searchResultName}>{u.username}</span>
-                      </div>
-                      <Button
-                        size="small"
-                        onClick={() => sendRequest.mutate(u.id)}
-                        disabled={sendRequest.isPending}
-                      >
-                        Додати
-                      </Button>
-                    </div>
-                  ))}
+                  {searchUsers.length === 0 ? (
+                    <p className={styles.searchHint}>Нічого не знайдено</p>
+                  ) : (
+                    searchUsers.map((u) => {
+                      const action = searchAction(u)
+                      return (
+                        <div key={u.id} className={styles.searchResult}>
+                          <UserAvatar username={u.username} avatarUrl={u.avatar_url} size="sm" />
+                          <div className={styles.searchResultInfo}>
+                            <span className={styles.searchResultName}>{u.username}</span>
+                          </div>
+                          {action.kind === 'add' && (
+                            <button
+                              type="button"
+                              className={styles.addBtn}
+                              onClick={() => sendRequest.mutate(u.id)}
+                              disabled={searchBusy}
+                            >
+                              Додати
+                            </button>
+                          )}
+                          {action.kind === 'cancel' && (
+                            <button
+                              type="button"
+                              className={styles.cancelBtn}
+                              onClick={() => cancelRequest.mutate(action.id)}
+                              disabled={searchBusy}
+                            >
+                              Скасувати
+                            </button>
+                          )}
+                          {action.kind === 'friends' && (
+                            <span className={styles.stateBadge}>У друзях</span>
+                          )}
+                          {action.kind === 'await' && (
+                            <span className={styles.stateBadge}>Очікує</span>
+                          )}
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
               )}
             </div>
@@ -193,7 +260,8 @@ export default function FriendsPage() {
             sent={sentRequests}
             onAccept={acceptRequest.mutate}
             onReject={rejectRequest.mutate}
-            loading={acceptRequest.isPending || rejectRequest.isPending}
+            onCancel={cancelRequest.mutate}
+            loading={acceptRequest.isPending || rejectRequest.isPending || cancelRequest.isPending}
           />
         )}
       </div>
@@ -207,12 +275,12 @@ export default function FriendsPage() {
         slotProps={{
           content: {
             sx: {
-              background: '#2d2d2d',
+              background: '#5A4A52',
               color: '#ffffff',
               borderRadius: '22px',
               fontWeight: 500,
               fontSize: 15,
-              boxShadow: '0 8px 28px rgba(13, 13, 15, 0.35)',
+              boxShadow: '0 8px 28px rgba(90, 74, 82, 0.4)',
             },
           },
         }}

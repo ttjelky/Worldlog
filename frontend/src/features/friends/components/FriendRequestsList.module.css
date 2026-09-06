@@ -3,33 +3,38 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 80px 20px;
-  gap: 12px;
+  padding: 64px 20px;
+  gap: 10px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 1px 6px rgba(160, 74, 92, 0.08);
 }
 
 .emptyIcon {
-  font-size: 56px;
-  color: rgba(255, 255, 255, 0.15);
-  margin-bottom: 8px;
+  font-size: 52px;
+  color: rgba(201, 111, 127, 0.4);
+  margin-bottom: 4px;
 }
 
 .emptyTitle {
+  margin: 0;
   font-size: 22px;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1d1a22;
 }
 
 .emptyText {
+  margin: 0;
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(29, 26, 34, 0.6);
   max-width: 360px;
 }
 
 .container {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding: 0 clamp(20px, 40px, 60px);
+  gap: 28px;
 }
 
 .section {
@@ -42,9 +47,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(29, 26, 34, 0.55);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -60,7 +66,7 @@
   font-size: 12px;
   font-weight: 700;
   color: #ffffff;
-  background: #e8855a;
+  background: #c96f7f;
 }
 
 .list {
@@ -74,19 +80,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.06);
+  padding: 14px 16px;
+  background: #ffffff;
   border-radius: 20px;
-  transition: background 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 1px 6px rgba(160, 74, 92, 0.08);
+  transition: box-shadow 0.18s ease;
 }
 
 .card:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-}
-
-.card:active {
-  transform: translateY(0);
+  box-shadow: 0 4px 16px rgba(160, 74, 92, 0.14);
 }
 
 .cardMain {
@@ -98,7 +100,9 @@
   cursor: pointer;
   background: none;
   border: none;
+  border-radius: 12px;
   padding: 0;
+  font-family: inherit;
   text-align: left;
 }
 
@@ -112,19 +116,22 @@
 .displayName {
   font-size: 16px;
   font-weight: 700;
-  color: #ffffff;
+  color: #1d1a22;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .username {
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(29, 26, 34, 0.5);
 }
 
 .requestText {
   font-size: 14px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(29, 26, 34, 0.55);
   margin-top: 2px;
 }
 
@@ -135,46 +142,78 @@
 }
 
 .acceptBtn {
-  background: #4caf7d !important;
+  background: #5a4a52 !important;
   color: #ffffff !important;
   border-radius: 999px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   font-size: 14px !important;
   text-transform: none !important;
-  padding: 8px 20px !important;
-  transition: background 0.18s ease !important;
+  padding: 9px 22px !important;
+  box-shadow: none !important;
+  transition: background 0.15s ease !important;
 }
 
 .acceptBtn:hover {
-  background: #43a06c !important;
+  background: #4a3d44 !important;
 }
 
 .rejectBtn {
   background: transparent !important;
-  color: rgba(255, 255, 255, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: rgba(29, 26, 34, 0.6) !important;
+  border: 1px solid rgba(90, 74, 82, 0.3) !important;
   border-radius: 999px !important;
   font-weight: 600 !important;
   font-size: 14px !important;
   text-transform: none !important;
   padding: 8px 20px !important;
-  transition: all 0.18s ease !important;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease !important;
 }
 
 .rejectBtn:hover {
-  color: #ef5350 !important;
-  border-color: #ef5350 !important;
-  background: rgba(239, 83, 80, 0.08) !important;
+  color: #b23a48 !important;
+  border-color: #b23a48 !important;
+  background: rgba(178, 58, 72, 0.07) !important;
+}
+
+.sentActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .pendingBadge {
-  padding: 6px 16px;
+  padding: 8px 18px;
   border-radius: 999px;
   font-size: 13px;
+  font-weight: 700;
+  color: #8a5a66;
+  background: #f6cbd6;
+  white-space: nowrap;
+}
+
+.cancelLink {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.06);
-  flex-shrink: 0;
+  color: rgba(29, 26, 34, 0.5);
+  padding: 8px 10px;
+  border-radius: 999px;
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.cancelLink:hover {
+  color: #b23a48;
+  background: rgba(178, 58, 72, 0.07);
+}
+
+.cancelLink:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 @media (max-width: 500px) {
@@ -182,10 +221,6 @@
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
-  }
-
-  .cardMain {
-    pointer-events: none;
   }
 
   .actions {
@@ -197,10 +232,8 @@
     flex: 1;
     justify-content: center;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .card:hover {
-    transform: none;
+  .sentActions {
+    justify-content: space-between;
   }
 }

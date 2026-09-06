@@ -18,6 +18,7 @@ const THEME_LABELS = {
   amethyst: 'Аметистовий кристал',
   trial_palace: 'Палац випробувань',
   honeycomb: 'Медові соти',
+  cherry_grove: 'Вишнева роща',
 }
 
 export default function SearchPage() {
