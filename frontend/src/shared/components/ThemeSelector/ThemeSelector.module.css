@@ -14,78 +14,100 @@
   --ts-border: rgba(255, 255, 255, 0.22);
 }
 
-.legend {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 10px;
-}
-
-.legendTitle {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--ts-text);
-}
-
 .legendHint {
   font-size: 12px;
   font-weight: 400;
   color: var(--ts-muted);
+  margin: 0 0 12px;
 }
 
 .options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
 }
 
 .option {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--ts-border);
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 26px;
+  border: 2px solid var(--ts-border);
   background: var(--ts-surface);
   color: var(--ts-text);
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  transition: border-color 150ms linear, background 150ms linear, box-shadow 150ms linear;
+  transition: border-color 150ms linear, border-radius 200ms ease, box-shadow 150ms linear;
 }
 
 .option:hover {
   border-color: var(--ts-text);
 }
 
+.option:active {
+  transform: scale(0.98);
+}
+
 .selected {
   border-color: var(--ts-selected);
-  background: color-mix(in srgb, var(--ts-selected) 10%, var(--ts-surface));
+  border-radius: 32px;
   box-shadow: 0 0 0 1px var(--ts-selected);
 }
 
-.swatches {
-  display: flex;
-  gap: 5px;
-  flex-shrink: 0;
+.selected:hover {
+  border-color: var(--ts-selected);
 }
 
-.swatch {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+/* Живе міні-прев'ю: фон сторінки + дві картки в акцентах теми */
+.preview {
+  display: flex;
+  gap: 6px;
+  height: 76px;
+  padding: 9px;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.previewCard {
+  flex: 1;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 .optionBody {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
+  padding: 0 4px 2px;
 }
 
 .optionName {
+  flex: 1;
+  min-width: 0;
   font-size: 14px;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Бейдж обраної теми */
+.check {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ts-selected);
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }

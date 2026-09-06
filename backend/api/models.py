@@ -19,8 +19,9 @@ class World(models.Model):
 
     class Theme(models.TextChoices):
         SULFUR_CAVES = 'sulfur_caves', 'Сіркові печери'
-        AMETHYST = 'amethyst', 'Аметистова'
+        AMETHYST = 'amethyst', 'Аметистовий кристал'
         TRIAL_PALACE = 'trial_palace', 'Палац випробувань'
+        HONEYCOMB = 'honeycomb', 'Медові соти'
 
     theme = models.CharField(
         max_length=20, choices=Theme.choices, default=Theme.SULFUR_CAVES

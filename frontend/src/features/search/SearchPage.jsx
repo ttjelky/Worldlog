@@ -15,8 +15,9 @@ import styles from './SearchPage.module.css'
 
 const THEME_LABELS = {
   sulfur_caves: 'Сірчані печери',
-  amethyst: 'Аметист',
+  amethyst: 'Аметистовий кристал',
   trial_palace: 'Палац випробувань',
+  honeycomb: 'Медові соти',
 }
 
 export default function SearchPage() {

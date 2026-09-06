@@ -417,7 +417,11 @@ function ThemeDialog({ open, onClose, world, worldId }) {
           <Button onClick={onClose} className={sharedStyles.dialogBtnCancel}>
             Скасувати
           </Button>
-          <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
+          <Button
+            type="submit"
+            className={sharedStyles.dialogBtnSubmit}
+            disabled={updateTheme.isPending || theme === (world?.theme || DEFAULT_THEME_ID)}
+          >
             Зберегти
           </Button>
         </DialogActions>
