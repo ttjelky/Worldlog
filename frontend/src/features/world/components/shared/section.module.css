@@ -15,6 +15,12 @@
   box-shadow: 0 1px 3px rgba(13, 13, 15, 0.08), 0 14px 30px rgba(13, 13, 15, 0.12);
 }
 
+/* Повноекранна модалка: нижні кути контентної картки — прямі */
+:global(.wl-modal-full) .card {
+  border-radius: 28px 28px 0 0;
+  box-shadow: none;
+}
+
 .sectionHeader {
   display: flex;
   justify-content: space-between;

@@ -109,6 +109,53 @@
   --expanded-h: min(720px, calc(100vh - 48px));
 }
 
+/* ---------- Режим «на весь екран» ---------- */
+
+.fullBtn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #ffffff;
+  color: #1d1a22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.fullBtn:hover {
+  background: #f0f0f0;
+  transform: scale(1.06);
+}
+
+.fullBtn:active {
+  transform: scale(0.94);
+}
+
+.modalFullIn {
+  animation: modalFullIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  max-width: none;
+  max-height: none;
+}
+
+.modalFullOut {
+  animation: modalFullOut 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  max-width: none;
+  max-height: none;
+}
+
+.modalFullIn .modalContent,
+.modalFullOut .modalContent {
+  border-radius: 28px 28px 0 0;
+}
+
 .modalClosing {
   animation: modalCollapse 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -190,11 +237,54 @@
   }
 }
 
+/* Звичайна модалка -> на весь екран (12px з боків, 64px зверху, низ до краю) */
+@keyframes modalFullIn {
+  from {
+    width: var(--expanded-w);
+    height: var(--expanded-h);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 32px;
+  }
+  to {
+    width: 100vw;
+    height: calc(100vh - 64px);
+    top: calc(50vh + 32px);
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 28px 28px 0 0;
+  }
+}
+
+@keyframes modalFullOut {
+  from {
+    width: 100vw;
+    height: calc(100vh - 64px);
+    top: calc(50vh + 32px);
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 28px 28px 0 0;
+  }
+  to {
+    width: var(--expanded-w);
+    height: var(--expanded-h);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 32px;
+  }
+}
+
 /* ---------- Responsive: fullscreen on mobile ---------- */
 
 @media (max-width: 768px) {
   .backdrop {
     padding: 0;
+  }
+
+  .fullBtn {
+    display: none;
   }
 
   .modal {

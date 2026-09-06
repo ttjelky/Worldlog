@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import OpenInFullIcon from '@mui/icons-material/OpenInFull'
+import FullscreenIcon from '@mui/icons-material/Fullscreen'
 import styles from './ExpandableCard.module.css'
 
 // Дозволяє вкладеному контенту знати стан розгортання та відкрити модалку
@@ -38,6 +39,11 @@ export default function ExpandableCard({
   const [fading, setFading] = useState(false)
   const [rect, setRect] = useState(null)
   const prevFocusRef = useRef(null)
+  // Режим «на весь екран»: full — цільовий стан, fullAnim — активна
+  // анімація переходу ('in' | 'out' | null)
+  const [full, setFull] = useState(false)
+  const [fullAnim, setFullAnim] = useState(null)
+  const fullTimer = useRef(null)
 
   const open = useCallback(() => {
     const el = cardRef.current
@@ -46,6 +52,9 @@ export default function ExpandableCard({
     setRect(el.getBoundingClientRect())
     setClosing(false)
     setFading(false)
+    setFull(false)
+    setFullAnim(null)
+    if (fullTimer.current) clearTimeout(fullTimer.current)
     setExpanded(true)
     document.body.style.overflow = 'hidden'
   }, [])
@@ -53,11 +62,41 @@ export default function ExpandableCard({
   const close = useCallback(() => {
     setClosing(true)
     setFading(false)
+    setFull(false)
+    setFullAnim(null)
+    if (fullTimer.current) clearTimeout(fullTimer.current)
     document.body.style.overflow = ''
   }, [])
 
+  const toggleFull = useCallback(() => {
+    if (fullTimer.current) clearTimeout(fullTimer.current)
+    if (!full) {
+      setFull(true)
+      setFullAnim('in')
+    } else {
+      // Повернення окремою анімацією. Клас НЕ знімаємо після неї:
+      // зняття перезапустило б базову modalExpand з нуля (повторна максимізація).
+      // modalFullOut у forwards-режимі тримає кінцеву геометрію звичайної модалки.
+      setFullAnim('out')
+      fullTimer.current = setTimeout(() => {
+        setFull(false)
+      }, 280)
+    }
+  }, [full])
+
+  useEffect(
+    () => () => {
+      if (fullTimer.current) clearTimeout(fullTimer.current)
+    },
+    [],
+  )
+
   const onBackdropClick = (e) => {
-    if (e.target === e.currentTarget) close()
+    if (e.target !== e.currentTarget) return
+    // На повному екрані видно лише верхню смугу фону — клік по ній
+    // згортає до звичайної модалки, а не закриває картку
+    if (full) toggleFull()
+    else close()
   }
 
   useEffect(() => {
@@ -155,7 +194,9 @@ export default function ExpandableCard({
                   extraWide ? styles.modalExtraWide : ''
                 } ${
                   closing ? styles.modalClosing : ''
-                } ${fading ? styles.modalFadingOut : ''}`}
+                } ${fading ? styles.modalFadingOut : ''} ${
+                  fullAnim === 'in' ? styles.modalFullIn : ''
+                } ${fullAnim === 'out' ? styles.modalFullOut : ''}`}
                 style={{
                   '--origin-x': `${rect.left}px`,
                   '--origin-y': `${rect.top}px`,
@@ -165,7 +206,21 @@ export default function ExpandableCard({
                 onAnimationEnd={onModalAnimEnd}
                 onTransitionEnd={onModalTransitionEnd}
               >
-                <div className={styles.modalContent}>
+                {!full && (
+                  <button
+                    type="button"
+                    className={styles.fullBtn}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleFull()
+                    }}
+                    aria-label="На весь екран"
+                    title="На весь екран"
+                  >
+                    <FullscreenIcon fontSize="small" />
+                  </button>
+                )}
+                <div className={`${styles.modalContent} ${full ? 'wl-modal-full' : ''}`}>
                   {typeof expandedContent === 'function'
                     ? expandedContent({ close })
                     : (expandedContent ?? children)}
