@@ -4,6 +4,7 @@ import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined'
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
+import Reveal from '../Reveal/Reveal'
 import styles from './FeatureGrid.module.css'
 
 const features = [
@@ -49,17 +50,21 @@ export default function FeatureGrid() {
   return (
     <section className={styles.section} id="functionality">
       <div className={styles.inner}>
-        <h2 className={styles.heading}>Функціонал для твого світу</h2>
+        <Reveal>
+          <h2 className={styles.heading}>Функціонал для твого світу</h2>
+        </Reveal>
 
         <div className={styles.grid}>
-          {features.map((f) => (
-            <div key={f.title} className={styles.card}>
-              <div className={styles.iconContainer}>
-                <f.Icon className={styles.icon} />
+          {features.map((f, i) => (
+            <Reveal key={f.title} delay={(i % 3) * 90} className={styles.cardWrap}>
+              <div className={styles.card}>
+                <div className={styles.iconContainer}>
+                  <f.Icon className={styles.icon} />
+                </div>
+                <h3 className={styles.cardTitle}>{f.title}</h3>
+                <p className={styles.cardDesc}>{f.desc}</p>
               </div>
-              <h3 className={styles.cardTitle}>{f.title}</h3>
-              <p className={styles.cardDesc}>{f.desc}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

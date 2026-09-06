@@ -25,9 +25,20 @@
 .item {
   border-radius: 22px;
   padding: 34px 32px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(20, 20, 20, 0.12);
+}
+
+.itemWrap {
+  height: 100%;
 }
 
 .primary {

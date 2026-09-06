@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import Collapse from '@mui/material/Collapse'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import Reveal from '../Reveal/Reveal'
 import styles from './FAQ.module.css'
 
 const faqItems = [
@@ -56,13 +57,17 @@ export default function FAQ() {
   return (
     <section className={styles.section} id="faq">
       <div className={styles.inner}>
-        <h2 className={styles.heading}>Часті запитання</h2>
+        <Reveal>
+          <h2 className={styles.heading}>Часті запитання</h2>
+        </Reveal>
 
-        <div className={styles.card}>
-          {faqItems.map((item) => (
-            <FaqItem key={item.q} q={item.q} a={item.a} />
-          ))}
-        </div>
+        <Reveal delay={100}>
+          <div className={styles.card}>
+            {faqItems.map((item) => (
+              <FaqItem key={item.q} q={item.q} a={item.a} />
+            ))}
+          </div>
+        </Reveal>
       </div>
     </section>
   )

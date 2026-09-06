@@ -3,9 +3,12 @@
   padding: 26px 12px;
 }
 
-.inner {
+.revealInner {
   max-width: var(--wl-max);
   margin: 0 auto;
+}
+
+.inner {
   display: flex;
   align-items: center;
   justify-content: center;

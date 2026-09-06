@@ -26,9 +26,20 @@
   background: var(--wl-gray-soft);
   border-radius: 22px;
   padding: 30px 28px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(20, 20, 20, 0.12);
+}
+
+.cardWrap {
+  height: 100%;
 }
 
 .iconContainer {

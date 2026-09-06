@@ -1,3 +1,4 @@
+import Reveal from '../Reveal/Reveal'
 import styles from './Differentiators.module.css'
 
 const items = [
@@ -27,17 +28,22 @@ export default function Differentiators() {
   return (
     <section className={styles.section}>
       <div className={styles.inner}>
-        <h2 className={styles.heading}>Чому WorldLog</h2>
+        <Reveal>
+          <h2 className={styles.heading}>Чому WorldLog</h2>
+        </Reveal>
 
         <div className={styles.grid}>
-          {items.map((item) => (
-            <div
+          {items.map((item, i) => (
+            <Reveal
               key={item.title}
-              className={`${styles.item} ${styles[item.variant]}`}
+              delay={(i % 2) * 90}
+              className={styles.itemWrap}
             >
-              <h3 className={styles.itemTitle}>{item.title}</h3>
-              <p className={styles.itemDesc}>{item.desc}</p>
-            </div>
+              <div className={`${styles.item} ${styles[item.variant]}`}>
+                <h3 className={styles.itemTitle}>{item.title}</h3>
+                <p className={styles.itemDesc}>{item.desc}</p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </div>

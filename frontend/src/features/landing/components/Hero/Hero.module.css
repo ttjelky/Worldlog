@@ -32,6 +32,7 @@
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--wl-ink);
+  animation: wlFadeUp 0.7s ease both;
 }
 
 .heroTitle {
@@ -41,6 +42,7 @@
   line-height: 0.98;
   letter-spacing: -0.06em;
   color: var(--wl-ink);
+  animation: wlFadeUp 0.7s 0.1s ease both;
 }
 
 .squiggle {
@@ -52,11 +54,35 @@
   pointer-events: none;
 }
 
+.squiggle path {
+  stroke-dasharray: 640;
+  stroke-dashoffset: 640;
+  animation: wlDraw 1.4s 0.35s ease forwards;
+}
+
+@keyframes wlFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes wlDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 .heroButtons {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-top: 10px;
+  animation: wlFadeUp 0.7s 0.2s ease both;
 }
 
 .heroCta {
@@ -92,15 +118,11 @@
   justify-content: center;
   background: var(--wl-brown);
   color: #ffffff;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease;
 }
 
 .heroRound:hover {
   background: var(--wl-brown-hover);
-}
-
-.heroRound:active {
-  transform: scale(0.94);
 }
 
 /* ── Права картка ── */
@@ -111,6 +133,32 @@
     radial-gradient(circle at 2px 2px, rgba(20, 20, 20, 0.08) 2px, transparent 0) 0 0 / 26px 26px,
     var(--wl-gray);
   min-height: 360px;
+  animation: wlScaleIn 0.8s ease both;
+}
+
+@keyframes wlScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eyebrow,
+  .heroTitle,
+  .heroButtons,
+  .heroCardRight {
+    animation: none;
+  }
+
+  .squiggle path {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
 }
 
 @media (max-width: 899px) {

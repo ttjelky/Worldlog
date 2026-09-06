@@ -1,10 +1,12 @@
 import GitHubIcon from '@mui/icons-material/GitHub'
+import Reveal from '../Reveal/Reveal'
 import styles from './TrustBar.module.css'
 
 export default function TrustBar() {
   return (
     <section className={styles.trustBar}>
-      <div className={styles.inner}>
+      <Reveal className={styles.revealInner}>
+        <div className={styles.inner}>
         <div className={styles.item}>
           <GitHubIcon className={styles.icon} />
           <span>
@@ -33,6 +35,7 @@ export default function TrustBar() {
           <img src="/dijital-logo.png" alt="DiJital" height={14} className={styles.dijitalImg} />
         </div>
       </div>
+      </Reveal>
     </section>
   )
 }
