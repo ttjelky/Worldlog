@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import Logo from '../Logo/Logo'
 import styles from './AuthShell.module.css'
 
@@ -5,6 +7,10 @@ export default function AuthShell({ title, subtitle, children, footer }) {
   return (
     <div className={styles.root}>
       <div className={styles.paper}>
+        <Link to="/" className={styles.backBtn}>
+          <ArrowBackIcon fontSize="small" />
+          Повернутися
+        </Link>
         <div className={styles.logoWrap}>
           <Logo />
         </div>

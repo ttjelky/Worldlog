@@ -3,23 +3,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #dfcefd;
+  background: #f4c69c;
   padding: 16px;
   font-family: inherit;
 }
 
 .paper {
-  --md-primary: #6f42c6;
+  --md-primary: #6b4a3a;
   --md-on-primary: #ffffff;
-  --md-primary-container: #e9ddfb;
-  --md-on-primary-container: #26113f;
-  --md-surface: #fbf8ff;
-  --md-surface-container: #f2eafb;
-  --md-surface-container-high: #ece1f8;
-  --md-on-surface: #1d1a22;
-  --md-on-surface-variant: #4b4358;
-  --md-outline: #7d7188;
-  --md-outline-variant: #cdc0dd;
+  --md-primary-container: #fce0ac;
+  --md-on-primary-container: #141414;
+  --md-surface: #ffffff;
+  --md-surface-container: #f6f1ea;
+  --md-surface-container-high: #efe7db;
+  --md-on-surface: #141414;
+  --md-on-surface-variant: rgba(20, 20, 20, 0.66);
+  --md-outline: rgba(20, 20, 20, 0.35);
+  --md-outline-variant: rgba(20, 20, 20, 0.16);
 
   --auth-surface: var(--md-surface);
 
@@ -27,33 +27,56 @@
   max-width: 480px;
   padding: 40px 36px 36px;
   background: var(--md-surface);
-  border-radius: 32px;
-  box-shadow:
-    0 1px 3px rgba(29, 26, 34, 0.15),
-    0 4px 24px rgba(29, 26, 34, 0.1);
+  border-radius: 28px;
+  box-shadow: 0 8px 32px rgba(20, 20, 20, 0.12);
 }
 
 @media (max-width: 600px) {
   .paper {
     padding: 32px 24px 28px;
-    border-radius: 28px;
+    border-radius: 24px;
   }
 }
 
 .logoWrap {
-  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  margin: 14px 0 20px;
+}
+
+.logoWrap img {
+  height: 52px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--md-primary);
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 6px 12px 6px 8px;
+  margin-left: -8px;
+  transition: background 0.15s ease;
+}
+
+.backBtn:hover {
+  background: rgba(107, 74, 58, 0.08);
 }
 
 .title {
-  font-weight: 500;
-  font-size: 44px;
+  font-weight: 800;
+  font-size: 40px;
+  letter-spacing: -0.03em;
   color: var(--md-on-surface);
   margin-bottom: 6px;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 .subtitle {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 400;
   color: var(--md-on-surface-variant);
   margin-bottom: 24px;

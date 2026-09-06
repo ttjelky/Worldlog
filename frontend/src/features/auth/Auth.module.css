@@ -41,26 +41,27 @@
   color: var(--md-primary, #6f42c6);
 }
 
-/* Submit button — M3 filled purple pill */
+/* Submit button — brown pill */
 .submitBtn {
-  background: #6f42c6 !important;
+  background: #6b4a3a !important;
   color: #ffffff !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   font-size: 16px !important;
-  letter-spacing: 0.01em !important;
+  letter-spacing: -0.01em !important;
   border-radius: 999px !important;
-  padding: 12px 28px !important;
+  padding: 13px 28px !important;
   text-transform: none !important;
   box-shadow: none !important;
-  transition: background 150ms linear !important;
+  transition: background 150ms linear, transform 150ms ease !important;
 }
 
 .submitBtn:hover {
-  background: #5c34a8 !important;
+  background: #5a3d2f !important;
 }
 
 .submitBtn:active {
-  background: #4e2b94 !important;
+  background: #4c3328 !important;
+  transform: scale(0.98);
 }
 
 .submitBtn:disabled {
@@ -69,7 +70,7 @@
 
 .footerLink {
   font-weight: 700 !important;
-  color: #6f42c6 !important;
+  color: #e8734a !important;
   min-width: 0 !important;
   padding: 0 !important;
   font-size: inherit !important;
