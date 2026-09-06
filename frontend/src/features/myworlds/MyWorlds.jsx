@@ -13,15 +13,10 @@ import AddIcon from '@mui/icons-material/Add'
 import SearchIcon from '@mui/icons-material/Search'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
-import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
-import { WorldForm, emptyWorld, PLACEHOLDER_COPY } from '../dashboard/Dashboard'
+import { goSection } from '../../shared/utils/navigation'
+import WorldCard, { getCompletionPercent } from '../../shared/components/WorldCard/WorldCard'
+import { WorldForm, emptyWorld } from '../dashboard/Dashboard'
 import styles from './MyWorlds.module.css'
-
-const PAGE_LABELS = {
-  overview: 'Огляд',
-  friends: 'Друзі',
-  search: 'Пошук',
-}
 
 const SORT_OPTIONS = [
   { value: 'created_desc', label: 'Спочатку нові' },
@@ -37,44 +32,10 @@ const FILTER_OPTIONS = [
   { value: 'private', label: 'Приватні' },
 ]
 
-function getCompletionPercent(world) {
-  if (!world.todos_count) return 0
-  return Math.round((world.todos_done / world.todos_count) * 100)
-}
-
-function WorldCard({ world, index }) {
-  const percent = getCompletionPercent(world)
-  const variant = index % 2 === 0 ? styles.cardCoral : styles.cardTeal
-
-  return (
-    <Button
-      className={`${styles.worldCard} ${variant}`}
-      onClick={() => (location.href = `/app/worlds/${world.id}`)}
-      sx={{ '& .MuiTouchRipple-ripple': { color: 'rgba(0, 0, 0, 0.18)' } }}
-    >
-      <div className={styles.cardTop}>
-        <span className={styles.cardNumber}>{String(index + 1).padStart(2, '0')}</span>
-        <span className={styles.cardBadge}>{world.is_public ? 'Публічний' : 'Приватний'}</span>
-      </div>
-      <h3 className={styles.cardTitle}>{world.name}</h3>
-      <div className={styles.cardFooter}>
-        <div className={styles.cardOwner}>
-          <UserAvatar username={world.owner_username} avatarUrl={world.owner_avatar_url} size="xs" className={styles.ownerAvatarWrap} />
-          <span className={styles.ownerName}>{world.owner_username}</span>
-        </div>
-        <div className={styles.cardProgressTrack}>
-          <div className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
-        </div>
-      </div>
-    </Button>
-  )
-}
-
 export default function MyWorlds() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
-  const [activePage, setActivePage] = useState('worlds')
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('created_desc')
   const [filterBy, setFilterBy] = useState('all')
@@ -95,7 +56,7 @@ export default function MyWorlds() {
     if (q) {
       list = list.filter(
         (w) =>
-          w.name.toLowerCase().includes(q) ||
+          (w.name || '').toLowerCase().includes(q) ||
           (w.description || '').toLowerCase().includes(q) ||
           (w.seed || '').toLowerCase().includes(q),
       )
@@ -105,10 +66,10 @@ export default function MyWorlds() {
 
     const pct = (w) => (w.todos_count ? w.todos_done / w.todos_count : 0)
     const sorters = {
-      created_desc: (a, b) => b.created_at.localeCompare(a.created_at),
-      created_asc: (a, b) => a.created_at.localeCompare(b.created_at),
-      name_asc: (a, b) => a.name.localeCompare(b.name, 'uk'),
-      name_desc: (a, b) => b.name.localeCompare(a.name, 'uk'),
+      created_desc: (a, b) => (b.created_at || '').localeCompare(a.created_at || ''),
+      created_asc: (a, b) => (a.created_at || '').localeCompare(b.created_at || ''),
+      name_asc: (a, b) => (a.name || '').localeCompare(b.name || '', 'uk'),
+      name_desc: (a, b) => (b.name || '').localeCompare(a.name || '', 'uk'),
       progress: (a, b) => pct(b) - pct(a),
     }
     return list.sort(sorters[sortBy] || sorters.created_desc)
@@ -121,27 +82,15 @@ export default function MyWorlds() {
   return (
     <div className={styles.appShell}>
       <Navbar
-        activePage={activePage}
+        activePage="worlds"
         logoSrc="/worldlog-logo-white.png"
-        onNavigate={(id) => {
-          if (id === 'home') navigate('/app')
-          else if (id === 'friends') navigate('/app/friends')
-          else if (id === 'search') navigate('/app/search')
-          else setActivePage(id)
-        }}
+        onNavigate={(id) => goSection(id, navigate)}
       />
 
       <div className={styles.page}>
-        {activePage !== 'worlds' ? (
-          <div className={styles.placeholder}>
-            <h1 className={styles.placeholderTitle}>{PAGE_LABELS[activePage]}</h1>
-            <p className={styles.placeholderText}>{PLACEHOLDER_COPY[activePage]}</p>
-          </div>
-        ) : (
-          <>
-            <section className={styles.hero}>
-              <p className={styles.heroGreeting}>Керуйте світами</p>
-              <h1 className={styles.heroTitle}>Мої світи</h1>
+        <section className={styles.hero}>
+          <p className={styles.heroGreeting}>Керуйте світами</p>
+          <h1 className={styles.heroTitle}>Мої світи</h1>
             </section>
 
             <div className={styles.toolbar}>
@@ -216,7 +165,7 @@ export default function MyWorlds() {
 
             <div className={styles.grid}>
               {filtered.map((w, i) => (
-                <WorldCard key={w.id} world={w} index={i} />
+                <WorldCard key={w.id} world={w} index={i} tone={i % 2 === 0 ? 'coral' : 'teal'} />
               ))}
 
               <Button
@@ -228,8 +177,6 @@ export default function MyWorlds() {
                 <span className={styles.addText}>Новий світ</span>
               </Button>
             </div>
-          </>
-        )}
       </div>
 
       <WorldForm

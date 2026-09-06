@@ -174,11 +174,7 @@ export default function ProfileHeader({
             </button>
           )
         ) : (
-          <FriendActionButton
-            isOwnProfile={isOwnProfile}
-            friendship={friendship}
-            actions={actions}
-          />
+          <FriendActionButton friendship={friendship} actions={actions} />
         )}
       </div>
     </div>

@@ -294,7 +294,43 @@
   transform: scale(0.92);
 }
 
-/* ---------- Ряд 1: Інфокартка ---------- */
+/* ---------- Стан помилки завантаження світу ---------- */
+
+.loadError {
+  max-width: 560px;
+  margin: 12vh auto;
+  text-align: center;
+  background: var(--page-row-bg, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--page-outline, rgba(0, 0, 0, 0.15));
+  border-radius: 28px;
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loadErrorTitle {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--page-ink, #1d1a22);
+}
+
+.loadErrorText {
+  margin: 0;
+  font-size: 15px;
+  color: var(--page-row-label, rgba(0, 0, 0, 0.5));
+}
+
+.loadErrorActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
 
 .infoCard {
   height: 100%;

@@ -7,10 +7,12 @@ import Dashboard from './features/dashboard/Dashboard'
 import MyWorlds from './features/myworlds/MyWorlds'
 import WorldDetail from './features/world/WorldDetail'
 import ProfilePage from './features/profile/ProfilePage'
+import NotFoundPage from './features/notfound/NotFoundPage'
 import FriendsPage from './features/friends/FriendsPage'
 import SearchPage from './features/search/SearchPage'
 import NotificationsPage from './features/notifications/NotificationsPage'
 import UndoProvider from './shared/undo/UndoProvider'
+import FeedbackProvider from './shared/feedback/FeedbackProvider'
 import { NotificationProvider } from './shared/notifications/NotificationProvider'
 import ToastNotification from './shared/notifications/ToastNotification'
 
@@ -29,8 +31,10 @@ function AppLayout() {
   return (
     <NotificationProvider>
       <UndoProvider>
-        <ToastNotification />
-        <Outlet />
+        <FeedbackProvider>
+          <ToastNotification />
+          <Outlet />
+        </FeedbackProvider>
       </UndoProvider>
     </NotificationProvider>
   )
@@ -70,7 +74,7 @@ function AppRoutes({ start, back }) {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="profile/:username" element={<ProfilePage />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }

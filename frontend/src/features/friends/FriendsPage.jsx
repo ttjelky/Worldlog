@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { LinearProgress, Snackbar, TextField } from '@mui/material'
+import { LinearProgress, TextField } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/People'
 import MailIcon from '@mui/icons-material/Mail'
 import SearchIcon from '@mui/icons-material/Search'
 import api from '../../api'
 import { useAuth } from '../../auth'
 import Navbar from '../../shared/components/Navbar/Navbar'
+import { goSection } from '../../shared/utils/navigation'
+import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
 import FriendsList from './components/FriendsList'
 import FriendRequestsList from './components/FriendRequestsList'
@@ -21,7 +23,7 @@ export default function FriendsPage() {
   const { user: currentUser } = useAuth()
   const [activePage, setActivePage] = useState('friends')
   const [tab, setTab] = useState(searchParams.get('tab') === 'requests' ? 1 : 0)
-  const [snackbar, setSnackbar] = useState({ open: false, message: '' })
+  const { notify } = useFeedback()
   const [userSearch, setUserSearch] = useState('')
 
   const { data: searchUsers = [] } = useQuery({
@@ -40,10 +42,10 @@ export default function FriendsPage() {
     mutationFn: (userId) => api.post('/friends/send/', { user_id: userId }),
     onSuccess: () => {
       refresh()
-      setSnackbar({ open: true, message: 'Запит надіслано' })
+      notify('Запит надіслано')
     },
     onError: (err) => {
-      setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося надіслати запит' })
+      notify(err.response?.data?.detail || 'Не вдалося надіслати запит')
     },
   })
 
@@ -51,10 +53,10 @@ export default function FriendsPage() {
     mutationFn: (id) => api.post(`/friends/${id}/cancel/`),
     onSuccess: () => {
       refresh()
-      setSnackbar({ open: true, message: 'Запит скасовано' })
+      notify('Запит скасовано')
     },
     onError: (err) => {
-      setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося скасувати запит' })
+      notify(err.response?.data?.detail || 'Не вдалося скасувати запит')
     },
   })
 
@@ -77,13 +79,10 @@ export default function FriendsPage() {
     mutationFn: (id) => api.post(`/friends/${id}/accept/`),
     onSuccess: () => {
       refresh()
-      setSnackbar({ open: true, message: 'Запит прийнято' })
+      notify('Запит прийнято')
     },
     onError: (err) => {
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.detail || 'Не вдалося прийняти запит',
-      })
+      notify(err.response?.data?.detail || 'Не вдалося прийняти запит')
     },
   })
 
@@ -91,13 +90,10 @@ export default function FriendsPage() {
     mutationFn: (id) => api.post(`/friends/${id}/reject/`),
     onSuccess: () => {
       refresh()
-      setSnackbar({ open: true, message: 'Запит відхилено' })
+      notify('Запит відхилено')
     },
     onError: (err) => {
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.detail || 'Не вдалося відхилити запит',
-      })
+      notify(err.response?.data?.detail || 'Не вдалося відхилити запит')
     },
   })
 
@@ -105,13 +101,10 @@ export default function FriendsPage() {
     mutationFn: (id) => api.delete(`/friends/${id}/`),
     onSuccess: () => {
       refresh()
-      setSnackbar({ open: true, message: 'Користувача видалено з друзів' })
+      notify('Користувача видалено з друзів')
     },
     onError: (err) => {
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.detail || 'Не вдалося видалити з друзів',
-      })
+      notify(err.response?.data?.detail || 'Не вдалося видалити з друзів')
     },
   })
 
@@ -143,7 +136,7 @@ export default function FriendsPage() {
       <Navbar
         activePage={activePage}
         logoSrc="/worldlog-logo.png"
-        onNavigate={(id) => handleNav(id, navigate)}
+        onNavigate={(id) => goSection(id, navigate)}
       />
 
       <div className={styles.page}>
@@ -265,34 +258,6 @@ export default function FriendsPage() {
           />
         )}
       </div>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        message={snackbar.message}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        slotProps={{
-          content: {
-            sx: {
-              background: '#5A4A52',
-              color: '#ffffff',
-              borderRadius: '22px',
-              fontWeight: 500,
-              fontSize: 15,
-              boxShadow: '0 8px 28px rgba(90, 74, 82, 0.4)',
-            },
-          },
-        }}
-      />
     </div>
   )
-}
-
-function handleNav(id, navigate) {
-  if (id === 'home') navigate('/app')
-  else if (id === 'overview') navigate('/app')
-  else if (id === 'worlds') navigate('/app/worlds')
-  else if (id === 'friends') navigate('/app/friends')
-  else if (id === 'search') navigate('/app/search')
 }

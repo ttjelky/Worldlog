@@ -17,7 +17,8 @@ import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
-import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
+import { goSection } from '../../shared/utils/navigation'
+import WorldCard, { getCompletionPercent } from '../../shared/components/WorldCard/WorldCard'
 import styles from './Dashboard.module.css'
 
 export const emptyWorld = {
@@ -27,13 +28,6 @@ export const emptyWorld = {
   start_date: '',
   cover_image: null,
   is_public: false,
-}
-
-export const PLACEHOLDER_COPY = {
-  overview: "Тут з'явиться загальна статистика по всіх твоїх світах.",
-  worlds: "Тут з'явиться повний перелік світів з фільтрами та сортуванням.",
-  friends: "Тут з'являться світи та профілі твоїх друзів.",
-  search: "Тут з'явиться пошук по світах, персонажах і подіях.",
 }
 
 function useWorldForm(initial) {
@@ -170,52 +164,6 @@ export function WorldForm({ open, onClose, initial, onSubmit, dark = false }) {
   )
 }
 
-function getCompletionPercent(world) {
-  if (!world.todos_count) return 0
-  return Math.round((world.todos_done / world.todos_count) * 100)
-}
-
-function WorldCard({ world, index }) {
-  const percent = getCompletionPercent(world)
-
-  return (
-    <Button
-      className={styles.worldCard}
-      onClick={() => (location.href = `/app/worlds/${world.id}`)}
-      disableRipple={false}
-      sx={{
-        '& .MuiTouchRipple-ripple': {
-          color: 'rgba(0, 0, 0, 0.18)',
-        },
-      }}
-    >
-      <div className={styles.cardTop}>
-        <span className={styles.cardNumber}>{String(index + 1).padStart(2, '0')}</span>
-        <span className={styles.cardBadge}>{world.is_public ? 'Публічний' : 'Приватний'}</span>
-      </div>
-      <h3 className={styles.cardTitle}>{world.name}</h3>
-      <div className={styles.cardFooter}>
-        <div className={styles.cardOwner}>
-          <UserAvatar username={world.owner_username} avatarUrl={world.owner_avatar_url} size="xs" className={styles.ownerAvatarWrap} />
-          <span className={styles.ownerName}>{world.owner_username}</span>
-        </div>
-        <div className={styles.cardProgressTrack}>
-          <div className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
-        </div>
-      </div>
-    </Button>
-  )
-}
-
-function PlaceholderPage({ id, label }) {
-  return (
-    <div className={styles.placeholder}>
-      <h1 className={styles.placeholderTitle}>{label}</h1>
-      <p className={styles.placeholderText}>{PLACEHOLDER_COPY[id]}</p>
-    </div>
-  )
-}
-
 function AddCardButton({ onClick }) {
   return (
     <Button
@@ -233,11 +181,64 @@ function AddCardButton({ onClick }) {
   )
 }
 
+function OverviewPanel({ worlds, onOpenWorlds }) {
+  const total = worlds.length
+  const pub = worlds.filter((w) => w.is_public).length
+  const done = worlds.reduce((s, w) => s + (w.todos_done || 0), 0)
+  const all = worlds.reduce((s, w) => s + (w.todos_count || 0), 0)
+  const avg = total
+    ? Math.round(worlds.reduce((s, w) => s + getCompletionPercent(w), 0) / total)
+    : 0
+  const top = [...worlds]
+    .sort((a, b) => getCompletionPercent(b) - getCompletionPercent(a))
+    .slice(0, 4)
+
+  const tiles = [
+    ['Світи', total],
+    ['Публічні', pub],
+    ['Задач виконано', `${done}/${all}`],
+    ['Середній прогрес', `${avg}%`],
+  ]
+
+  return (
+    <>
+      <section className={styles.hero}>
+        <p className={styles.heroGreeting}>Загальна картина</p>
+        <h1 className={styles.heroTitle}>Огляд</h1>
+      </section>
+
+      <div className={styles.overviewTiles}>
+        {tiles.map(([label, value]) => (
+          <div key={label} className={styles.overviewTile}>
+            <span className={styles.overviewValue}>{value}</span>
+            <span className={styles.overviewLabel}>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {top.length > 0 && (
+        <>
+          <h2 className={styles.sectionSubtitle}>Лідери за прогресом</h2>
+          <div className={styles.grid}>
+            {top.map((w, i) => (
+              <WorldCard key={w.id} world={w} index={i} tone="violet" />
+            ))}
+          </div>
+        </>
+      )}
+
+      <Button className={styles.overviewCta} onClick={onOpenWorlds}>
+        Перейти до моїх світів
+        <ArrowForwardIcon fontSize="small" />
+      </Button>
+    </>
+  )
+}
+
 export default function Dashboard() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState(null)
   const [activePage, setActivePage] = useState('home')
 
   const { data: worlds = [], isLoading } = useQuery({
@@ -249,14 +250,8 @@ export default function Dashboard() {
       api.post('/worlds/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
     onSuccess: () => qc.invalidateQueries(['worlds']),
   })
-  const updateWorld = useMutation({
-    mutationFn: ({ id, data }) =>
-      api.patch(`/worlds/${id}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
-    onSuccess: () => qc.invalidateQueries(['worlds']),
-  })
 
   const openCreate = () => {
-    setEditing(null)
     setOpen(true)
   }
 
@@ -264,31 +259,19 @@ export default function Dashboard() {
     ? Math.round(worlds.reduce((sum, w) => sum + getCompletionPercent(w), 0) / worlds.length)
     : 0
 
-  const NAV_ITEMS = [
-    { id: 'home', label: 'Головна' },
-    { id: 'overview', label: 'Огляд' },
-    { id: 'worlds', label: 'Мої світи' },
-    { id: 'friends', label: 'Друзі' },
-    { id: 'search', label: 'Пошук' },
-  ]
-
-  const activeNavItem = NAV_ITEMS.find((n) => n.id === activePage)
-
   return (
     <div className={styles.appShell}>
       <Navbar
         activePage={activePage}
         onNavigate={(id) => {
-          if (id === 'worlds') navigate('/app/worlds')
-          else if (id === 'friends') navigate('/app/friends')
-          else if (id === 'search') navigate('/app/search')
-          else setActivePage(id)
+          if (id === 'home' || id === 'overview') setActivePage(id)
+          else goSection(id, navigate)
         }}
       />
 
       <div className={styles.page}>
-        {activePage !== 'home' ? (
-          <PlaceholderPage id={activeNavItem.id} label={activeNavItem.label} />
+        {activePage === 'overview' ? (
+          <OverviewPanel worlds={worlds} onOpenWorlds={() => navigate('/app/worlds')} />
         ) : (
           <>
             <section className={styles.hero}>
@@ -313,7 +296,7 @@ export default function Dashboard() {
 
             <div className={styles.grid}>
               {worlds.map((w, i) => (
-                <WorldCard key={w.id} world={w} index={i} />
+                <WorldCard key={w.id} world={w} index={i} tone="violet" />
               ))}
 
               {worlds.length >= 1 ? (
@@ -340,11 +323,8 @@ export default function Dashboard() {
       <WorldForm
         open={open}
         onClose={() => setOpen(false)}
-        initial={editing ? { ...emptyWorld, ...editing, cover_image: null } : emptyWorld}
-        onSubmit={(data) => {
-          if (editing) updateWorld.mutateAsync({ id: editing.id, data }).then(() => setOpen(false))
-          else createWorld.mutateAsync(data).then(() => setOpen(false))
-        }}
+        initial={emptyWorld}
+        onSubmit={(data) => createWorld.mutateAsync(data).then(() => setOpen(false))}
       />
     </div>
   )

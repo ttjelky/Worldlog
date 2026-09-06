@@ -13,6 +13,8 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
@@ -31,12 +33,22 @@ const priorities = {
   high: ['#FFB199', 'Високий'],
   urgent: ['#FF8A80', 'Терміновий'],
 }
+const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+
 const toDateStr = (d) => d.toISOString().slice(0, 10)
 const todayStr = () => toDateStr(new Date())
 const tomorrowStr = () => {
   const d = new Date()
   d.setDate(d.getDate() + 1)
   return toDateStr(d)
+}
+const pad2 = (n) => String(n).padStart(2, '0')
+const toISODate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1)
+const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, 1)
+const monthLabel = (d) => {
+  const s = new Intl.DateTimeFormat('uk-UA', { month: 'long', year: 'numeric' }).format(d)
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 const empty = () => ({ title: '', description: '', priority: 'medium', due_date: todayStr() })
 
@@ -47,6 +59,7 @@ export default function PlannerSection({ worldId, accent }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty())
   const [filter, setFilter] = useState(null)
+  const [month, setMonth] = useState(() => startOfMonth(new Date()))
 
   const { data: todos = [] } = useQuery({
     queryKey: ['todos', String(worldId)],
@@ -60,8 +73,36 @@ export default function PlannerSection({ worldId, accent }) {
       .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
     if (filter === 'today') return items.filter((t) => t.due_date === todayStr())
     if (filter === 'tomorrow') return items.filter((t) => t.due_date === tomorrowStr())
+    if (typeof filter === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(filter)) {
+      return items.filter((t) => t.due_date === filter)
+    }
     return items
   }, [todos, filter])
+
+  const countsByDate = useMemo(() => {
+    const map = {}
+    todos.forEach((t) => {
+      if (t.due_date) map[t.due_date] = (map[t.due_date] || 0) + 1
+    })
+    return map
+  }, [todos])
+
+  const monthCells = useMemo(() => {
+    const y = month.getFullYear()
+    const m = month.getMonth()
+    const lead = (new Date(y, m, 1).getDay() + 6) % 7
+    const days = new Date(y, m + 1, 0).getDate()
+    const cells = []
+    for (let i = 0; i < lead; i++) cells.push(null)
+    for (let d = 1; d <= days; d++) cells.push(new Date(y, m, d))
+    return cells
+  }, [month])
+  const localToday = toISODate(new Date())
+
+  const pickDay = (iso) => {
+    setFilter((cur) => (cur === iso ? null : iso))
+    if (iso) setMonth(startOfMonth(new Date(`${iso}T12:00:00`)))
+  }
 
   const overdue = (t) => {
     if (!t.due_date || t.is_done) return false
@@ -172,6 +213,67 @@ export default function PlannerSection({ worldId, accent }) {
           </button>
         ))}
       </div>
+
+      {section.modal && (
+        <div className={styles.calendar}>
+          <div className={styles.calHeader}>
+            <button
+              type="button"
+              className={styles.calNavBtn}
+              aria-label="Попередній місяць"
+              onClick={() => setMonth((m) => addMonths(m, -1))}
+            >
+              <ChevronLeftIcon fontSize="small" />
+            </button>
+            <span className={styles.calTitle}>{monthLabel(month)}</span>
+            <button
+              type="button"
+              className={styles.calNavBtn}
+              aria-label="Наступний місяць"
+              onClick={() => setMonth((m) => addMonths(m, 1))}
+            >
+              <ChevronRightIcon fontSize="small" />
+            </button>
+            <button
+              type="button"
+              className={styles.calTodayBtn}
+              onClick={() => {
+                setMonth(startOfMonth(new Date()))
+                setFilter(null)
+              }}
+            >
+              Сьогодні
+            </button>
+          </div>
+          <div className={styles.calGrid} role="grid" aria-label="Календар завдань">
+            {WEEKDAYS.map((d) => (
+              <span key={d} className={styles.calWeekday}>
+                {d}
+              </span>
+            ))}
+            {monthCells.map((date, i) => {
+              if (!date) return <span key={`e${i}`} className={styles.calEmpty} />
+              const iso = toISODate(date)
+              const count = countsByDate[iso] || 0
+              return (
+                <button
+                  key={iso}
+                  type="button"
+                  className={`${styles.calDay} ${iso === localToday ? styles.calToday : ''} ${
+                    filter === iso ? styles.calSelected : ''
+                  } ${count > 0 ? styles.calHasTodos : ''}`}
+                  onClick={() => pickDay(iso)}
+                  aria-pressed={filter === iso}
+                  aria-label={`${iso}, завдань: ${count}`}
+                >
+                  <span className={styles.calNum}>{date.getDate()}</span>
+                  {count > 0 && <span className={styles.calCount}>{count}</span>}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div
         className={`${sharedStyles.body} ${styles.todoList} ${

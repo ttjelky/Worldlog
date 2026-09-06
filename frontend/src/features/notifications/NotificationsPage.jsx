@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Snackbar, Button } from '@mui/material'
+import { Button } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
 import PublicIcon from '@mui/icons-material/Public'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
+import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
 import styles from './NotificationsPage.module.css'
 
@@ -22,7 +23,9 @@ export default function NotificationsPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [activePage, setActivePage] = useState('notifications')
-  const [snackbar, setSnackbar] = useState({ open: false, message: '' })
+  const { notify } = useFeedback()
+  // Локальні виклики фідбеку йдуть у спільний тост
+  const setSnackbar = ({ message }) => notify(message)
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications'],
@@ -141,26 +144,6 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        message={snackbar.message}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        slotProps={{
-          content: {
-            sx: {
-              background: '#2d2d2d',
-              color: '#ffffff',
-              borderRadius: '22px',
-              fontWeight: 500,
-              fontSize: 15,
-              boxShadow: '0 8px 28px rgba(13, 13, 15, 0.35)',
-            },
-          },
-        }}
-      />
     </div>
   )
 }

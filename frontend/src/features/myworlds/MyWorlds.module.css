@@ -154,34 +154,6 @@
   display: none;
 }
 
-/* ---------- Заглушки інших вкладок ---------- */
-
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  min-height: 40vh;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.06);
-  padding: clamp(28px, 5vw, 56px);
-}
-
-.placeholderTitle {
-  font-size: clamp(32px, 5vw, 52px);
-  font-weight: 900;
-  color: #ffffff;
-  letter-spacing: -0.02em;
-  margin-bottom: 10px;
-}
-
-.placeholderText {
-  font-size: 16px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
-  max-width: 480px;
-}
-
 .emptyMsg {
   text-align: center;
   font-size: 16px;
@@ -221,24 +193,6 @@
   text-transform: none !important;
 }
 
-.cardCoral {
-  background: #d57c6a !important;
-}
-
-.cardCoral:hover,
-.cardCoral:focus-visible {
-  background: #c76a58 !important;
-}
-
-.cardTeal {
-  background: #54ac98 !important;
-}
-
-.cardTeal:hover,
-.cardTeal:focus-visible {
-  background: #489c89 !important;
-}
-
 .addCard {
   background: #54ac98 !important;
   border-radius: 28px !important;
@@ -266,79 +220,4 @@
   font-size: 18px;
   font-weight: 500;
   color: #ffffff;
-}
-
-.cardTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.cardNumber {
-  font-size: 14px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.cardBadge {
-  padding: 5px 14px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #ffffff;
-  background: #3ddc84;
-}
-
-.cardTitle {
-  font-size: 54px;
-  font-weight: 500;
-  letter-spacing: -0.05em;
-  color: #ffffff;
-  margin: 20px 0 0;
-  line-height: 1.15;
-  text-align: left;
-}
-
-.cardFooter {
-  margin-top: auto;
-  padding-top: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.cardOwner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.ownerAvatarWrap {
-  width: 28px;
-  height: 28px;
-}
-
-.ownerName {
-  font-size: 13px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cardProgressTrack {
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.24);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.cardProgressFill {
-  height: 100%;
-  background: #ffffff;
-  border-radius: 4px;
-  transition: width 0.3s ease;
 }

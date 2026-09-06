@@ -6,19 +6,8 @@ import PeopleIcon from '@mui/icons-material/People'
 import { useAuth } from '../../../auth'
 import styles from './FriendActionButton.module.css'
 
-export default function FriendActionButton({ isOwnProfile, friendship, actions }) {
+export default function FriendActionButton({ friendship, actions }) {
   const { user: currentUser } = useAuth()
-
-  if (isOwnProfile) {
-    return (
-      <Button
-        className={`${styles.btn} ${styles.btnEdit}`}
-        startIcon={<PersonAddIcon />}
-      >
-        Редагувати профіль
-      </Button>
-    )
-  }
 
   if (actions.loading) {
     return (
@@ -41,7 +30,7 @@ export default function FriendActionButton({ isOwnProfile, friendship, actions }
   }
 
   const { status, user_a } = friendship
-  const isSender = user_a === currentUser?.id
+  const isSender = user_a != null && user_a === currentUser?.id
 
   if (status === 'pending') {
     if (isSender) {

@@ -1,10 +1,12 @@
-import { useMemo, useState, useCallback, useRef } from 'react'
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Snackbar, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material'
 import api from '../../api'
 import { useAuth } from '../../auth'
 import Navbar from '../../shared/components/Navbar/Navbar'
+import { goSection } from '../../shared/utils/navigation'
+import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import ProfileHeader from './components/ProfileHeader'
 import ProfileStats from './components/ProfileStats'
 import ProfileAbout from './components/ProfileAbout'
@@ -47,7 +49,9 @@ export default function ProfilePage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [activePage, setActivePage] = useState('profile')
-  const [snackbar, setSnackbar] = useState({ open: false, message: '' })
+  const { notify } = useFeedback()
+  // Локальні виклики фідбеку йдуть у спільний тост
+  const setSnackbar = ({ message }) => notify(message)
   const [isEditing, setIsEditing] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [avatarFile, setAvatarFile] = useState(null)
@@ -90,6 +94,17 @@ export default function ProfilePage() {
   }, [editForm.username, editForm.display_name, editForm.bio, avatarFile, isEditing])
 
   const { showConfirm, warn, confirm: confirmDiscard, cancel: cancelDiscard } = useUnsavedChangesWarning(hasChanges)
+
+  // Попередження при закритті/перезавантаженні вкладки з незбереженими змінами
+  useEffect(() => {
+    if (!hasChanges) return undefined
+    const onBeforeUnload = (e) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [hasChanges])
 
   const enterEditMode = useCallback(() => {
     if (!profileData) return
@@ -157,7 +172,7 @@ export default function ProfilePage() {
       return { userData: null, hasAvatar }
     },
     onSuccess: async ({ userData, hasAvatar }) => {
-      let avatarUrl = null
+      let avatarFailed = false
       if (userData) {
         updateUser({
           username: userData.username,
@@ -170,16 +185,18 @@ export default function ProfilePage() {
           const fd = new FormData()
           fd.append('avatar', avatarFile)
           const res = await api.patch('/me/profile/', fd)
-          avatarUrl = res.data.avatar_url || null
-          updateUser({ avatar_url: avatarUrl })
+          updateUser({ avatar_url: res.data.avatar_url || null })
         } catch {
-          setSnackbar({ open: true, message: 'Аватар оновлено, але сталася помилка завантаження' })
+          avatarFailed = true
         }
       }
       qc.invalidateQueries(['me'])
       qc.invalidateQueries(['userProfile', username])
       exitEditMode()
-      setSnackbar({ open: true, message: 'Профіль оновлено' })
+      setSnackbar({
+        open: true,
+        message: avatarFailed ? 'Профіль оновлено, але аватар не завантажено' : 'Профіль оновлено',
+      })
     },
     onError: (err) => {
       if (err.response?.data) {
@@ -272,7 +289,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className={styles.appShell}>
-        <Navbar activePage={activePage} logoSrc="/worldlog-logo-white.png" onNavigate={(id) => handleNav(id, navigate)} />
+        <Navbar activePage={activePage} logoSrc="/worldlog-logo-white.png" onNavigate={(id) => goSection(id, navigate)} />
         <div className={styles.page}>
           <ProfileSkeleton />
         </div>
@@ -283,11 +300,14 @@ export default function ProfilePage() {
   if (error || !profileData) {
     return (
       <div className={styles.appShell}>
-        <Navbar activePage={activePage} logoSrc="/worldlog-logo-white.png" onNavigate={(id) => handleNav(id, navigate)} />
+        <Navbar activePage={activePage} logoSrc="/worldlog-logo-white.png" onNavigate={(id) => goSection(id, navigate)} />
         <div className={styles.page}>
           <div className={styles.errorState}>
             <h2 className={styles.errorTitle}>Профіль не знайдено</h2>
             <p className={styles.errorText}>Користувача з таким іменем не існує або сталася помилка.</p>
+            <Button className={styles.errorBackBtn} onClick={() => navigate('/app')}>
+              На головну
+            </Button>
           </div>
         </div>
       </div>
@@ -296,7 +316,7 @@ export default function ProfilePage() {
 
   return (
     <div className={styles.appShell}>
-      <Navbar activePage={activePage} logoSrc="/worldlog-logo-white.png" onNavigate={(id) => handleNav(id, navigate)} />
+      <Navbar activePage={activePage} logoSrc="/worldlog-logo-white.png" onNavigate={(id) => goSection(id, navigate)} />
 
       <div className={styles.page}>
         <ProfileHeader
@@ -315,38 +335,12 @@ export default function ProfilePage() {
         />
 
         <ProfileStats
-          worldsCount={isOwnProfile ? worlds.length : profileData.worlds_count}
+          worldsCount={profileData.worlds_count ?? (isOwnProfile ? worlds.length : 0)}
           friendsCount={profileData.friends_count}
         />
 
-        <ProfileAbout
-          profile={profileData}
-          isOwnProfile={isOwnProfile}
-          isEditing={isEditing}
-          editForm={editForm}
-          onEditChange={handleEditChange}
-        />
+        <ProfileAbout profile={profileData} isOwnProfile={isOwnProfile} />
       </div>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        message={snackbar.message}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        slotProps={{
-          content: {
-            sx: {
-              background: '#2d2d2d',
-              color: '#ffffff',
-              borderRadius: '22px',
-              fontWeight: 500,
-              fontSize: 15,
-              boxShadow: '0 8px 28px rgba(13, 13, 15, 0.35)',
-            },
-          },
-        }}
-      />
 
       <Dialog open={showConfirm} onClose={cancelDiscard} maxWidth="xs" fullWidth slotProps={{ paper: { className: styles.confirmPaper } }}>
         <DialogTitle className={styles.confirmTitle}>Є незбережені зміни</DialogTitle>
@@ -364,12 +358,4 @@ export default function ProfilePage() {
       </Dialog>
     </div>
   )
-}
-
-function handleNav(id, navigate) {
-  if (id === 'home') navigate('/app')
-  else if (id === 'worlds') navigate('/app/worlds')
-  else if (id === 'friends') navigate('/app/friends')
-  else if (id === 'search') navigate('/app/search')
-  else if (id === 'notifications') navigate('/app/notifications')
 }

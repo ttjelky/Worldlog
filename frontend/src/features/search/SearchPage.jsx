@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Snackbar } from '@mui/material'
+import { Button } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import PublicIcon from '@mui/icons-material/Public'
 import CheckIcon from '@mui/icons-material/Check'
@@ -9,6 +9,8 @@ import CloseIcon from '@mui/icons-material/Close'
 import api from '../../api'
 import { useAuth } from '../../auth'
 import Navbar from '../../shared/components/Navbar/Navbar'
+import { goSection } from '../../shared/utils/navigation'
+import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
 import SearchSkeleton from './components/SearchSkeleton'
 import styles from './SearchPage.module.css'
@@ -19,7 +21,9 @@ export default function SearchPage() {
   const { user: currentUser } = useAuth()
   const [searchParams] = useSearchParams()
   const [activePage, setActivePage] = useState('search')
-  const [snackbar, setSnackbar] = useState({ open: false, message: '' })
+  const { notify } = useFeedback()
+  // Локальні виклики фідбеку йдуть у спільний тост
+  const setSnackbar = ({ message }) => notify(message)
   const [sentAccess, setSentAccess] = useState([])
 
   // Запит живе в навбарі (?q=), сторінка його лише читає
@@ -141,7 +145,7 @@ export default function SearchPage() {
       <Navbar
         activePage={activePage}
         logoSrc="/worldlog-logo.png"
-        onNavigate={(id) => handleNav(id, navigate)}
+        onNavigate={(id) => goSection(id, navigate)}
       />
 
       <div className={styles.page}>
@@ -315,26 +319,6 @@ export default function SearchPage() {
           </>
         )}
       </div>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        message={snackbar.message}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        slotProps={{
-          content: {
-            sx: {
-              background: '#2d2d2d',
-              color: '#ffffff',
-              borderRadius: '22px',
-              fontWeight: 500,
-              fontSize: 15,
-              boxShadow: '0 8px 28px rgba(13, 13, 15, 0.35)',
-            },
-          },
-        }}
-      />
     </div>
   )
 }
@@ -434,13 +418,4 @@ function WorldSearchResult({ world, index = 0, showAccess = true, accessSent, on
       </div>
     </div>
   )
-}
-
-function handleNav(id, navigate) {
-  if (id === 'home') navigate('/app')
-  else if (id === 'overview') navigate('/app')
-  else if (id === 'worlds') navigate('/app/worlds')
-  else if (id === 'friends') navigate('/app/friends')
-  else if (id === 'search') navigate('/app/search')
-  else if (id === 'notifications') navigate('/app/notifications')
 }

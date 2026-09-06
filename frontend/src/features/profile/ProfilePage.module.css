@@ -38,6 +38,22 @@
   max-width: 400px;
 }
 
+.errorBackBtn {
+  margin-top: 20px !important;
+  border-radius: 999px !important;
+  padding: 10px 28px !important;
+  background: #ffffff !important;
+  color: #1d1a22 !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+}
+
+.errorBackBtn:hover {
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+
 /* Unsaved changes dialog */
 .confirmPaper {
   background: #454545 !important;

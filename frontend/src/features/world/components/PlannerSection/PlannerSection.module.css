@@ -176,6 +176,150 @@
   color: #ffffff;
 }
 
+/* ---------- Календар (розгорнутий вигляд) ---------- */
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.calHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calTitle {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.calNavBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.calNavBtn:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.calTodayBtn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.calTodayBtn:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calWeekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 4px 0;
+}
+
+.calEmpty {
+  min-height: 40px;
+}
+
+.calDay {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 40px;
+  padding: 4px 2px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  color: rgba(255, 255, 255, 0.85);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.calDay:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.calNum {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.calCount {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.calHasTodos .calCount {
+  color: #1d1a22;
+  background: #ffffff;
+}
+
+.calToday .calNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+
+.calSelected {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.calSelected:hover {
+  background: rgba(255, 255, 255, 0.36);
+}
+
 .filterBtnDeleteDone {
   margin-left: auto;
   display: inline-flex;

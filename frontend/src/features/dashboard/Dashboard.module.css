@@ -106,79 +106,68 @@
   background: #9166c8 !important;
 }
 
-.cardTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* ---------- Огляд: агрегована статистика ---------- */
+
+.overviewTiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 26px 0 34px;
 }
 
-.cardNumber {
-  font-size: 14px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.cardBadge {
-  padding: 5px 14px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #ffffff;
-  background: #2fb872;
-}
-
-.cardTitle {
-  font-size: 54px;
-  font-weight: 500;
-  letter-spacing: -0.05em;
-  color: #ffffff;
-  margin: 20px 0 0;
-  line-height: 1.15;
-  text-align: left;
-}
-
-.cardFooter {
-  margin-top: auto;
-  padding-top: 18px;
+.overviewTile {
+  background: rgba(145, 102, 200, 0.12);
+  border-radius: 20px;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
 }
 
-.cardOwner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+.overviewValue {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #1d1a22;
 }
 
-.ownerAvatarWrap {
-  width: 28px;
-  height: 28px;
-}
-
-.ownerName {
+.overviewLabel {
   font-size: 13px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 600;
+  color: rgba(29, 26, 34, 0.6);
 }
 
-.cardProgressTrack {
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.24);
-  border-radius: 4px;
-  overflow: hidden;
+.sectionSubtitle {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1d1a22;
 }
 
-.cardProgressFill {
-  height: 100%;
-  background: #ffffff;
-  border-radius: 4px;
-  transition: width 0.3s ease;
+.overviewCta {
+  margin-top: 22px;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border-radius: 999px !important;
+  padding: 12px 28px !important;
+  background: #9166c8 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+}
+
+.overviewCta:hover {
+  background: #7a52b0 !important;
+}
+
+@media (max-width: 860px) {
+  .overviewTiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .addCard {
@@ -231,33 +220,6 @@
   font-size: 15px;
   opacity: 0.75;
   margin-bottom: 24px;
-}
-
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  min-height: 40vh;
-  border-radius: 28px;
-  background: rgba(145, 102, 200, 0.08);
-  padding: clamp(28px, 5vw, 56px);
-}
-
-.placeholderTitle {
-  font-size: clamp(32px, 5vw, 52px);
-  font-weight: 900;
-  color: #9166c8;
-  letter-spacing: -0.02em;
-  margin-bottom: 10px;
-}
-
-.placeholderText {
-  font-size: 16px;
-  font-weight: 600;
-  color: #9166c8;
-  opacity: 0.7;
-  max-width: 480px;
 }
 
 /* ==================================================================

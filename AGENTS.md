@@ -74,7 +74,7 @@ worldlog/
 - `Membership` model has `unique_together = ('world', 'user')` and roles `OWNER/EDITOR/VIEWER`.
 - The OWNER is **not** stored as a Membership row — it is derived from `world.owner_id`.
 - `get_user_role(user, world)` returns `'owner'` if `world.owner_id == user.id`, else looks up active Membership.
-- Frontend shows the owner via `world.owner_username` as a first-class row in ParticipantsSection, not as a membership.
+- Frontend shows the owner via `world.owner_username` as a first-class row in the access roster, not as a membership.
 
 ### Permissions (`backend/api/permissions.py`)
 
@@ -92,6 +92,12 @@ def get_user_role(user, world):
 | `IsWorldOwner` | Owner only | Update/delete world, update/delete Membership role changes |
 | `IsWorldEditorOrAbove` | Owner OR editor | Create/update/delete content (Players, Locations, Todos, Notes, etc.). Create Membership (invite) |
 | `IsWorldViewerOrAbove` | Any active membership | Read-only access (currently unused, superseded by `IsOwnerOrMember`) |
+
+> `IsWorldOwner` / `IsWorldEditorOrAbove` enforce the world scope in **both**
+> `has_permission` (resolves `world_id` from URL — this is what actually gates
+> `create`, since DRF never calls `has_object_permission` without an object)
+> and `has_object_permission`. `WorldViewSet` update/delete is owner-only via
+> `get_permissions` override.
 
 ### `RelatedViewSetMixin`
 
@@ -127,7 +133,8 @@ All content viewsets (Player, Location, Todo, Note, History, Project, Bookmark, 
 
 **Worlds (ModelViewSet):**
 - `GET/POST /api/worlds/` — List (owner + member) / Create
-- `GET/PATCH/DELETE /api/worlds/:id/` — Detail / Update / Delete (owner or member)
+- `GET /api/worlds/:id/` — Detail (owner or member)
+- `PATCH/DELETE /api/worlds/:id/` — Owner only
 
 **World Content (nested under `/api/worlds/:world_id/`):**
 - `/players/` — CRUD (editor+ can write)
@@ -154,8 +161,13 @@ All content viewsets (Player, Location, Todo, Note, History, Project, Bookmark, 
 - `POST /api/friends/:id/cancel/` — Cancel sent request
 - `DELETE /api/friends/:id/` — Remove friend (accepted only)
 
+**World access requests:**
+- `GET/POST /api/worlds/:world_id/access-requests/` — List (owner only) / request access (validates owner/member/duplicates, notifies owner)
+- `POST /api/world-access-requests/:id/accept/` — Owner accepts (creates viewer membership, notifies requester)
+- `POST /api/world-access-requests/:id/reject/` — Owner rejects (notifies requester)
+
 **Notifications:**
-- `GET /api/notifications/` — List (latest 50)
+- `GET /api/notifications/` — List (latest 50, includes `access_request` id when relevant)
 - `POST /api/notifications/:id/read/` — Mark one as read
 - `POST /api/notifications/read-all/` — Mark all as read
 
@@ -174,7 +186,7 @@ Key serializers:
 ## Frontend
 
 ### Tech Stack
-- React 19, React Router v7, MUI 6, TanStack React Query 5, Axios
+- React 19, React Router v7, MUI 6, TanStack React Query 5, Axios, Vitest (unit tests: `npm test`)
 - Vite 8.2, CSS Modules, Material 3 design principles
 
 ### Routing (`frontend/src/App.jsx`)
@@ -190,7 +202,8 @@ Key serializers:
 /app/search          → SearchPage (private)
 /app/profile         → ProfilePage (private, own profile)
 /app/profile/:username → ProfilePage (private, any user)
-*                    → Redirect to /
+/app/notifications     → NotificationsPage (private)
+*                    → NotFoundPage (404)
 ```
 
 `PrivateRoute` wraps all `/app/*` routes. Uses `auth.isAuthenticated()` to check JWT in localStorage.
@@ -237,9 +250,10 @@ Each theme defines: `pageBg`, `ink`, `soft`, `softHover`, `activeBg`, `activeBgH
 923-line component. Core of the app.
 
 **Card system:**
-- 14 cards: info, cover, players, participants, locations, todos, history, notes, projects, planner, bookmarks, ideas, wiki, progress
+- 14 cards: info, cover, players, locations, todos, history, notes, projects, planner, bookmarks, ideas, wiki, progress, relationships
 - `CARD_META`: Maps card ID → row number + slot CSS class
-- `DEFAULT_CARDS`: Default layout (7 rows, 2-3 cards per row)
+- `DEFAULT_CARDS`: Default layout (8 rows; relationships alone in row 7)
+- Access roster (`WorldAccessList` from `ParticipantsSection.jsx`) lives inside the info card, not as a separate card
 - Cards are arranged in rows, rendered via `renderCard()` and `renderRow()`
 - Each card is wrapped in `ExpandableCard` (modal expand on click)
 
@@ -281,16 +295,17 @@ All sections follow the same pattern:
 | Section | Component | API Endpoint | Key Features |
 |---------|-----------|-------------|--------------|
 | Players | `PlayersSection` | `/worlds/:id/players/` | Avatar upload, role notes |
-| Participants | `ParticipantsSection` | `/worlds/:id/memberships/` | Owner row (no edit), membership rows, AddParticipantDialog (user search + role), EditRoleDialog, RemoveParticipantDialog |
+| Access roster | `WorldAccessList` (in `ParticipantsSection.jsx`, rendered inside info card) | `/worlds/:id/memberships/` + `/access-requests/` | Owner row, membership rows, incoming access requests (owner), AddParticipantDialog, EditRoleDialog, RemoveParticipantDialog |
 | Locations | `LocationsSection` | `/worlds/:id/locations/` | XYZ coords, category, screenshots (one per location, replaces on upload) |
 | Todos | `TodosSection` | `/worlds/:id/todos/` | Priority, due date, is_done toggle, project association |
 | History | `HistorySection` | `/worlds/:id/history/` | Timeline with color-coded nodes by category, date-based sorting |
 | Notes | `NotesSection` | `/worlds/:id/notes/` | Tags (comma-separated) |
 | Projects | `ProjectsSection` | `/worlds/:id/projects/` | Status, progress (auto-calculated from todos), todo count |
-| Planner | `PlannerSection` | `/worlds/:id/todos/` + `/projects/` | Calendar view, drag tasks between days |
+| Planner | `PlannerSection` | `/worlds/:id/todos/` + `/projects/` | Month calendar grid (modal only, day filter, counts), quick filters, overdue highlight |
 | Bookmarks | `BookmarksSection` | `/worlds/:id/bookmarks/` | URL links with descriptions |
 | Ideas | `IdeasSection` | `/worlds/:id/ideas/` | Title + content |
-| Wiki | `WikiSection` | `/worlds/:id/wiki/` | Page types (location/character/faction/etc.), content |
+| Wiki | `WikiSection` | `/worlds/:id/wiki/` | Page types (location/character/faction/etc.), content. No tabs — list only; graph lives in the standalone `RelationshipsSection` card |
+| Relationships | `RelationshipsSection` | `/worlds/:id/wiki/graph/` | d3-force graph, zoom/pan, node click opens wiki page via `worldlog:open-wiki-page` event |
 | Progress | `ProgressSection` | `/worlds/:id/todos/` + `/projects/` | Aggregate stats, charts |
 | CardsMenu | `CardsMenu` | — | Sidebar to toggle card visibility per world |
 
@@ -304,13 +319,16 @@ All sections follow the same pattern:
 | `ToastNotification` | `shared/notifications/ToastNotification.jsx` | Slide-in toast for new notifications |
 | `NotificationProvider` | `shared/notifications/NotificationProvider.jsx` | Polls `/notifications/` every 5s, provides `notifications`, `unreadCount`, `markRead`, `markAllRead` |
 | `UndoProvider` | `shared/undo/UndoProvider.jsx` | Context for undo-able delete operations (`deleteWorld`, `deletePlayer`, etc.) |
+| `FeedbackProvider` | `shared/feedback/FeedbackProvider.jsx` | Single action-feedback toast (`useFeedback().notify()`); mounted in `AppLayout`. Server-push toasts stay in `ToastNotification` |
+| `WorldCard` | `shared/components/WorldCard/WorldCard.jsx` | Shared world card (Dashboard, MyWorlds): number, visibility badge, title, owner, progress; tones coral/teal/violet |
+| `ErrorBoundary` | `shared/components/ErrorBoundary/ErrorBoundary.jsx` | Render-crash fallback (reload/home), mounted in `main.jsx` |
 | `ExpandableCard` | `features/world/components/shared/ExpandableCard.jsx` | Card wrapper with modal expand, `useExpandableCard()` hook |
 
 ### Profile Page (`frontend/src/features/profile/ProfilePage.jsx`)
 
-- Full-page inline edit mode with `isEditing` state
-- Unsaved changes warning dialog on navigate-away
-- Avatar upload via FormData to `/me/profile/`
+- Full-page inline edit mode with `isEditing` state (fields live in `ProfileHeader`; `ProfileAbout` is read-only)
+- Unsaved changes: confirm dialog on cancel + `beforeunload` guard
+- Avatar upload via FormData to `/me/profile/` (combined success/error message)
 - `max-width: 860px` container (`.page` in `ProfilePage.module.css`)
 - `ProfileHeader`, `ProfileStats`, `ProfileAbout`, `ProfileSkeleton` sub-components
 - Shows own profile (`/app/profile`) or other user (`/app/profile/:username`)
@@ -318,16 +336,16 @@ All sections follow the same pattern:
 ### Friends Page (`frontend/src/features/friends/FriendsPage.jsx`)
 
 - Integrated user search bar at top (queries `/users/search/`)
-- Search results show "Додати" (send friend request) buttons inline
-- Pill tabs: Друзі / Запити / Запропонувати
+- Search results show state-aware buttons (Додати / Скасувати / У друзях / Очікує)
+- Pill tabs: Друзі / Запити
 - Friend request accept/reject/cancel actions
 - Supports `?tab=requests` URL param
 
 ### Search Page (`frontend/src/features/search/SearchPage.jsx`)
 
-- Global user search at `/app/search`
-- Queries `/users/search/` with debounced input
-- Shows user cards with "Додати" button if not already friends
+- Global search input lives in the `Navbar` (icon expands to input, query in `?q=`)
+- Empty query: hub with Мої світи / Друзі / Вхідні запити (inline accept/reject)
+- With query: Світи (`/worlds/search/`) + Користувачі (`/users/search/`, state-aware buttons)
 
 ### Notifications
 
@@ -363,7 +381,7 @@ All sections follow the same pattern:
 
 ## Key Conventions
 
-1. **No OWNER membership row**: World owner is derived from `world.owner_id`, never stored as Membership. Frontend shows owner as first row in ParticipantsSection via `world.owner_username`.
+1. **No OWNER membership row**: World owner is derived from `world.owner_id`, never stored as Membership. Frontend shows owner as first row in the access roster via `world.owner_username`.
 2. **Permission gating pattern**: `canEdit = userRole && userRole !== 'viewer'` in all section components. `RelatedViewSetMixin` enforces this server-side.
 3. **Theme per world**: Stored as `world.theme` field, applied via CSS variables at page root. Each page defines its own accent palette.
 4. **Layout persistence**: WorldDetail card layout saved to `localStorage` per world ID. Includes card order, visibility, row config, and flex widths.

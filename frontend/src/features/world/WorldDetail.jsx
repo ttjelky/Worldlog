@@ -503,9 +503,16 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
 
 export default function WorldDetail({ onBack }) {
   const { worldId } = useParams()
-  const { data: world, isLoading } = useQuery({
+  const {
+    data: world,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['world', worldId],
     queryFn: () => api.get(`/worlds/${worldId}/`).then((r) => r.data),
+    retry: 1,
   })
 
   const [editMode, setEditMode] = useState(false)
@@ -743,7 +750,39 @@ export default function WorldDetail({ onBack }) {
   }
 
   if (isLoading) return <LinearProgress />
-  if (!world) return <p>Світ не знайдено</p>
+  if (isError || !world) {
+    const status = error?.response?.status
+    const title =
+      status === 403
+        ? 'Немає доступу до світу'
+        : status === 404
+          ? 'Світ не знайдено'
+          : 'Не вдалося завантажити світ'
+    return (
+      <div className={styles.page}>
+        <div className={styles.loadError}>
+          <h2 className={styles.loadErrorTitle}>{title}</h2>
+          <p className={styles.loadErrorText}>
+            {status === 403
+              ? 'Попроси власника надати доступ або перевір інший світ.'
+              : 'Перевір адресу або спробуй ще раз.'}
+          </p>
+          <div className={styles.loadErrorActions}>
+            <Button
+              className={styles.worldEditBtn}
+              onClick={() => refetch()}
+            >
+              Спробувати ще
+            </Button>
+            <Button className={styles.worldEditBtn} onClick={onBack}>
+              <ArrowBackIcon fontSize="small" />
+              Назад
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const theme = getWorldTheme(world.theme)
   const red = theme.accentRed

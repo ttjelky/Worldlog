@@ -5,10 +5,6 @@
   transition: background 0.25s ease;
 }
 
-.aboutCardEditing {
-  background: rgba(255, 255, 255, 0.04);
-}
-
 .sectionTitle {
   font-size: 20px;
   font-weight: 700;
@@ -51,28 +47,6 @@
   flex: 1;
 }
 
-.editField {
-  flex: 1;
-  max-width: 400px;
-}
-
-.inputField {
-  color: #ffffff !important;
-  border-radius: 12px !important;
-}
-
-.inputField fieldset {
-  border-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-.inputField:hover fieldset {
-  border-color: rgba(255, 255, 255, 0.35) !important;
-}
-
-.inputField.Mui-focused fieldset {
-  border-color: #e8855a !important;
-}
-
 @media (max-width: 500px) {
   .aboutCard {
     padding: 24px 20px;
@@ -86,9 +60,5 @@
 
   .aboutValue {
     text-align: left;
-  }
-
-  .editField {
-    max-width: none;
   }
 }
