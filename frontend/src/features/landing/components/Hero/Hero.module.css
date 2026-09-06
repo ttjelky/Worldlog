@@ -129,11 +129,17 @@
 
 .heroCardRight {
   border-radius: var(--wl-radius);
-  background:
-    radial-gradient(circle at 2px 2px, rgba(20, 20, 20, 0.08) 2px, transparent 0) 0 0 / 26px 26px,
-    var(--wl-gray);
+  background: var(--wl-gray);
   min-height: 360px;
+  overflow: hidden;
   animation: wlScaleIn 0.8s ease both;
+}
+
+.heroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 @keyframes wlScaleIn {

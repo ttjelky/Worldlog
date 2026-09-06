@@ -50,7 +50,13 @@ export default function Hero({ onStart }) {
             </button>
           </div>
         </div>
-        <div className={styles.heroCardRight} aria-hidden="true" />
+        <div className={styles.heroCardRight}>
+          <img
+            src="/hero-photo.jpg"
+            alt="Світ гравця в WorldLog"
+            className={styles.heroImg}
+          />
+        </div>
       </div>
     </section>
   )
