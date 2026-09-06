@@ -72,7 +72,7 @@
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: rgba(255, 255, 255, 0.75);
+  color: #141414;
 }
 
 .hubCount {
@@ -87,6 +87,13 @@
   font-weight: 700;
   color: #ffffff;
   background: #4a7fa5;
+}
+
+.sectionEmpty {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(29, 26, 34, 0.55);
 }
 
 .resultsList {
@@ -171,6 +178,21 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  padding-top: 14px;
+}
+
+.cardCoverWrap {
+  margin: -28px -28px 0;
+  height: 120px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cardCover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .cardNumber {

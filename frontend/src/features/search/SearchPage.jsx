@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
-import PublicIcon from '@mui/icons-material/Public'
 import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
 import api from '../../api'
@@ -41,6 +40,14 @@ export default function SearchPage() {
     queryFn: () => api.get('/users/search/', { params: { q: query } }).then((r) => r.data),
     enabled: showResults,
     staleTime: 5000,
+  })
+
+  // Стрічка публічних світів для хаба (бекенд повертає останні без q)
+  const { data: publicWorlds = [], isLoading: publicLoading } = useQuery({
+    queryKey: ['publicWorlds'],
+    queryFn: () => api.get('/worlds/search/').then((r) => r.data),
+    enabled: !showResults,
+    staleTime: 30000,
   })
 
   // Хаб: все доступне за категоріями, коли запиту ще немає
@@ -125,8 +132,7 @@ export default function SearchPage() {
 
   const isLoadingResults = worldsLoading || usersLoading
   const hasResults = worldResults.length > 0 || userResults.length > 0
-  const hubLoading = worldsHubLoading || friendsHubLoading
-  const hubEmpty = myWorlds.length === 0 && hubFriends.length === 0 && hubRequests.length === 0
+  const hubLoading = worldsHubLoading || friendsHubLoading || publicLoading
   const friendBusy =
     sendRequest.isPending || cancelRequest.isPending || acceptRequest.isPending || rejectRequest.isPending
 
@@ -222,57 +228,74 @@ export default function SearchPage() {
           <>
             {hubLoading && <SearchSkeleton />}
 
-            {!hubLoading && hubEmpty && (
-              <div className={styles.emptyState}>
-                <PublicIcon className={styles.emptyIcon} />
-                <h3 className={styles.emptyTitle}>Почни з пошуку</h3>
-                <p className={styles.emptyText}>
-                  Введи назву світу або ім'я користувача в рядку пошуку нагорі
-                </p>
-              </div>
-            )}
+            {!hubLoading && (
+              <>
+                {myWorlds.length > 0 && (
+                  <section className={styles.hubSection} aria-label="Мої світи">
+                    <h2 className={styles.hubTitle}>
+                      Світи <span className={styles.hubCount}>{myWorlds.length}</span>
+                    </h2>
+                    <div className={styles.resultsList}>
+                      {myWorlds.map((world, i) => (
+                        <WorldSearchResult
+                          key={world.id}
+                          world={world}
+                          index={i}
+                          showAccess={false}
+                          onNavigate={navigate}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
 
-            {myWorlds.length > 0 && (
-              <section className={styles.hubSection} aria-label="Мої світи">
-                <h2 className={styles.hubTitle}>
-                  Світи <span className={styles.hubCount}>{myWorlds.length}</span>
-                </h2>
-                <div className={styles.resultsList}>
-                  {myWorlds.map((world, i) => (
-                    <WorldSearchResult
-                      key={world.id}
-                      world={world}
-                      index={i}
-                      showAccess={false}
-                      onNavigate={navigate}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {hubFriends.length > 0 && (
-              <section className={styles.hubSection} aria-label="Мої друзі">
-                <h2 className={styles.hubTitle}>
-                  Друзі <span className={styles.hubCount}>{hubFriends.length}</span>
-                </h2>
-                <div className={styles.userList}>
-                  {hubFriends.map((f) =>
-                    f.other_user ? (
-                      <UserRow
-                        key={f.id}
-                        user={f.other_user}
-                        action={{ kind: 'open' }}
-                        onNavigate={navigate}
-                      />
-                    ) : null,
+                <section className={styles.hubSection} aria-label="Публічні світи">
+                  <h2 className={styles.hubTitle}>
+                    Публічні світи <span className={styles.hubCount}>{publicWorlds.length}</span>
+                  </h2>
+                  {publicWorlds.length > 0 ? (
+                    <div className={styles.resultsList}>
+                      {publicWorlds.map((world, i) => (
+                        <WorldSearchResult
+                          key={world.id}
+                          world={world}
+                          index={i}
+                          accessSent={sentAccess.includes(world.id)}
+                          onRequestAccess={(worldId) => requestAccess.mutate(worldId)}
+                          loading={requestAccess.isPending}
+                          onNavigate={navigate}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className={styles.sectionEmpty}>Поки немає публічних світів.</p>
                   )}
-                </div>
-              </section>
-            )}
+                </section>
 
-            {hubRequests.length > 0 && (
-              <section className={styles.hubSection} aria-label="Запити в друзі">
+                <section className={styles.hubSection} aria-label="Мої друзі">
+                  <h2 className={styles.hubTitle}>
+                    Друзі <span className={styles.hubCount}>{hubFriends.length}</span>
+                  </h2>
+                  {hubFriends.length > 0 ? (
+                    <div className={styles.userList}>
+                      {hubFriends.map((f) =>
+                        f.other_user ? (
+                          <UserRow
+                            key={f.id}
+                            user={f.other_user}
+                            action={{ kind: 'open' }}
+                            onNavigate={navigate}
+                          />
+                        ) : null,
+                      )}
+                    </div>
+                  ) : (
+                    <p className={styles.sectionEmpty}>У тебе ще немає друзів.</p>
+                  )}
+                </section>
+
+                {hubRequests.length > 0 && (
+                  <section className={styles.hubSection} aria-label="Запити в друзі">
                 <h2 className={styles.hubTitle}>
                   Запити <span className={styles.hubCount}>{hubRequests.length}</span>
                 </h2>
@@ -312,9 +335,11 @@ export default function SearchPage() {
                         </div>
                       </div>
                     ) : null,
-                  )}
-                </div>
-              </section>
+                    )}
+                  </div>
+                </section>
+                )}
+              </>
             )}
           </>
         )}
@@ -378,6 +403,11 @@ function WorldSearchResult({ world, index = 0, showAccess = true, accessSent, on
         }
       }}
     >
+      {world.cover_image_url && (
+        <div className={styles.cardCoverWrap} aria-hidden="true">
+          <img src={world.cover_image_url} alt="" className={styles.cardCover} />
+        </div>
+      )}
       <div className={styles.cardTop}>
         <span className={styles.cardNumber}>{String(index + 1).padStart(2, '0')}</span>
         <span className={styles.cardThemeBadge}>

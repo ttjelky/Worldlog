@@ -805,18 +805,19 @@ class WorldSearchView(APIView):
 
     def get(self, request):
         query = request.query_params.get('q', '').strip()
-        if len(query) < 2:
-            return Response([])
 
-        worlds = World.objects.filter(
-            is_public=True,
-        ).filter(
-            Q(name__icontains=query) | Q(description__icontains=query)
-        ).exclude(
-            owner=request.user
-        ).exclude(
-            memberships__user=request.user
-        )[:20]
+        base = (
+            World.objects.filter(is_public=True)
+            .exclude(owner=request.user)
+            .exclude(memberships__user=request.user)
+        )
+        if len(query) < 2:
+            # Без запиту — стрічка останніх публічних світів для хаба пошуку
+            worlds = base.order_by('-created_at')[:20]
+        else:
+            worlds = base.filter(
+                Q(name__icontains=query) | Q(description__icontains=query)
+            )[:20]
 
         serializer = WorldSerializer(worlds, many=True, context={'request': request})
         return Response(serializer.data)

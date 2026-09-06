@@ -79,9 +79,13 @@
 /* ---------- Пошук у навбарі ---------- */
 
 .searchToggle {
-  padding: 10px 14px !important;
+  width: 46px !important;
+  height: 46px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
   display: inline-flex !important;
   align-items: center;
+  justify-content: center;
 }
 
 .searchToggle svg {
@@ -95,6 +99,7 @@
   flex: 1;
   min-width: 170px;
   max-width: 340px;
+  height: 46px;
   background: #ffffff;
   border: none;
   border-radius: 999px;
