@@ -10,10 +10,13 @@ import {
   TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import ClearIcon from '@mui/icons-material/Clear'
 import SearchIcon from '@mui/icons-material/Search'
 import api from '../../api'
+import { useAuth } from '../../auth'
 import Navbar from '../../shared/components/Navbar/Navbar'
 import { goSection } from '../../shared/utils/navigation'
+import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import WorldCard, { getCompletionPercent } from '../../shared/components/WorldCard/WorldCard'
 import { WorldForm, emptyWorld } from '../dashboard/Dashboard'
 import styles from './MyWorlds.module.css'
@@ -35,19 +38,32 @@ const FILTER_OPTIONS = [
 export default function MyWorlds() {
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const { user: currentUser } = useAuth()
+  const { notify } = useFeedback()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('created_desc')
   const [filterBy, setFilterBy] = useState('all')
 
-  const { data: worlds = [], isLoading } = useQuery({
+  const {
+    data: worlds = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['worlds'],
     queryFn: () => api.get('/worlds/').then((r) => r.data),
   })
   const createWorld = useMutation({
     mutationFn: (data) =>
       api.post('/worlds/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
-    onSuccess: () => qc.invalidateQueries(['worlds']),
+    onSuccess: () => {
+      qc.invalidateQueries(['worlds'])
+      notify('Світ створено')
+    },
+    onError: (err) => {
+      notify(err.response?.data?.detail || 'Не вдалося створити світ')
+    },
   })
 
   const filtered = useMemo(() => {
@@ -75,112 +91,174 @@ export default function MyWorlds() {
     return list.sort(sorters[sortBy] || sorters.created_desc)
   }, [worlds, search, filterBy, sortBy])
 
+  const myWorlds = useMemo(
+    () => filtered.filter((w) => w.owner === currentUser?.id),
+    [filtered, currentUser],
+  )
+  const sharedWorlds = useMemo(
+    () => filtered.filter((w) => w.owner !== currentUser?.id),
+    [filtered, currentUser],
+  )
+
   const totalProgress = worlds.length
     ? Math.round(worlds.reduce((sum, w) => sum + getCompletionPercent(w), 0) / worlds.length)
     : 0
+
+  const hasActiveFilters = search.trim() !== '' || sortBy !== 'created_desc' || filterBy !== 'all'
+  const resetFilters = () => {
+    setSearch('')
+    setSortBy('created_desc')
+    setFilterBy('all')
+  }
 
   return (
     <div className={styles.appShell}>
       <Navbar
         activePage="worlds"
-        logoSrc="/worldlog-logo-white.png"
+        logoSrc="/worldlog-logo.png"
         onNavigate={(id) => goSection(id, navigate)}
       />
 
       <div className={styles.page}>
-        <section className={styles.hero}>
-          <p className={styles.heroGreeting}>Керуйте світами</p>
-          <h1 className={styles.heroTitle}>Мої світи</h1>
+        <div className={styles.toolbar}>
+          <TextField
+            className={styles.searchField}
+            label="Пошук"
+            placeholder="Шукати мої світи…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon className={styles.controlIcon} />
+                  </InputAdornment>
+                ),
+                endAdornment: search ? (
+                  <InputAdornment position="end">
+                    <button
+                      type="button"
+                      className={styles.clearBtn}
+                      onClick={() => setSearch('')}
+                      aria-label="Очистити фільтр"
+                    >
+                      <ClearIcon fontSize="small" />
+                    </button>
+                  </InputAdornment>
+                ) : null,
+              },
+            }}
+          />
+          <FormControl className={styles.control}>
+            <TextField
+              select
+              label="Сортування"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              {SORT_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>
+                  {o.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </FormControl>
+          <FormControl className={styles.control}>
+            <TextField
+              select
+              label="Фільтр"
+              value={filterBy}
+              onChange={(e) => setFilterBy(e.target.value)}
+            >
+              {FILTER_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>
+                  {o.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </FormControl>
+          {hasActiveFilters && (
+            <button type="button" className={styles.resetBtn} onClick={resetFilters}>
+              Скинути
+            </button>
+          )}
+        </div>
+
+        <div className={styles.statsBar}>
+          <span className={styles.statsText}>
+            {filtered.length}{' '}
+            {filtered.length === 1 ? 'світ' : filtered.length < 5 ? 'світи' : 'світів'}
+          </span>
+          <div className={styles.statsRight}>
+            <span className={styles.statsText}>{totalProgress}% задач виконано</span>
+            <div className={styles.progressTrack}>
+              <div className={styles.progressFill} style={{ width: `${totalProgress}%` }} />
+            </div>
+          </div>
+        </div>
+
+        {isLoading && <LinearProgress className={styles.loader} />}
+
+        {!isLoading && isError && (
+          <div className={styles.loadError}>
+            <p className={styles.emptyMsg}>Не вдалося завантажити світи.</p>
+            <button type="button" className={styles.resetBtn} onClick={() => refetch()}>
+              Спробувати ще
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !isError && filtered.length === 0 && (
+          <p className={styles.emptyMsg}>
+            {worlds.length === 0
+              ? 'Ще немає жодного світу. Створи перший!'
+              : 'Нічого не знайдено. Спробуй змінити пошук або фільтр.'}
+          </p>
+        )}
+
+        {!isError && (
+          <>
+            <section className={styles.worldsSection} aria-label="Створені мною світи">
+              <h2 className={styles.sectionTitle}>
+                Створені мною <span className={styles.sectionCount}>{myWorlds.length}</span>
+              </h2>
+              <div className={styles.grid}>
+                {myWorlds.map((w, i) => (
+                  <WorldCard key={w.id} world={w} index={i} tone={i % 2 === 0 ? 'sand' : 'cactus'} />
+                ))}
+
+                <Button
+                  className={`${styles.worldCard} ${styles.addCard}`}
+                  onClick={() => setOpen(true)}
+                  sx={{ '& .MuiTouchRipple-ripple': { color: 'rgba(255, 255, 255, 0.3)' } }}
+                >
+                  <AddIcon className={styles.addIcon} />
+                  <span className={styles.addText}>Новий світ</span>
+                </Button>
+              </div>
             </section>
 
-            <div className={styles.toolbar}>
-              <TextField
-                className={styles.searchField}
-                label="Пошук"
-                placeholder="Назва, опис або сід…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon className={styles.controlIcon} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-              <FormControl className={styles.control}>
-                <TextField
-                  select
-                  label="Сортування"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
-                  {SORT_OPTIONS.map((o) => (
-                    <MenuItem key={o.value} value={o.value}>
-                      {o.label}
-                    </MenuItem>
+            <section className={styles.worldsSection} aria-label="Світи з наданим доступом">
+              <h2 className={styles.sectionTitle}>
+                Наданий доступ <span className={styles.sectionCount}>{sharedWorlds.length}</span>
+              </h2>
+              {sharedWorlds.length > 0 ? (
+                <div className={styles.grid}>
+                  {sharedWorlds.map((w, i) => (
+                    <WorldCard key={w.id} world={w} index={i} tone={i % 2 === 0 ? 'sand' : 'cactus'} />
                   ))}
-                </TextField>
-              </FormControl>
-              <FormControl className={styles.control}>
-                <TextField
-                  select
-                  label="Фільтр"
-                  value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value)}
-                >
-                  {FILTER_OPTIONS.map((o) => (
-                    <MenuItem key={o.value} value={o.value}>
-                      {o.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </FormControl>
-            </div>
-
-            <div className={styles.statsBar}>
-              <span className={styles.statsText}>
-                {filtered.length}{' '}
-                {filtered.length === 1 ? 'світ' : filtered.length < 5 ? 'світи' : 'світів'}
-              </span>
-              <div className={styles.statsRight}>
-                <span className={styles.statsText}>{totalProgress}% задач виконано</span>
-                <div className={styles.progressTrack}>
-                  <div className={styles.progressFill} style={{ width: `${totalProgress}%` }} />
                 </div>
-              </div>
-            </div>
-
-            {isLoading && <LinearProgress className={styles.loader} />}
-
-            {!isLoading && filtered.length === 0 && (
-              <p className={styles.emptyMsg}>
-                {worlds.length === 0
-                  ? 'Ще немає жодного світу. Створи перший!'
-                  : 'Нічого не знайдено. Спробуй змінити пошук або фільтр.'}
-              </p>
-            )}
-
-            <div className={styles.grid}>
-              {filtered.map((w, i) => (
-                <WorldCard key={w.id} world={w} index={i} tone={i % 2 === 0 ? 'coral' : 'teal'} />
-              ))}
-
-              <Button
-                className={`${styles.worldCard} ${styles.addCard}`}
-                onClick={() => setOpen(true)}
-                sx={{ '& .MuiTouchRipple-ripple': { color: 'rgba(255, 255, 255, 0.3)' } }}
-              >
-                <AddIcon className={styles.addIcon} />
-                <span className={styles.addText}>Новий світ</span>
-              </Button>
-            </div>
+              ) : (
+                <p className={styles.sectionEmpty}>
+                  Ніхто ще не надав тобі доступ до свого світу.
+                </p>
+              )}
+            </section>
+          </>
+        )}
       </div>
 
       <WorldForm
-        dark
         open={open}
         onClose={() => setOpen(false)}
         initial={emptyWorld}

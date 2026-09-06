@@ -8,11 +8,11 @@ export function getCompletionPercent(world) {
   return Math.round((world.todos_done / world.todos_count) * 100)
 }
 
-const TONES = ['coral', 'teal', 'violet']
+const TONES = ['coral', 'teal', 'violet', 'sand', 'cactus']
 
 /**
  * Картка світу для списків (дашборд, мої світи).
- * tone: 'coral' | 'teal' | 'violet' | 'auto' (чергування за індексом).
+ * tone: 'coral' | 'teal' | 'violet' | 'sand' | 'cactus' | 'auto' (чергування).
  */
 export default function WorldCard({ world, index = 0, tone = 'auto' }) {
   const navigate = useNavigate()
@@ -25,6 +25,11 @@ export default function WorldCard({ world, index = 0, tone = 'auto' }) {
       onClick={() => navigate(`/app/worlds/${world.id}`)}
       sx={{ '& .MuiTouchRipple-ripple': { color: 'rgba(0, 0, 0, 0.18)' } }}
     >
+      {world.cover_image_url && (
+        <div className={styles.cardCoverWrap} aria-hidden="true">
+          <img src={world.cover_image_url} alt="" className={styles.cardCover} />
+        </div>
+      )}
       <div className={styles.cardTop}>
         <span className={styles.cardNumber}>{String(index + 1).padStart(2, '0')}</span>
         <span className={styles.cardBadge}>{world.is_public ? 'Публічний' : 'Приватний'}</span>

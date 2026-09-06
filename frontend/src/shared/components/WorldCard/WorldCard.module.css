@@ -27,6 +27,28 @@
   background: #ab8cdd !important;
 }
 
+.cardSand {
+  background: #cdae7c !important;
+}
+
+.cardCactus {
+  background: #8e5f7e !important;
+}
+
+.cardCoverWrap {
+  margin: -28px -28px 0;
+  height: 120px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cardCover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .worldCard:hover,
 .worldCard:focus-visible {
   filter: brightness(0.94);
@@ -37,6 +59,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  padding-top: 14px;
 }
 
 .cardNumber {

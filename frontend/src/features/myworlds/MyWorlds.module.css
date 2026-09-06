@@ -1,38 +1,17 @@
 .appShell {
   min-height: 100vh;
-  background: #434343;
-  color: #ffffff;
-  /* Навбар: білі посилання і лого, кораловий профіль */
-  --nav-link-1: #ffffff;
-  --nav-link-2: #ffffff;
+  background: #f3e3b3;
+  color: #1d1a22;
+  /* Навбар: темні посилання і лого, пісковиковий профіль */
+  --nav-link-1: #1d1a22;
+  --nav-link-2: #1d1a22;
   /* Активна вкладка — темний текст на білій пігулці */
-  --nav-active-text: #434343;
-  --nav-profile: #d57c6a;
+  --nav-active-text: #1d1a22;
+  --nav-profile: #cdae7c;
 }
 
 .page {
-  padding: clamp(20px, 3vw, 42px) clamp(5px, 3vw, 20px) 64px;
-}
-
-/* ---------- Hero ---------- */
-
-.hero {
-  margin-bottom: 4px;
-  margin-left: clamp(20px, 40px, 60px);
-}
-
-.heroGreeting {
-  font-size: 36px;
-  font-weight: 500;
-  color: #ffffff;
-}
-
-.heroTitle {
-  font-size: clamp(80px, 12vw, 120px);
-  font-weight: 500;
-  color: #ffffff;
-  letter-spacing: -0.05em;
-  line-height: 1;
+  padding: clamp(8px, 2vw, 20px) clamp(12px, 3vw, 32px) 64px;
 }
 
 /* ---------- Toolbar: пошук / сортування / фільтр ---------- */
@@ -57,23 +36,74 @@
 }
 
 .controlIcon {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(29, 26, 34, 0.5);
+}
+
+.clearBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: rgba(29, 26, 34, 0.5);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.clearBtn:hover {
+  background: rgba(29, 26, 34, 0.08);
+  color: #1d1a22;
+}
+
+.resetBtn {
+  align-self: center;
+  border: 1px dashed rgba(142, 95, 126, 0.55);
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #8e5f7e;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.resetBtn:hover {
+  background: rgba(142, 95, 126, 0.1);
+}
+
+.loadError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 0;
+}
+
+.loadError .emptyMsg {
+  padding: 0;
 }
 
 .toolbar :global(.MuiOutlinedInput-root),
 .toolbar :global(.MuiOutlinedInput-root .MuiOutlinedInput-input) {
-  color: #ffffff;
+  color: #1d1a22;
 }
 
 .toolbar :global(.MuiOutlinedInput-root) {
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: #ffffff;
+  border: 1px solid rgba(138, 109, 59, 0.35);
   transition: border-color 150ms linear;
 }
 
 .toolbar :global(.MuiOutlinedInput-root:hover) {
-  border-color: #ffffff;
+  border-color: rgba(138, 109, 59, 0.7);
 }
 
 .toolbar :global(.MuiOutlinedInput-notchedOutline) {
@@ -81,16 +111,16 @@
 }
 
 .toolbar :global(.MuiInputLabel-root) {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(29, 26, 34, 0.6);
   /* Підпис-«чип»: фон перекриває рамку поля */
-  background: #434343;
+  background: #f3e3b3;
   padding: 0 6px;
   border-radius: 999px;
   margin-left: -6px;
 }
 
 .toolbar :global(.MuiInputLabel-root.Mui-focused) {
-  color: #ffffff;
+  color: #8e5f7e;
 }
 
 .toolbar :global(.MuiSelect-select).MuiSelect-select {
@@ -98,7 +128,7 @@
 }
 
 .toolbar :global(.MuiSelect-icon) {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(29, 26, 34, 0.6);
 }
 
 /* ---------- Stats bar ---------- */
@@ -109,7 +139,7 @@
   justify-content: space-between;
   padding: 24px 50px;
   margin-bottom: 32px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 2px solid rgba(142, 95, 126, 0.3);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -117,7 +147,7 @@
 .statsText {
   font-size: 15px;
   font-weight: 700;
-  color: #ffffff;
+  color: #1d1a22;
 }
 
 .statsRight {
@@ -129,14 +159,14 @@
 .progressTrack {
   width: 140px;
   height: 8px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(142, 95, 126, 0.2);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  background: #ffffff;
+  background: #8e5f7e;
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -146,8 +176,12 @@
   margin: 0 auto 24px;
 }
 
+.loader :global(.MuiLinearProgress-root) {
+  background-color: rgba(142, 95, 126, 0.2) !important;
+}
+
 .loader :global(.MuiLinearProgress-bar) {
-  background-color: #ffffff;
+  background-color: #8e5f7e !important;
 }
 
 .loader :global(.MuiLinearProgress-dashed) {
@@ -158,8 +192,53 @@
   text-align: center;
   font-size: 16px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(29, 26, 34, 0.65);
   padding: 40px 0;
+}
+
+/* ---------- Секції списків ---------- */
+
+.worldsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 34px;
+}
+
+.worldsSection:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: rgba(29, 26, 34, 0.75);
+}
+
+.sectionCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  background: #8e5f7e;
+}
+
+.sectionEmpty {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(29, 26, 34, 0.55);
 }
 
 /* ---------- Grid + cards ---------- */
@@ -194,7 +273,7 @@
 }
 
 .addCard {
-  background: #54ac98 !important;
+  background: #8e5f7e !important;
   border-radius: 28px !important;
   align-items: center !important;
   justify-content: center !important;
@@ -204,11 +283,11 @@
 
 .addCard:hover,
 .addCard:focus-visible {
-  background: #489c89 !important;
+  background: #77516a !important;
 }
 
 .addCard:active {
-  background: #3f8d7c !important;
+  background: #65435a !important;
 }
 
 .addIcon {

@@ -24,6 +24,7 @@ class World(models.Model):
         HONEYCOMB = 'honeycomb', 'Медові соти'
         CHERRY_GROVE = 'cherry_grove', 'Вишнева роща'
         SKIES = 'skies', 'Небеса'
+        DESERT = 'desert', 'Пустеля'
 
     theme = models.CharField(
         max_length=20, choices=Theme.choices, default=Theme.SULFUR_CAVES

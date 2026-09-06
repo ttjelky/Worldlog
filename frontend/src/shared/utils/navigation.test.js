@@ -10,7 +10,7 @@ function makeNavigate() {
 describe('goSection', () => {
   it.each([
     ['home', '/app'],
-    ['overview', '/app'],
+    ['overview', '/app?tab=overview'],
     ['worlds', '/app/worlds'],
     ['friends', '/app/friends'],
     ['search', '/app/search'],
