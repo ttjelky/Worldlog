@@ -1,4 +1,5 @@
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
 import { auth } from './api'
 import { useAuth } from './auth'
 import Landing from './features/landing/Landing'
@@ -44,9 +45,33 @@ export default function App() {
   }
   const back = () => navigate('/app')
 
+  return <AppRoutes start={start} back={back} />
+}
+
+function AppRoutes({ start, back }) {
+  const location = useLocation()
+  // Точка останнього натискання — центр кола переходу (фолбек: центр екрана)
+  const clickPos = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+
+  useEffect(() => {
+    const onDown = (e) => {
+      clickPos.current = { x: e.clientX, y: e.clientY }
+    }
+    window.addEventListener('pointerdown', onDown)
+    return () => window.removeEventListener('pointerdown', onDown)
+  }, [])
+
   return (
-    <Routes>
-      <Route path="/" element={<Landing onStart={start} />} />
+    <div
+      key={location.pathname}
+      className="page-transition"
+      style={{
+        '--rx': `${clickPos.current.x}px`,
+        '--ry': `${clickPos.current.y}px`,
+      }}
+    >
+      <Routes location={location}>
+        <Route path="/" element={<Landing onStart={start} />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route
@@ -67,6 +92,7 @@ export default function App() {
         <Route path="profile/:username" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </div>
   )
 }

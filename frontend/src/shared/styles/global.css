@@ -81,3 +81,24 @@ ol {
   white-space: nowrap;
   border: 0;
 }
+
+/* ---------- Анімація переходу між сторінками ----------
+   Нова сторінка розкривається кругом від курсора (material circle reveal) */
+
+.page-transition {
+  min-height: 100vh;
+  clip-path: circle(150vmax at var(--rx, 50vw) var(--ry, 50vh));
+  animation: page-circle 0.55s ease-out;
+}
+
+@keyframes page-circle {
+  from {
+    clip-path: circle(0px at var(--rx, 50vw) var(--ry, 50vh));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition {
+    animation: none;
+  }
+}
