@@ -13,14 +13,24 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
+import { useFeedback } from '../../../../shared/feedback/FeedbackProvider'
 import styles from './BookmarksSection.module.css'
 
 const empty = { title: '', url: '', description: '' }
+
+function domainOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return ''
+  }
+}
 
 export default function BookmarksSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
@@ -51,6 +61,7 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
     onSuccess: () => qc.invalidateQueries(['bookmarks', String(worldId)]),
   })
   const undo = useUndo()
+  const { notify } = useFeedback()
   const deleteBookmark = (b) =>
     undo.deleteItem({
       id: b.id,
@@ -70,7 +81,7 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
   }
   const openEdit = (b) => {
     setEditing(b)
-    setForm({ ...b })
+    setForm({ title: '', description: '', url: '', ...b })
     setOpen(true)
   }
   const submit = (e) => {
@@ -112,52 +123,83 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
           section.modal ? styles.bookmarkListFull : ''
         } ${section.full ? styles.bookmarkListWide : ''}`}
       >
-        {visibleBookmarks.map((b) => (
-          <div
-            key={b.id}
-            className={styles.bookmarkItem}
-            onClick={() => window.open(b.url, '_blank')}
-          >
-            <div className={styles.bookmarkIcon}>
-              <OpenInNewIcon fontSize="small" />
+        {visibleBookmarks.map((b) => {
+          const domain = domainOf(b.url)
+          const openLink = () => window.open(b.url, '_blank', 'noopener')
+          const copyLink = async (e) => {
+            e.stopPropagation()
+            try {
+              await navigator.clipboard.writeText(b.url)
+              notify('Посилання скопійовано')
+            } catch {
+              notify('Не вдалося скопіювати')
+            }
+          }
+          return (
+            <div
+              key={b.id}
+              className={styles.bookmarkItem}
+              onClick={openLink}
+              role="link"
+              tabIndex={0}
+              title={b.url}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  openLink()
+                }
+              }}
+            >
+              <div className={styles.bookmarkIcon}>
+                <OpenInNewIcon fontSize="small" />
+              </div>
+              <div className={styles.bookmarkInfo}>
+                <div className={styles.bookmarkTitleRow}>
+                  <div className={styles.bookmarkTitle}>{b.title}</div>
+                  {domain && <span className={styles.domainBadge}>{domain}</span>}
+                </div>
+                <div className={styles.bookmarkUrl}>{b.url}</div>
+                {b.description && <div className={styles.bookmarkDesc}>{b.description}</div>}
+              </div>
+              <div className={styles.rowActions}>
+                <RelationshipButton
+                  worldId={worldId}
+                  sourceType="bookmark"
+                  sourceId={b.id}
+                  name={b.title}
+                  accent={accent}
+                />
+                <IconButton size="small" aria-label="Копіювати посилання" onClick={copyLink}>
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+                {canEdit && (
+                  <>
+                    <IconButton
+                      size="small"
+                      aria-label="Редагувати закладку"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEdit(b)
+                      }}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      aria-label="Видалити закладку"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteBookmark(b)
+                      }}
+                    >
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
+              </div>
             </div>
-            <div className={styles.bookmarkInfo}>
-              <div className={styles.bookmarkTitle}>{b.title}</div>
-              <div className={styles.bookmarkUrl}>{b.url}</div>
-            </div>
-            <div className={styles.rowActions}>
-              <RelationshipButton
-                worldId={worldId}
-                sourceType="bookmark"
-                sourceId={b.id}
-                name={b.title}
-                accent={accent}
-              />
-              {canEdit && (
-                <>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openEdit(b)
-                    }}
-                  >
-                    <EditOutlinedIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      deleteBookmark(b)
-                    }}
-                  >
-                    <DeleteOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </div>
-          </div>
-        ))}
+          )
+        })}
         {visibleBookmarks.length === 0 && (
           <p className={sharedStyles.emptyMsg}>
             {bookmarks.length === 0 ? 'Закладок поки немає. Додай першу.' : 'Нічого не знайдено.'}
@@ -191,6 +233,13 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
                 onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                 required
                 type="url"
+              />
+              <TextField
+                label="Опис"
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                multiline
+                minRows={2}
               />
             </div>
           </DialogContent>

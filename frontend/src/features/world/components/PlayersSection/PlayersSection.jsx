@@ -126,16 +126,16 @@ export default function PlayersSection({ worldId, accent, userRole }) {
                 name={p.nickname}
                 accent={accent}
               />
-              {canEdit && (
-                <>
-                  <IconButton size="small" onClick={() => openEdit(p)}>
-                    <EditOutlinedIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => deletePlayer(p)}>
-                    <DeleteOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </>
-              )}
+                {canEdit && (
+                  <>
+                    <IconButton size="small" aria-label="Редагувати гравця" onClick={() => openEdit(p)}>
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" aria-label="Видалити гравця" onClick={() => deletePlayer(p)}>
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
             </div>
           </div>
         ))}
@@ -176,6 +176,7 @@ export default function PlayersSection({ worldId, accent, userRole }) {
               <TextField
                 label="Аватар (скін або фото)"
                 type="file"
+                inputProps={{ accept: 'image/*' }}
                 InputLabelProps={{ shrink: true }}
                 onChange={(e) => setForm((f) => ({ ...f, avatar: e.target.files?.[0] || null }))}
               />
@@ -185,7 +186,11 @@ export default function PlayersSection({ worldId, accent, userRole }) {
             <Button onClick={() => setOpen(false)} className={sharedStyles.dialogBtnCancel}>
               Скасувати
             </Button>
-            <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
+            <Button
+              type="submit"
+              className={sharedStyles.dialogBtnSubmit}
+              disabled={mutation.isPending}
+            >
               Зберегти
             </Button>
           </DialogActions>

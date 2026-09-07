@@ -17,6 +17,7 @@ import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
+import { useFeedback } from '../../../../shared/feedback/FeedbackProvider'
 import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import LocationBadgeText from '../shared/LocationBadgeText'
 import { useLocations } from '../shared/locationData'
@@ -52,6 +53,7 @@ export default function IdeasSection({ worldId, accent, userRole }) {
     onSuccess: () => qc.invalidateQueries(['ideas', String(worldId)]),
   })
   const undo = useUndo()
+  const { notify } = useFeedback()
   const deleteIdea = (t) =>
     undo.deleteItem({
       id: t.id,
@@ -77,8 +79,21 @@ export default function IdeasSection({ worldId, accent, userRole }) {
       qc.invalidateQueries(['ideas', String(worldId)])
       qc.invalidateQueries(['projects', String(worldId)])
       qc.invalidateQueries(['world', String(worldId)])
+      notify('Ідею перетворено на проєкт')
+    },
+    onError: () => {
+      notify('Не вдалося перетворити ідею')
     },
   })
+
+  const handleConvert = (idea) => {
+    if (convertMutation.isPending) return
+    if (
+      window.confirm(`Перетворити «${idea.title}» на проєкт? Ідею буде видалено.`)
+    ) {
+      convertMutation.mutate(idea)
+    }
+  }
 
   const openNew = () => {
     setEditing(null)
@@ -140,10 +155,16 @@ export default function IdeasSection({ worldId, accent, userRole }) {
                   <LocationBadgeText text={t.content} worldId={worldId} locations={locations} small />
                 </div>
               )}
-              <button className={styles.convertBtn} onClick={() => convertMutation.mutate(t)}>
-                <AutoAwesomeIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                Перетворити на проєкт
-              </button>
+              {canEdit && (
+                <button
+                  className={styles.convertBtn}
+                  onClick={() => handleConvert(t)}
+                  disabled={convertMutation.isPending}
+                >
+                  <AutoAwesomeIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                  Перетворити на проєкт
+                </button>
+              )}
             </div>
             <div className={styles.rowActions}>
               <RelationshipButton
@@ -153,16 +174,16 @@ export default function IdeasSection({ worldId, accent, userRole }) {
                 name={t.title}
                 accent={accent}
               />
-              {canEdit && (
-                <>
-                  <IconButton size="small" onClick={() => openEdit(t)}>
-                    <EditOutlinedIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => deleteIdea(t)}>
-                    <DeleteOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </>
-              )}
+                {canEdit && (
+                  <>
+                    <IconButton size="small" aria-label="Редагувати ідею" onClick={() => openEdit(t)}>
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" aria-label="Видалити ідею" onClick={() => deleteIdea(t)}>
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
             </div>
           </div>
         ))}
@@ -208,7 +229,11 @@ export default function IdeasSection({ worldId, accent, userRole }) {
             <Button onClick={() => setOpen(false)} className={sharedStyles.dialogBtnCancel}>
               Скасувати
             </Button>
-            <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
+            <Button
+              type="submit"
+              className={sharedStyles.dialogBtnSubmit}
+              disabled={mutation.isPending}
+            >
               Зберегти
             </Button>
           </DialogActions>

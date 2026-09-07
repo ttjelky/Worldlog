@@ -34,8 +34,8 @@ const statusLabels = {
 const statusColors = {
   draft: '#B0B0B0',
   planning: '#FFE29A',
-  in_progress: '#B7EAC7',
-  completed: '#B7EAC7',
+  in_progress: '#7DD3FC',
+  completed: '#8FE3A0',
 }
 
 function calcStatus(todosCount, doneCount) {
@@ -47,9 +47,10 @@ function calcStatus(todosCount, doneCount) {
 
 const empty = { title: '', description: '' }
 
-function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, onDelete }) {
+function ProjectDetails({ project, worldId, locations, accent, canEdit, onClose, onEdit, onDelete }) {
   const qc = useQueryClient()
   const [newTodo, setNewTodo] = useState('')
+  const undo = useUndo()
 
   const { data: allTodos = [] } = useQuery({
     queryKey: ['todos', String(project.world)],
@@ -75,13 +76,19 @@ function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, 
     },
   })
 
-  const deleteTodo = useMutation({
-    mutationFn: (id) => api.delete(`/worlds/${project.world}/todos/${id}/`),
-    onSuccess: () => {
-      qc.invalidateQueries(['todos', String(project.world)])
-      qc.invalidateQueries(['projects', String(project.world)])
-    },
-  })
+  const deleteTodo = (id) => {
+    const t = todos.find((x) => x.id === id)
+    undo.deleteItem({
+      id,
+      url: `/worlds/${project.world}/todos/${id}/`,
+      queryKeys: [
+        ['todos', String(project.world)],
+        ['projects', String(project.world)],
+      ],
+      message: `Завдання «${t?.title || 'завдання'}» видалено`,
+      nouns: ['завдання', 'завдання', 'завдань'],
+    })
+  }
 
   const handleAddTodo = () => {
     const title = newTodo.trim()
@@ -101,15 +108,15 @@ function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, 
       </IconButton>
 
       <div className={styles.detailsHead}>
-        <h3 className={styles.detailsTitle}>
-          <LocationBadgeText text={project.title} worldId={worldId} locations={locations} />
-          <span
-            className={styles.statusChip}
-            style={{ background: statusColors[status] + '33', color: statusColors[status] }}
-          >
-            {statusLabels[status]}
-          </span>
-        </h3>
+          <h3 className={styles.detailsTitle}>
+            <LocationBadgeText text={project.title} worldId={worldId} locations={locations} />
+            <span
+              className={styles.statusBadge}
+              style={{ background: statusColors[status] + '33', color: statusColors[status] }}
+            >
+              {statusLabels[status]}
+            </span>
+          </h3>
       </div>
 
       {project.description && (
@@ -132,50 +139,70 @@ function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, 
       )}
 
       <div className={styles.todosSection}>
-        <div className={styles.todoAdd}>
-          <TextField
-            size="small"
-            placeholder="Нове завдання…"
-            value={newTodo}
-            onChange={(e) => setNewTodo(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
-            className={styles.todoInput}
-          />
-          <IconButton
-            className={styles.todoAddBtn}
-            onClick={handleAddTodo}
-            disabled={!newTodo.trim() || addTodo.isPending}
-          >
-            <AddIcon fontSize="small" />
-          </IconButton>
-        </div>
+        {canEdit && (
+          <div className={styles.todoAdd}>
+            <TextField
+              size="small"
+              placeholder="Нове завдання…"
+              value={newTodo}
+              onChange={(e) => setNewTodo(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
+              className={styles.todoInput}
+            />
+            <IconButton
+              className={styles.todoAddBtn}
+              onClick={handleAddTodo}
+              disabled={!newTodo.trim() || addTodo.isPending}
+              aria-label="Додати завдання"
+            >
+              <AddIcon fontSize="small" />
+            </IconButton>
+          </div>
+        )}
 
         <div className={styles.todoList}>
           {todos.map((t) => (
             <div
               key={t.id}
               className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''}`}
-              onClick={() => toggleTodo.mutate({ id: t.id, is_done: t.is_done })}
-              style={{ cursor: 'pointer' }}
+              onClick={canEdit ? () => toggleTodo.mutate({ id: t.id, is_done: t.is_done }) : undefined}
+              style={canEdit ? { cursor: 'pointer' } : undefined}
+              role={canEdit ? 'checkbox' : undefined}
+              aria-checked={canEdit ? t.is_done : undefined}
+              tabIndex={canEdit ? 0 : undefined}
+              onKeyDown={
+                canEdit
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        toggleTodo.mutate({ id: t.id, is_done: t.is_done })
+                      }
+                    }
+                  : undefined
+              }
             >
               <Checkbox
                 checked={t.is_done}
                 onClick={(e) => e.stopPropagation()}
-                onChange={() => toggleTodo.mutate({ id: t.id, is_done: t.is_done })}
+                onChange={canEdit ? () => toggleTodo.mutate({ id: t.id, is_done: t.is_done }) : undefined}
+                disabled={!canEdit}
                 size="small"
                 className={styles.todoCheckbox}
               />
               <span className={styles.todoTitle}>{t.title}</span>
-              <IconButton
-                size="small"
-                className={styles.todoDelete}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  deleteTodo.mutate(t.id)
-                }}
-              >
-                <DeleteOutlinedIcon fontSize="small" />
-              </IconButton>
+              {canEdit && (
+                <IconButton
+                  size="small"
+                  className={styles.todoDelete}
+                  aria-label="Видалити завдання"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteTodo(t.id)
+                  }}
+                >
+                  <DeleteOutlinedIcon fontSize="small" />
+                </IconButton>
+              )}
             </div>
           ))}
         </div>
@@ -189,12 +216,16 @@ function ProjectDetails({ project, worldId, locations, accent, onClose, onEdit, 
           name={project.title}
           accent={accent}
         />
-        <IconButton className={styles.actionBtn} aria-label="Редагувати проєкт" onClick={onEdit}>
-          <EditOutlinedIcon fontSize="small" />
-        </IconButton>
-        <IconButton className={styles.actionBtn} aria-label="Видалити проєкт" onClick={onDelete}>
-          <DeleteOutlinedIcon fontSize="small" />
-        </IconButton>
+        {canEdit && (
+          <>
+            <IconButton className={styles.actionBtn} aria-label="Редагувати проєкт" onClick={onEdit}>
+              <EditOutlinedIcon fontSize="small" />
+            </IconButton>
+            <IconButton className={styles.actionBtn} aria-label="Видалити проєкт" onClick={onDelete}>
+              <DeleteOutlinedIcon fontSize="small" />
+            </IconButton>
+          </>
+        )}
       </div>
     </div>
   )
@@ -206,6 +237,7 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [statusFilter, setStatusFilter] = useState(null)
+  const [search, setSearch] = useState('')
   const section = useExpandableCard()
   const canEdit = userRole && userRole !== 'viewer'
 
@@ -214,11 +246,19 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
     queryFn: () => api.get(`/worlds/${worldId}/projects/`).then((r) => r.data),
   })
   const { data: locations = [] } = useLocations(worldId)
-  const visibleProjects = statusFilter
-    ? projects.filter(
-        (p) => calcStatus(p.todos_count ?? 0, p.todos_done ?? 0) === statusFilter,
-      )
-    : projects
+  const visibleProjects = projects.filter((p) => {
+    if (
+      statusFilter &&
+      calcStatus(p.todos_count ?? 0, p.todos_done ?? 0) !== statusFilter
+    ) {
+      return false
+    }
+    const q = search.trim().toLowerCase()
+    if (section.full && q) {
+      return `${p.title || ''} ${p.description || ''}`.toLowerCase().includes(q)
+    }
+    return true
+  })
 
   const mutation = useMutation({
     mutationFn: (payload) =>
@@ -278,7 +318,16 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
       </div>
 
       {section.full && (
-        <div className={styles.statusChips} role="group" aria-label="Фільтр за статусом">
+        <>
+          <input
+            type="search"
+            className={sharedStyles.wideSearch}
+            placeholder="Знайти проєкт…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Пошук проєкту"
+          />
+          <div className={styles.statusChips} role="group" aria-label="Фільтр за статусом">
           {Object.entries(statusLabels).map(([value, label]) => (
             <button
               key={value}
@@ -290,7 +339,8 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
               {label}
             </button>
           ))}
-        </div>
+          </div>
+        </>
       )}
 
       <div
@@ -311,6 +361,7 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
                   worldId={worldId}
                   locations={locations}
                   accent={accent}
+                  canEdit={canEdit}
                   onClose={close}
                   onEdit={() => openEdit(p)}
                   onDelete={() => {
@@ -365,6 +416,7 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
                     <>
                       <IconButton
                         size="small"
+                        aria-label="Редагувати проєкт"
                         onClick={(e) => {
                           e.stopPropagation()
                           openEdit(p)
@@ -374,6 +426,7 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
                       </IconButton>
                       <IconButton
                         size="small"
+                        aria-label="Видалити проєкт"
                         onClick={(e) => {
                           e.stopPropagation()
                           deleteProject(p)

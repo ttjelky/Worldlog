@@ -33,7 +33,7 @@ const parseTags = (tags) =>
         .filter(Boolean)
     : []
 
-function NoteDetails({ note, worldId, locations, accent, onClose, onEdit, onDelete }) {
+function NoteDetails({ note, worldId, locations, accent, canEdit, onClose, onEdit, onDelete }) {
   const tags = parseTags(note.tags)
 
   return (
@@ -65,12 +65,23 @@ function NoteDetails({ note, worldId, locations, accent, onClose, onEdit, onDele
 
       <div className={styles.detailsFooter}>
         <div className={styles.actionBtns}>
-          <IconButton className={styles.actionBtn} aria-label="Редагувати нотатку" onClick={onEdit}>
-            <EditOutlinedIcon fontSize="small" />
-          </IconButton>
-          <IconButton className={styles.actionBtn} aria-label="Видалити нотатку" onClick={onDelete}>
-            <DeleteOutlinedIcon fontSize="small" />
-          </IconButton>
+          <RelationshipButton
+            worldId={worldId}
+            sourceType="note"
+            sourceId={note.id}
+            name={note.title}
+            accent={accent}
+          />
+          {canEdit && (
+            <>
+              <IconButton className={styles.actionBtn} aria-label="Редагувати нотатку" onClick={onEdit}>
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+              <IconButton className={styles.actionBtn} aria-label="Видалити нотатку" onClick={onDelete}>
+                <DeleteOutlinedIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -163,6 +174,7 @@ export default function NotesSection({ worldId, accent, userRole }) {
             <button
               key={tag}
               type="button"
+              aria-pressed={activeTag === tag}
               className={`${styles.tagFilterBtn} ${activeTag === tag ? styles.tagFilterActive : ''}`}
               onClick={() => setActiveTag(activeTag === tag ? null : tag)}
             >
@@ -199,6 +211,7 @@ export default function NotesSection({ worldId, accent, userRole }) {
                 worldId={worldId}
                 locations={locations}
                 accent={accent}
+                canEdit={canEdit}
                 onClose={close}
                 onEdit={() => openEdit(n)}
                 onDelete={() => {
@@ -240,6 +253,7 @@ export default function NotesSection({ worldId, accent, userRole }) {
                   <>
                     <IconButton
                       size="small"
+                      aria-label="Редагувати нотатку"
                       onClick={(e) => {
                         e.stopPropagation()
                         openEdit(n)
@@ -249,6 +263,7 @@ export default function NotesSection({ worldId, accent, userRole }) {
                     </IconButton>
                     <IconButton
                       size="small"
+                      aria-label="Видалити нотатку"
                       onClick={(e) => {
                         e.stopPropagation()
                         deleteNote(n)
@@ -262,8 +277,10 @@ export default function NotesSection({ worldId, accent, userRole }) {
             </div>
           </ExpandableCard>
         ))}
-        {notes.length === 0 && (
-          <p className={sharedStyles.emptyMsg}>Нотаток ще немає. Додай першу.</p>
+        {filteredNotes.length === 0 && (
+          <p className={sharedStyles.emptyMsg}>
+            {notes.length === 0 ? 'Нотаток ще немає. Додай першу.' : 'Нічого не знайдено.'}
+          </p>
         )}
       </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
@@ -12,7 +12,6 @@ import {
   IconButton,
   MenuItem,
   TextField,
-  Tooltip,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
@@ -115,6 +114,8 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   const [pendingImage, setPendingImage] = useState(null)
   const [lightbox, setLightbox] = useState(null)
   const [epochFilter, setEpochFilter] = useState('current')
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState(null)
   const [epochDialog, setEpochDialog] = useState(false)
   const [closeEpoch, setCloseEpoch] = useState(null)
   const canEdit = userRole && userRole !== 'viewer'
@@ -261,13 +262,25 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
 
   const filtered = useMemo(() => {
     let list = [...events]
-    const epochId = epochFilter === 'current' && activeEpochObj ? String(activeEpochObj.id) : ''
+    const epochId =
+      epochFilter === 'all'
+        ? ''
+        : epochFilter === 'current' && activeEpochObj
+          ? String(activeEpochObj.id)
+          : epochFilter
     if (epochId && epochId !== 'all') list = list.filter((e) => String(e.epoch) === String(epochId))
+    if (typeFilter) list = list.filter((e) => e.event_type === typeFilter)
+    const q = search.trim().toLowerCase()
+    if (q) {
+      list = list.filter((e) =>
+        `${e.title || ''} ${e.description || ''}`.toLowerCase().includes(q),
+      )
+    }
     list.sort((a, b) => {
       return new Date(a.date) - new Date(b.date)
     })
     return list
-  }, [events, epochFilter, activeEpochObj])
+  }, [events, epochFilter, activeEpochObj, typeFilter, search])
 
   const grouped = useMemo(() => {
     const byEpoch = new Map()
@@ -334,10 +347,11 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         </div>
       </div>
 
-      <div className={styles.filters}>
+      <div className={styles.filters} role="group" aria-label="Фільтр епох">
         <Button
           size="small"
           variant={epochFilter === 'all' ? 'contained' : 'outlined'}
+          aria-pressed={epochFilter === 'all'}
           onClick={() => setEpochFilter('all')}
           className={`${styles.epochFilterButton} ${
             epochFilter === 'all' ? styles.epochFilterButtonActive : ''
@@ -348,6 +362,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         <Button
           size="small"
           variant={epochFilter === 'current' ? 'contained' : 'outlined'}
+          aria-pressed={epochFilter === 'current'}
           onClick={() => setEpochFilter('current')}
           className={`${styles.epochFilterButton} ${
             epochFilter === 'current' ? styles.epochFilterButtonActive : ''
@@ -357,10 +372,36 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         </Button>
       </div>
 
+      {section.full && (
+        <>
+          <input
+            type="search"
+            className={sharedStyles.wideSearch}
+            placeholder="Знайти подію…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Пошук події"
+          />
+          <div className={styles.typeChips} role="group" aria-label="Фільтр за типом події">
+            {eventTypes.map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={typeFilter === value}
+                className={`${styles.typeChip} ${typeFilter === value ? styles.typeChipActive : ''}`}
+                onClick={() => setTypeFilter((cur) => (cur === value ? null : value))}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       <div
         className={`${sharedStyles.body} ${styles.timeline} ${
           section.modal ? styles.timelineFull : ''
-        }`}
+        } ${section.full ? styles.timelineWide : ''}`}
       >
         {epochs.length === 0 && canEdit ? (
           <div className={styles.epochEmpty}>
@@ -520,6 +561,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                                     <button
                                       type="button"
                                       className={styles.thumbBtn}
+                                      aria-label={`Відкрити фото: ${h.title}`}
                                       onClick={() => setLightbox(h.image_url)}
                                     >
                                       <img
@@ -563,10 +605,18 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                               />
                               {canEdit && (
                                 <>
-                                  <IconButton size="small" onClick={() => openEdit(h)}>
+                                  <IconButton
+                                    size="small"
+                                    aria-label="Редагувати подію"
+                                    onClick={() => openEdit(h)}
+                                  >
                                     <EditOutlinedIcon fontSize="small" />
                                   </IconButton>
-                                  <IconButton size="small" onClick={() => deleteEvent(h)}>
+                                  <IconButton
+                                    size="small"
+                                    aria-label="Видалити подію"
+                                    onClick={() => deleteEvent(h)}
+                                  >
                                     <DeleteOutlinedIcon fontSize="small" />
                                   </IconButton>
                                 </>
@@ -716,14 +766,6 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 onRemove={removeParticipant}
               />
               <PhotoInput pending={pendingImage} onPick={setPendingImage} />
-
-              <Tooltip title="Скоро — буде доступно пізніше">
-                <span>
-                  <Button disabled className={styles.aiButton}>
-                    ✨ Згенерувати опис
-                  </Button>
-                </span>
-              </Tooltip>
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>
@@ -759,7 +801,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
 
 function CardPhotoAdd({ worldId, eventId }) {
   const qc = useQueryClient()
-  const ref = { current: null }
+  const ref = useRef(null)
   const mutation = useMutation({
     mutationFn: (file) =>
       api.patch(
@@ -795,7 +837,7 @@ function CardPhotoAdd({ worldId, eventId }) {
 }
 
 function PhotoInput({ pending, onPick }) {
-  const ref = { current: null }
+  const ref = useRef(null)
   return (
     <div className={styles.photoInput}>
       <input

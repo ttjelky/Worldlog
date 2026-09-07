@@ -55,6 +55,15 @@
   white-space: nowrap;
 }
 
+/* У повноекранному режимі текст переноситься, а не ріжеться */
+.ideaListWide .ideaTitle,
+.ideaListWide .ideaDesc {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: break-word;
+}
+
 .convertBtn {
   display: inline-flex;
   align-items: center;
@@ -74,6 +83,11 @@
   background: rgba(255, 255, 255, 0.32);
 }
 
+.convertBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .rowActions {
   display: flex;
   gap: 0;
@@ -87,4 +101,10 @@
 
 .rowActions :global(.MuiIconButton-root:hover) {
   background: rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 640px) {
+  .ideaListWide {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

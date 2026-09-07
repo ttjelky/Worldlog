@@ -31,3 +31,47 @@
   color: rgba(255, 255, 255, 0.75);
   margin-top: 3px;
 }
+
+.statBar {
+  display: block;
+  height: 6px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.statFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #ffffff;
+  transition: width 0.3s ease;
+}
+
+.statSkeleton {
+  min-height: 86px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.08) 75%
+  );
+  background-size: 400px 100%;
+  animation: statShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes statShimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statSkeleton {
+    animation: none;
+  }
+}

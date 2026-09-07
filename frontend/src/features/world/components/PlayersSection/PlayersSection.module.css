@@ -49,6 +49,14 @@
   white-space: nowrap;
 }
 
+/* У повноекранному режимі роль переноситься, а не ріжеться */
+.playerListWide .playerRole {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: break-word;
+}
+
 .avatar {
   width: 40px !important;
   height: 40px !important;
@@ -70,4 +78,10 @@
 
 .rowActions :global(.MuiIconButton-root:hover) {
   background: rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 640px) {
+  .playerListWide {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

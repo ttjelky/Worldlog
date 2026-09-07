@@ -127,23 +127,23 @@
   height: auto;
   min-height: 100%;
   max-height: none;
-  padding-bottom: 80px;
+  padding-bottom: 24px;
 }
 
 .detailsFooter {
-  position: fixed;
-  bottom: 24px;
-  right: 36px;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  z-index: 2;
 }
 
 .actionBtns {
-  background-color: rgb(28, 102, 66);
-  border-radius: 20px;
-  padding: 0px 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 2px 6px;
 }
 
 .detailsClose {
@@ -213,4 +213,10 @@
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.88);
   white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .noteListWide {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

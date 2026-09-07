@@ -48,6 +48,12 @@
   color: #ffffff;
 }
 
+@media (max-width: 640px) {
+  .projectListWide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .projectItem {
   display: flex;
   flex-direction: column;
@@ -73,13 +79,12 @@
   color: #ffffff;
 }
 
-.statusChip {
+.statusBadge {
   display: inline-flex;
   font-size: 13px;
+  font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
   white-space: nowrap;
   vertical-align: middle;
   margin-left: 6px;

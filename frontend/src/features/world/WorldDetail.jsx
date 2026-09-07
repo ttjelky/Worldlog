@@ -23,6 +23,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../api'
 import backBtnStyles from '../../shared/styles/backButton.module.css'
 import { useUndo } from '../../shared/undo/UndoProvider'
+import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import { WorldAccessList } from './components/ParticipantsSection/ParticipantsSection'
 import PlayersSection from './components/PlayersSection/PlayersSection'
 import LocationsSection from './components/LocationsSection/LocationsSection'
@@ -180,6 +181,7 @@ function InfoCard({ world, worldId, userRole, accent }) {
 function CoverImageCard({ world, worldId, accent, userRole }) {
   const qc = useQueryClient()
   const inputRef = useRef(null)
+  const { notify } = useFeedback()
 
   const uploadCover = useMutation({
     mutationFn: (file) => {
@@ -190,6 +192,7 @@ function CoverImageCard({ world, worldId, accent, userRole }) {
       })
     },
     onSuccess: () => qc.invalidateQueries(['world', String(worldId)]),
+    onError: () => notify('Не вдалося завантажити обкладинку'),
   })
 
   const deleteCover = useMutation({
@@ -202,11 +205,26 @@ function CoverImageCard({ world, worldId, accent, userRole }) {
         },
       ),
     onSuccess: () => qc.invalidateQueries(['world', String(worldId)]),
+    onError: () => notify('Не вдалося видалити обкладинку'),
   })
 
   const handleFile = (e) => {
     const file = e.target.files?.[0]
-    if (file) uploadCover.mutate(file)
+    e.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      notify('Потрібен файл зображення')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      notify('Файл занадто великий (макс. 5 МБ)')
+      return
+    }
+    uploadCover.mutate(file)
+  }
+
+  const handleDelete = () => {
+    if (window.confirm('Видалити обкладинку світу?')) deleteCover.mutate()
   }
 
   const canEdit = userRole && userRole !== 'viewer'
@@ -215,14 +233,33 @@ function CoverImageCard({ world, worldId, accent, userRole }) {
     <div className={`${sharedStyles.card} ${styles.coverCard}`} style={{ '--accent': accent }}>
       {world.cover_image_url ? (
         <>
-          {canEdit && <input ref={inputRef} type="file" accept="image/*" className={styles.coverFileInput} onChange={handleFile} />}
+          {canEdit && (
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              aria-label="Змінити обкладинку"
+              className={styles.coverFileInput}
+              onChange={handleFile}
+            />
+          )}
           <img className={styles.coverImgFull} src={world.cover_image_url} alt={world.name} />
           {canEdit && (
             <div className={styles.coverOverlay}>
-              <IconButton className={styles.coverAction} onClick={() => inputRef.current?.click()} disabled={uploadCover.isPending}>
+              <IconButton
+                className={styles.coverAction}
+                aria-label="Змінити обкладинку"
+                onClick={() => inputRef.current?.click()}
+                disabled={uploadCover.isPending}
+              >
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
-              <IconButton className={styles.coverAction} onClick={() => deleteCover.mutate()} disabled={deleteCover.isPending}>
+              <IconButton
+                className={styles.coverAction}
+                aria-label="Видалити обкладинку"
+                onClick={handleDelete}
+                disabled={deleteCover.isPending}
+              >
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
             </div>
@@ -234,6 +271,7 @@ function CoverImageCard({ world, worldId, accent, userRole }) {
             ref={inputRef}
             type="file"
             accept="image/*"
+            aria-label="Завантажити обкладинку"
             className={styles.coverFileInput}
             onChange={handleFile}
           />
@@ -437,7 +475,11 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
         <InfoCard world={world} worldId={worldId} userRole={userRole} accent={red} />
       </ExpandableCard>
     ),
-    cover: () => <CoverImageCard world={world} worldId={worldId} accent={cover} userRole={userRole} />,
+    cover: () => (
+      <ExpandableCard>
+        <CoverImageCard world={world} worldId={worldId} accent={cover} userRole={userRole} />
+      </ExpandableCard>
+    ),
     players: () => (
       <ExpandableCard>
         <PlayersSection worldId={worldId} accent={green} userRole={userRole} />
