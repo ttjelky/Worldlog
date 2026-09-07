@@ -342,12 +342,15 @@ class EpochSerializer(serializers.ModelSerializer):
 class WorldSerializer(serializers.ModelSerializer):
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     owner_avatar_url = serializers.SerializerMethodField()
-    players_count = serializers.IntegerField(source='players.count', read_only=True)
-    locations_count = serializers.IntegerField(source='locations.count', read_only=True)
-    todos_count = serializers.IntegerField(source='todos.count', read_only=True)
-    todos_done = serializers.SerializerMethodField()
-    history_count = serializers.IntegerField(source='history.count', read_only=True)
-    epochs_count = serializers.IntegerField(source='epochs.count', read_only=True)
+    # Лічильники приходять з annotate (див. world_list_queryset у views) —
+    # жодних додаткових запитів на світ. На неанотованих інстансах
+    # (відповіді create/update) поля пропускаються, фронт довантажує списки.
+    players_count = serializers.IntegerField(read_only=True)
+    locations_count = serializers.IntegerField(read_only=True)
+    todos_count = serializers.IntegerField(read_only=True)
+    todos_done = serializers.IntegerField(read_only=True)
+    history_count = serializers.IntegerField(read_only=True)
+    epochs_count = serializers.IntegerField(read_only=True)
     cover_image_url = serializers.SerializerMethodField()
     current_user_role = serializers.SerializerMethodField()
 
@@ -398,13 +401,16 @@ class WorldSerializer(serializers.ModelSerializer):
             pass
         return None
 
-    def get_todos_done(self, obj):
-        return obj.todos.filter(is_done=True).count()
-
     def get_current_user_role(self, obj):
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return None
+        # Prefetch своїх memberships з world_list_queryset — без запиту
+        mine = getattr(obj, 'my_membership', None)
+        if mine is not None:
+            if obj.owner_id == request.user.id:
+                return Membership.Role.OWNER
+            return mine[0].role if mine else None
         from .permissions import get_user_role
         return get_user_role(request.user, obj)
 
@@ -438,17 +444,23 @@ class NoteSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    progress = serializers.IntegerField(read_only=True)
-    todos_count = serializers.IntegerField(source='todos.count', read_only=True)
-    todos_done = serializers.SerializerMethodField()
+    progress = serializers.SerializerMethodField()
+    todos_count = serializers.IntegerField(read_only=True)
+    todos_done = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Project
         fields = ('id', 'world', 'title', 'description', 'status', 'progress', 'todos_count', 'todos_done', 'created_at')
         read_only_fields = ('world',)
 
-    def get_todos_done(self, obj):
-        return obj.todos.filter(is_done=True).count()
+    def get_progress(self, obj):
+        total = getattr(obj, 'todos_count', None)
+        done = getattr(obj, 'todos_done', None)
+        if total is None or done is None:
+            # Без annotate (відповіді create/update) — рахуємо напряму
+            total = obj.todos.count()
+            done = obj.todos.filter(is_done=True).count()
+        return round(done / total * 100) if total else 0
 
 
 class BookmarkSerializer(serializers.ModelSerializer):

@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import IntegrityError
-from django.db.models import Q
+from django.db.models import Count, Prefetch, Q
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -115,6 +115,30 @@ class ProfileUpdateView(APIView):
         return Response(data)
 
 
+def world_list_queryset(user):
+    """Світи з лічильниками одним запитом: annotate замість N+1,
+    select_related для власника, prefetch лише своїх memberships
+    (для current_user_role без додаткових запитів)."""
+    return (
+        World.objects.select_related('owner', 'owner__profile')
+        .prefetch_related(
+            Prefetch(
+                'memberships',
+                queryset=Membership.objects.filter(user=user),
+                to_attr='my_membership',
+            )
+        )
+        .annotate(
+            players_count=Count('players', distinct=True),
+            locations_count=Count('locations', distinct=True),
+            todos_count=Count('todos', distinct=True),
+            todos_done=Count('todos', filter=Q(todos__is_done=True), distinct=True),
+            history_count=Count('history', distinct=True),
+            epochs_count=Count('epochs', distinct=True),
+        )
+    )
+
+
 class WorldViewSet(viewsets.ModelViewSet):
     serializer_class = WorldSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrMember]
@@ -127,11 +151,9 @@ class WorldViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated(), IsOwnerOrMember()]
 
     def get_queryset(self):
-        return (World.objects.filter(
-            owner=self.request.user
-        ) | World.objects.filter(
-            memberships__user=self.request.user
-        )).distinct()
+        return world_list_queryset(self.request.user).filter(
+            Q(owner=self.request.user) | Q(memberships__user=self.request.user)
+        ).distinct()
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -322,6 +344,13 @@ class NoteViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 class ProjectViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.annotate(
+            todos_count=Count('todos', distinct=True),
+            todos_done=Count('todos', filter=Q(todos__is_done=True), distinct=True),
+        )
 
 
 class BookmarkViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
@@ -806,10 +835,12 @@ class WorldSearchView(APIView):
     def get(self, request):
         query = request.query_params.get('q', '').strip()
 
-        base = (
-            World.objects.filter(is_public=True)
-            .exclude(owner=request.user)
-            .exclude(memberships__user=request.user)
+        base = world_list_queryset(request.user).filter(
+            is_public=True,
+        ).exclude(
+            owner=request.user
+        ).exclude(
+            memberships__user=request.user
         )
         if len(query) < 2:
             # Без запиту — стрічка останніх публічних світів для хаба пошуку

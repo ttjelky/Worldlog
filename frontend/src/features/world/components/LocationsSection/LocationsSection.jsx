@@ -338,10 +338,10 @@ export default function LocationsSection({ worldId, accent, userRole }) {
       )}
     >
       <article className={styles.locTile}>
-        <div className={styles.locThumbArea}>
-          {l.screenshots?.[0] ? (
-            <img className={styles.locThumb} src={l.screenshots[0].image} alt={l.name} />
-          ) : (
+              <div className={styles.locThumbArea}>
+                {l.screenshots?.[0] ? (
+                  <img className={styles.locThumb} src={l.screenshots[0].image} alt={l.name} loading="lazy" decoding="async" />
+                ) : (
             <div className={styles.locThumbPlaceholder}>
               <PhotoCameraOutlinedIcon />
             </div>

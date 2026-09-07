@@ -10,7 +10,15 @@ import theme from './theme'
 import './shared/styles/global.css'
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      // Дані свіжі 30с — менше блимання і повторних запитів при навігації
+      staleTime: 30000,
+      gcTime: 10 * 60 * 1000,
+    },
+  },
 })
 
 createRoot(document.getElementById('root')).render(

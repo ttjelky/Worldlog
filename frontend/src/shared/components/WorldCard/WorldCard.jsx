@@ -27,7 +27,7 @@ export default function WorldCard({ world, index = 0, tone = 'auto' }) {
     >
       {world.cover_image_url && (
         <div className={styles.cardCoverWrap} aria-hidden="true">
-          <img src={world.cover_image_url} alt="" className={styles.cardCover} />
+          <img src={world.cover_image_url} alt="" className={styles.cardCover} loading="lazy" decoding="async" />
         </div>
       )}
       <div className={styles.cardTop}>

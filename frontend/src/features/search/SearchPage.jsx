@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
@@ -33,6 +33,7 @@ export default function SearchPage() {
     queryKey: ['worldSearch', query],
     queryFn: () => api.get(`/worlds/search/?q=${encodeURIComponent(query)}`).then((r) => r.data),
     enabled: showResults,
+    placeholderData: keepPreviousData,
   })
 
   const { data: userResults = [], isLoading: usersLoading } = useQuery({
@@ -40,6 +41,7 @@ export default function SearchPage() {
     queryFn: () => api.get('/users/search/', { params: { q: query } }).then((r) => r.data),
     enabled: showResults,
     staleTime: 5000,
+    placeholderData: keepPreviousData,
   })
 
   // Стрічка публічних світів для хаба (бекенд повертає останні без q)
@@ -405,7 +407,7 @@ function WorldSearchResult({ world, index = 0, showAccess = true, accessSent, on
     >
       {world.cover_image_url && (
         <div className={styles.cardCoverWrap} aria-hidden="true">
-          <img src={world.cover_image_url} alt="" className={styles.cardCover} />
+          <img src={world.cover_image_url} alt="" className={styles.cardCover} loading="lazy" decoding="async" />
         </div>
       )}
       <div className={styles.cardTop}>
