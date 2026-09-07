@@ -86,9 +86,9 @@ export function NotificationProvider({ children }) {
       if (notification.notification_type === 'friend_request' || notification.notification_type === 'friend_accepted') {
         navigate('/app/friends?tab=requests')
       } else if (notification.notification_type.startsWith('world_access')) {
-        navigate('/app/notifications')
+        navigate('/app/worlds')
       } else {
-        navigate('/app/notifications')
+        navigate('/app/worlds')
       }
     },
     [navigate, markAsRead],

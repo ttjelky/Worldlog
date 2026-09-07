@@ -1,0 +1,263 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(13, 13, 15, 0.35);
+  animation: backdrop-in 0.2s ease;
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.panel {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: 400px;
+  max-width: calc(100vw - 24px);
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 12px 48px rgba(13, 13, 15, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: panel-in 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid rgba(29, 26, 34, 0.1);
+}
+
+.title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #141414;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #e8734a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.readAllBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b4a3a;
+  padding: 8px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.readAllBtn:hover {
+  background: rgba(107, 74, 58, 0.08);
+}
+
+.readAllBtn:disabled {
+  opacity: 0.5;
+}
+
+.closeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(29, 26, 34, 0.06);
+  color: #1d1a22;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(29, 26, 34, 0.12);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hint {
+  text-align: center;
+  font-size: 14px;
+  color: rgba(29, 26, 34, 0.5);
+  padding: 24px 0;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 20px;
+}
+
+.emptyIcon {
+  font-size: 44px !important;
+  color: rgba(29, 26, 34, 0.2);
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(29, 26, 34, 0.55);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.item:hover {
+  background: rgba(29, 26, 34, 0.05);
+}
+
+.unread {
+  background: rgba(232, 115, 74, 0.1);
+}
+
+.unread:hover {
+  background: rgba(232, 115, 74, 0.16);
+}
+
+.itemContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.itemLabel {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b4a3a;
+}
+
+.itemMessage {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d1a22;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.itemTime {
+  font-size: 12px;
+  color: rgba(29, 26, 34, 0.45);
+}
+
+.itemActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.acceptBtn,
+.rejectBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.acceptBtn {
+  background: #4caf7d;
+  color: #ffffff;
+}
+
+.acceptBtn:hover {
+  background: #43a06c;
+}
+
+.rejectBtn {
+  background: rgba(29, 26, 34, 0.07);
+  color: #1d1a22;
+}
+
+.rejectBtn:hover {
+  background: rgba(178, 58, 72, 0.12);
+  color: #b23a48;
+}
+
+.acceptBtn:disabled,
+.rejectBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .panel {
+    animation: none;
+  }
+}

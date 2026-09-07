@@ -202,7 +202,7 @@
   align-items: center !important;
   justify-content: center !important;
   min-width: 0 !important;
-  padding: 8px !important;
+  padding: 11px !important;
   border-radius: 999px !important;
   color: #000000 !important;
   background: #ffffff !important;
@@ -220,7 +220,7 @@
   align-items: center !important;
   gap: 10px !important;
   min-width: 0 !important;
-  padding: 6px 10px 6px 6px !important;
+  padding: 9px 20px 9px 9px !important;
   border-radius: 999px !important;
   background: #ffffff !important;
   text-transform: none !important;

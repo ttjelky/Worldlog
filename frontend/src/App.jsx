@@ -20,7 +20,6 @@ const ProfilePage = lazy(() => import('./features/profile/ProfilePage'))
 const NotFoundPage = lazy(() => import('./features/notfound/NotFoundPage'))
 const FriendsPage = lazy(() => import('./features/friends/FriendsPage'))
 const SearchPage = lazy(() => import('./features/search/SearchPage'))
-const NotificationsPage = lazy(() => import('./features/notifications/NotificationsPage'))
 
 function RouteFallback() {
   return <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 2000 }} />
@@ -83,7 +82,6 @@ function AppRoutes({ start, back }) {
           <Route path="worlds/:worldId" element={<WorldDetail onBack={back} />} />
           <Route path="friends" element={<FriendsPage />} />
           <Route path="search" element={<SearchPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="profile/:username" element={<ProfilePage />} />
         </Route>

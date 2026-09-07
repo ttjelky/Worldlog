@@ -19,9 +19,6 @@ export function goSection(id, navigate) {
     case 'search':
       navigate('/app/search')
       break
-    case 'notifications':
-      navigate('/app/notifications')
-      break
     default:
       break
   }

@@ -7,6 +7,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../../auth'
 import { useNotifications } from '../../notifications/NotificationProvider'
 import UserAvatar from '../UserAvatar/UserAvatar'
+import NotificationsPanel from '../NotificationsPanel/NotificationsPanel'
 import styles from './Navbar.module.css'
 
 const NAV_ITEMS = [
@@ -31,6 +32,7 @@ function NavLinkButton({ item, activePage, onNavigate }) {
 
 export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-logo-purple.png' }) {
   const [anchorEl, setAnchorEl] = useState(null)
+  const [panelOpen, setPanelOpen] = useState(false)
   const { user, logout } = useAuth()
   const { unreadCount } = useNotifications()
   const navigate = useNavigate()
@@ -81,7 +83,6 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
     else if (id === 'worlds') navigate('/app/worlds')
     else if (id === 'friends') navigate('/app/friends')
     else if (id === 'search') navigate('/app/search')
-    else if (id === 'notifications') navigate('/app/notifications')
     else onNavigate(id)
   }
 
@@ -142,8 +143,9 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
       <div className={styles.navRight}>
         <Button
           className={styles.notificationsBtn}
-          onClick={() => navigate('/app/notifications')}
+          onClick={() => setPanelOpen(true)}
           aria-label="Сповіщення"
+          aria-haspopup="dialog"
         >
           <Badge badgeContent={unreadCount} color="error" max={9}>
             <NotificationsIcon />
@@ -182,6 +184,7 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
           </MenuItem>
         </Menu>
       </div>
+      {panelOpen && <NotificationsPanel onClose={() => setPanelOpen(false)} />}
     </nav>
   )
 }

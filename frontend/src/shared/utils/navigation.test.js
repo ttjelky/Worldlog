@@ -14,7 +14,6 @@ describe('goSection', () => {
     ['worlds', '/app/worlds'],
     ['friends', '/app/friends'],
     ['search', '/app/search'],
-    ['notifications', '/app/notifications'],
   ])('navigates %s to %s', (id, path) => {
     const { navigate, calls } = makeNavigate()
     goSection(id, navigate)
