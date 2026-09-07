@@ -104,38 +104,38 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
               onNavigate={handleNav}
             />
           ))}
-          {searchOpen ? (
-            <div className={styles.searchBox}>
-              <SearchIcon className={styles.searchBoxIcon} />
-              <input
-                ref={inputRef}
-                autoFocus
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setValue('')
-                    commitSearch('')
-                  }
-                }}
-                onBlur={() => {
-                  if (!value && location.pathname !== '/app/search') setSearchOpen(false)
-                }}
-                placeholder="Пошук…"
-                aria-label="Пошук"
-                className={styles.searchInput}
-              />
-            </div>
-          ) : (
+          <div className={`${styles.searchWrap} ${searchOpen ? styles.open : ''}`}>
             <button
               type="button"
               aria-label="Пошук"
-              className={`${styles.navLink} ${styles.searchToggle}`}
-              onClick={openSearch}
+              className={styles.magBtn}
+              onClick={() => {
+                if (searchOpen) inputRef.current?.focus()
+                else openSearch()
+              }}
             >
               <SearchIcon />
             </button>
-          )}
+            <input
+              ref={inputRef}
+              autoFocus={searchOpen}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setValue('')
+                  commitSearch('')
+                }
+              }}
+              onBlur={() => {
+                if (!value && location.pathname !== '/app/search') setSearchOpen(false)
+              }}
+              placeholder="Пошук…"
+              aria-label="Пошук"
+              tabIndex={searchOpen ? 0 : -1}
+              className={styles.searchField}
+            />
+          </div>
         </div>
       </div>
 

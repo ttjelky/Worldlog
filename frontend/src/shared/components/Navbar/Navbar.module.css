@@ -76,57 +76,55 @@
   background: #ffffff !important;
 }
 
-/* ---------- Пошук у навбарі ---------- */
+/* ---------- Пошук у навбарі: лупа на місці, інпут розкривається вправо ---------- */
 
-.searchToggle {
-  width: 46px !important;
-  height: 46px !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  display: inline-flex !important;
+.searchWrap {
+  display: flex;
   align-items: center;
-  justify-content: center;
+  border-radius: 999px;
+  transition: background 0.2s ease;
 }
 
-.searchToggle svg {
+.magBtn {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--link-accent, #ffffff);
+  background: transparent;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.magBtn:hover {
+  background: color-mix(in srgb, var(--link-accent, #ffffff) 12%, transparent);
+}
+
+.magBtn svg {
   font-size: 20px;
 }
 
-.searchBox {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  min-width: 170px;
-  max-width: 340px;
-  height: 46px;
+.searchWrap.open {
   background: #ffffff;
-  border: none;
-  border-radius: 999px;
-  padding: 7px 8px 7px 14px;
-  animation: search-expand 0.22s ease;
+  padding-right: 14px;
 }
 
-@keyframes search-expand {
-  from {
-    opacity: 0;
-    transform: scaleX(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.searchWrap.open .magBtn {
+  color: rgba(29, 26, 34, 0.55);
+  pointer-events: none;
 }
 
-.searchBoxIcon {
-  color: rgba(29, 26, 34, 0.45);
-  font-size: 20px !important;
-  flex-shrink: 0;
-}
-
-.searchInput {
-  flex: 1;
-  min-width: 0;
+.searchField {
+  width: 100%;
+  max-width: 0;
+  opacity: 0;
+  height: 46px;
   border: none;
   outline: none;
   background: transparent;
@@ -135,14 +133,33 @@
   font-weight: 500;
   color: #1d1a22;
   padding: 0;
+  transition:
+    max-width 0.25s ease,
+    opacity 0.2s ease,
+    margin 0.25s ease;
 }
 
-.searchInput:focus-visible {
-  outline: none;
+.searchWrap.open .searchField {
+  max-width: 220px;
+  opacity: 1;
+  margin-left: 2px;
+  animation: search-grow 0.25s ease;
 }
 
-.searchInput::placeholder {
+@keyframes search-grow {
+  from {
+    max-width: 0;
+    opacity: 0;
+    margin-left: 0;
+  }
+}
+
+.searchField::placeholder {
   color: rgba(29, 26, 34, 0.45);
+}
+
+.searchField:focus-visible {
+  outline: none;
 }
 
 @media (max-width: 700px) {
@@ -155,17 +172,20 @@
     flex: 1;
   }
 
-  .searching .navLinks > :not(.searchBox) {
+  .searching .navLinks > :not(.searchWrap) {
     display: none;
   }
 
-  .searchBox {
+  .searchWrap.open .searchField {
     max-width: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .searchBox {
+  .searchWrap,
+  .magBtn,
+  .searchField {
+    transition: none;
     animation: none;
   }
 }
