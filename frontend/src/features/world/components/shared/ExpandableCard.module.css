@@ -177,6 +177,11 @@
   overflow-x: hidden;
   overflow-y: auto;
   border-radius: 32px;
+  scrollbar-width: none;
+}
+
+.modalContent::-webkit-scrollbar {
+  display: none;
 }
 
 .modalContent > * {

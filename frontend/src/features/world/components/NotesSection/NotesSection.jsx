@@ -10,7 +10,6 @@ import {
   TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
-import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
@@ -38,10 +37,6 @@ function NoteDetails({ note, worldId, locations, accent, canEdit, onClose, onEdi
 
   return (
     <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
-      <IconButton className={styles.detailsClose} aria-label="Закрити" onClick={onClose}>
-        <CloseIcon />
-      </IconButton>
-
       <div className={styles.detailsHead}>
         <h3 className={styles.detailsTitle}>
           <LocationBadgeText text={note.title} worldId={worldId} locations={locations} />

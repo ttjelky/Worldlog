@@ -19,15 +19,21 @@
 
 /* Самотня картка в ряду (одна взагалі або остання непарна) — на всю ширину.
    Картка обгорнута в ExpandableCard, тому цілимось в обгортку, а не в .locTile */
-.locGrid > .locTileWrap:last-child:nth-child(odd) {
+.locGrid > .locTileWrap:nth-child(2n+1):last-child {
   grid-column: 1 / -1;
+}
+
+/* У широкій 3-колонковій сітці (повний екран) правило вище не діє:
+   самотня картка лишається звичайного розміру */
+.locGridWide > .locTileWrap:nth-child(2n+1):last-child {
+  grid-column: auto;
 }
 
 /* Розтягнута картка майже вдвічі ширша за звичайну, тож обкладинці даємо
    вдвічі «ширше» співвідношення — висота картки лишається як у сусідніх.
    Лише для 2-колонкової сітки (на мобільному всі картки й так на всю ширину) */
 @media (min-width: 641px) {
-  .locGrid > .locTileWrap:last-child:nth-child(odd) .locThumbArea {
+  .locGrid:not(.locGridWide) > .locTileWrap:nth-child(2n+1):last-child .locThumbArea {
     aspect-ratio: 5 / 1;
   }
 }
@@ -323,21 +329,42 @@
   min-width: 0;
 }
 
-/* ---------- Форма: прикріплення фото ---------- */
+/* ---------- Форма: назва + кнопка фото в один ряд ---------- */
 
-.attachBlock {
+.titleRow {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  align-items: stretch;
 }
 
-.attachBlock :global(.MuiButton-root) {
-  align-self: flex-start;
-  border: 1px dashed rgba(29, 26, 34, 0.4);
-  border-radius: 12px;
-  padding: 8px 16px;
-  text-transform: none;
+.titleField {
+  flex: 1;
+  min-width: 0;
 }
+
+.titleRow :global(.MuiButton-root) {
+  flex-shrink: 0;
+  white-space: nowrap;
+  height: auto;
+  border: none;
+  border-radius: 999px;
+  padding: 0 20px;
+  background: color-mix(in srgb, var(--accent, #6f42c6) 12%, transparent);
+  color: var(--accent, #6f42c6);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: none;
+  box-shadow: none;
+  transition: background 150ms linear;
+}
+
+.titleRow :global(.MuiButton-root:hover) {
+  background: color-mix(in srgb, var(--accent, #6f42c6) 20%, transparent);
+  box-shadow: none;
+}
+
+/* ---------- Форма: прикріплення фото ---------- */
 
 .attachPreviews {
   display: flex;

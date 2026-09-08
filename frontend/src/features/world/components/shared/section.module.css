@@ -207,6 +207,11 @@
   overflow-y: auto !important;
   flex: 1;
   min-height: 0;
+  scrollbar-width: none;
+}
+
+.dialogPaper :global(.MuiDialogContent-root::-webkit-scrollbar) {
+  display: none;
 }
 
 .dialogActions {

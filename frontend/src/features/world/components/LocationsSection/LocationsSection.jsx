@@ -42,6 +42,7 @@ const legacyCategoryLabels = {
   temple: categoryLabels.build,
 }
 const empty = { name: '', description: '', x: 0, y: 0, z: 0, category: 'other' }
+const COORD_KEYS = ['x', 'y', 'z']
 const CAROUSEL_PER_PAGE = 2
 const CAROUSEL_INTERVAL = 10000
 
@@ -79,10 +80,6 @@ function LocationDetails({
 
   return (
     <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
-      <IconButton className={styles.detailsClose} aria-label="Закрити" onClick={onClose}>
-        <CloseIcon />
-      </IconButton>
-
       <div className={styles.detailsHead}>
         <h3 className={styles.detailsName}>{location.name}</h3>
         <div className={styles.detailsMeta}>
@@ -176,6 +173,8 @@ export default function LocationsSection({ worldId, accent, userRole }) {
   const snapTimer = useRef(null)
   const pendingTarget = useRef(null)
   const attachInputRef = useRef(null)
+  const coordInputs = useRef({})
+  const formRef = useRef(null)
   const canEdit = userRole && userRole !== 'viewer'
 
   const { data: locations = [] } = useQuery({
@@ -609,17 +608,35 @@ export default function LocationsSection({ worldId, accent, userRole }) {
           paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
         }}
       >
-        <form onSubmit={submit}>
+        <form onSubmit={submit} ref={formRef}>
           <DialogTitle>{editing ? 'Редагувати локацію' : 'Нова локація'}</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
-              <TextField
-                label="Назва"
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                required
-                autoFocus
-              />
+              <div className={styles.titleRow}>
+                <TextField
+                  label="Назва"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  required
+                  autoFocus
+                  className={styles.titleField}
+                />
+                <input
+                  ref={attachInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={addPendingPhoto}
+                />
+                <Button
+                  size="small"
+                  startIcon={<AddPhotoAlternateOutlinedIcon />}
+                  onClick={() => attachInputRef.current?.click()}
+                  title={pendingPhoto ? 'Замінити фото' : 'Додати фото'}
+                >
+                  {pendingPhoto ? 'Замінити фото' : 'Додати фото'}
+                </Button>
+              </div>
               <TextField
                 label="Опис"
                 value={form.description}
@@ -628,7 +645,7 @@ export default function LocationsSection({ worldId, accent, userRole }) {
                 minRows={2}
               />
               <div className={styles.coordRow}>
-                {['x', 'y', 'z'].map((c) => (
+                {COORD_KEYS.map((c, i) => (
                   <TextField
                     key={c}
                     label={c.toUpperCase()}
@@ -636,6 +653,21 @@ export default function LocationsSection({ worldId, accent, userRole }) {
                     value={form[c]}
                     onChange={(e) => setForm((f) => ({ ...f, [c]: e.target.value }))}
                     className={styles.coordField}
+                    inputRef={(el) => {
+                      coordInputs.current[c] = el
+                    }}
+                    onFocus={() => {
+                      // Дефолтні нулі стираються одразу — можна друкувати поверх
+                      if (form[c] === 0 || form[c] === '0') {
+                        setForm((f) => ({ ...f, [c]: '' }))
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter') return
+                      e.preventDefault()
+                      if (i < COORD_KEYS.length - 1) coordInputs.current[COORD_KEYS[i + 1]]?.focus()
+                      else formRef.current?.requestSubmit()
+                    }}
                   />
                 ))}
               </div>
@@ -651,47 +683,21 @@ export default function LocationsSection({ worldId, accent, userRole }) {
                   </MenuItem>
                 ))}
               </TextField>
-              <div className={styles.attachBlock}>
-                <input
-                  ref={attachInputRef}
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={addPendingPhoto}
-                />
-                {pendingPhoto ? (
-                  <Button
-                    size="small"
-                    startIcon={<AddPhotoAlternateOutlinedIcon />}
-                    onClick={() => attachInputRef.current?.click()}
-                  >
-                    Замінити фото
-                  </Button>
-                ) : (
-                  <Button
-                    size="small"
-                    startIcon={<AddPhotoAlternateOutlinedIcon />}
-                    onClick={() => attachInputRef.current?.click()}
-                  >
-                    Додати фото
-                  </Button>
-                )}
-                {pendingPhoto && (
-                  <div className={styles.attachPreviews}>
-                    <div className={styles.attachPreview}>
-                      <img src={pendingPhoto.url} alt="" />
-                      <IconButton
-                        size="small"
-                        className={styles.attachRemove}
-                        aria-label="Прибрати фото"
-                        onClick={() => setPendingPhoto(null)}
-                      >
-                        <CloseIcon sx={{ fontSize: 14 }} />
-                      </IconButton>
-                    </div>
+              {pendingPhoto && (
+                <div className={styles.attachPreviews}>
+                  <div className={styles.attachPreview}>
+                    <img src={pendingPhoto.url} alt="" />
+                    <IconButton
+                      size="small"
+                      className={styles.attachRemove}
+                      aria-label="Прибрати фото"
+                      onClick={() => setPendingPhoto(null)}
+                    >
+                      <CloseIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>
