@@ -240,8 +240,8 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ('id', 'world', 'nickname', 'role_note', 'avatar')
-        read_only_fields = ('world',)
+        fields = ('id', 'world', 'nickname', 'role_note', 'status', 'avatar', 'created_at')
+        read_only_fields = ('world', 'created_at')
 
 
 class TodoItemSerializer(serializers.ModelSerializer):
@@ -256,8 +256,9 @@ class TodoItemSerializer(serializers.ModelSerializer):
             'is_done',
             'priority',
             'due_date',
+            'created_at',
         )
-        read_only_fields = ('world',)
+        read_only_fields = ('world', 'created_at')
 
 
 class HistoryEventSerializer(serializers.ModelSerializer):
@@ -351,6 +352,11 @@ class WorldSerializer(serializers.ModelSerializer):
     todos_done = serializers.IntegerField(read_only=True)
     history_count = serializers.IntegerField(read_only=True)
     epochs_count = serializers.IntegerField(read_only=True)
+    notes_count = serializers.IntegerField(read_only=True)
+    projects_count = serializers.IntegerField(read_only=True)
+    bookmarks_count = serializers.IntegerField(read_only=True)
+    ideas_count = serializers.IntegerField(read_only=True)
+    wiki_count = serializers.IntegerField(read_only=True)
     cover_image_url = serializers.SerializerMethodField()
     current_user_role = serializers.SerializerMethodField()
 
@@ -365,6 +371,8 @@ class WorldSerializer(serializers.ModelSerializer):
             'description',
             'seed',
             'start_date',
+            'game_version',
+            'server_address',
             'cover_image',
             'cover_image_url',
             'is_public',
@@ -377,6 +385,11 @@ class WorldSerializer(serializers.ModelSerializer):
             'todos_done',
             'history_count',
             'epochs_count',
+            'notes_count',
+            'projects_count',
+            'bookmarks_count',
+            'ideas_count',
+            'wiki_count',
             'current_user_role',
         )
         read_only_fields = ('owner',)
@@ -439,7 +452,7 @@ class MembershipSerializer(serializers.ModelSerializer):
 class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
-        fields = ('id', 'world', 'title', 'content', 'tags', 'created_at')
+        fields = ('id', 'world', 'title', 'content', 'tags', 'is_pinned', 'color', 'created_at')
         read_only_fields = ('world',)
 
 
@@ -466,14 +479,14 @@ class ProjectSerializer(serializers.ModelSerializer):
 class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
-        fields = ('id', 'world', 'title', 'url', 'description', 'created_at')
+        fields = ('id', 'world', 'title', 'url', 'description', 'tags', 'is_pinned', 'created_at')
         read_only_fields = ('world',)
 
 
 class IdeaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Idea
-        fields = ('id', 'world', 'title', 'content', 'created_at')
+        fields = ('id', 'world', 'title', 'content', 'status', 'votes', 'created_at')
         read_only_fields = ('world',)
 
 

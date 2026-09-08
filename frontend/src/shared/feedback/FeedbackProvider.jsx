@@ -43,6 +43,20 @@ export default function FeedbackProvider({ children }) {
               fontWeight: 500,
               fontSize: 15,
               boxShadow: '0 8px 28px rgba(13, 13, 15, 0.35)',
+              // Розмір за контентом: без фіксованого мінімуму MUI (288px),
+              // ширина росте з текстом до ліміту екрана
+              width: 'auto',
+              minWidth: 0,
+              maxWidth: 'min(92vw, 520px)',
+              whiteSpace: 'pre-wrap',
+              textAlign: 'center',
+              justifyContent: 'center',
+              '& .MuiSnackbarContent-message': {
+                width: '100%',
+                textAlign: 'center',
+                paddingLeft: 0,
+                paddingRight: 0,
+              },
             },
           },
         }}

@@ -34,13 +34,19 @@
 .bookmarkIcon {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.16);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   color: #ffffff;
+  overflow: hidden;
+}
+
+.bookmarkIcon img {
+  border-radius: 4px;
+  display: block;
 }
 
 .bookmarkInfo {
@@ -108,6 +114,96 @@
 .bookmarkItem:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.7);
   outline-offset: 1px;
+}
+
+.toolbarRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sortChips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sortChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-radius 0.25s ease-out;
+}
+
+.sortChip:hover {
+  background: rgba(255, 255, 255, 0.26);
+  color: #ffffff;
+}
+
+.sortChipActive {
+  background: #ffffff;
+  border-radius: 26px;
+  color: #333;
+}
+
+.sortChipActive:hover {
+  background: #e9e9e9;
+  color: #1d1a22;
+}
+
+.checkGroup {
+  margin-left: auto;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.deleteBrokenBtn {
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(255, 138, 128, 0.25);
+  color: #ffb3ab;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.deleteBrokenBtn:hover {
+  background: rgba(255, 138, 128, 0.4);
+  color: #fff;
+}
+
+.bookmarkTitleBroken {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.brokenBadge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 138, 128, 0.25);
+  color: #ffb3ab;
+  white-space: nowrap;
 }
 
 @media (max-width: 640px) {

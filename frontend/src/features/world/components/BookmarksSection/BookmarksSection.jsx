@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
@@ -14,6 +14,8 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import PushPinIcon from '@mui/icons-material/PushPin'
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
@@ -22,7 +24,7 @@ import { useUndo } from '../../../../shared/undo/UndoProvider'
 import { useFeedback } from '../../../../shared/feedback/FeedbackProvider'
 import styles from './BookmarksSection.module.css'
 
-const empty = { title: '', url: '', description: '' }
+const empty = { title: '', url: '' }
 
 function domainOf(url) {
   try {
@@ -32,6 +34,37 @@ function domainOf(url) {
   }
 }
 
+const brokenNoun = (n) => {
+  const d10 = n % 10
+  const d100 = n % 100
+  if (d10 === 1 && d100 !== 11) return 'посилання не працює'
+  if (d10 >= 2 && d10 <= 4 && (d100 < 12 || d100 > 14)) return 'посилання не працюють'
+  return 'посилань не працюють'
+}
+
+// Favicon із сайту закладки: спочатку пробуємо /favicon.ico самого сайту,
+// якщо немає — сервіс Google, в крайньому разі — стандартна іконка.
+function Favicon({ domain }) {
+  const [stage, setStage] = useState(0)
+  if (!domain || stage > 1) {
+    return <OpenInNewIcon fontSize="small" />
+  }
+  const src =
+    stage === 0
+      ? `https://${domain}/favicon.ico`
+      : `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`
+  return (
+    <img
+      src={src}
+      alt=""
+      width={16}
+      height={16}
+      loading="lazy"
+      onError={() => setStage((s) => s + 1)}
+    />
+  )
+}
+
 export default function BookmarksSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
@@ -39,26 +72,62 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState('newest')
   const canEdit = userRole && userRole !== 'viewer'
+
+  // Статуси перевірки — у спільному кеші React Query, а не в useState:
+  // картка монтується двічі (згорнута + модалка), і useState губився
+  // при максимізації/мінімізації. Кеш один на обидва маунти.
+  const { data: checkResults = {} } = useQuery({
+    queryKey: ['bookmark-checks', String(worldId)],
+    queryFn: () => ({}),
+    staleTime: Infinity,
+  })
+  const setCheckResults = useCallback(
+    (updater) =>
+      qc.setQueryData(['bookmark-checks', String(worldId)], (old) => {
+        const prev = old ?? {}
+        return typeof updater === 'function' ? updater(prev) : updater
+      }),
+    [qc, worldId],
+  )
 
   const { data: bookmarks = [] } = useQuery({
     queryKey: ['bookmarks', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/bookmarks/`).then((r) => r.data),
   })
-  const visibleBookmarks =
-    section.full && search.trim()
-      ? bookmarks.filter((b) =>
-          `${b.title || ''} ${b.url || ''} ${b.description || ''}`
-            .toLowerCase()
-            .includes(search.trim().toLowerCase()),
-        )
-      : bookmarks
+  const visibleBookmarks = bookmarks
+    .filter((b) => {
+      if (section.full && search.trim()) {
+        const q = search.trim().toLowerCase()
+        return `${b.title || ''} ${b.url || ''}`.toLowerCase().includes(q)
+      }
+      return true
+    })
+    .sort((a, b) => {
+      // Непрацюючі — нагору, далі закріплені
+      const aBroken = checkResults[a.id] && !checkResults[a.id].ok
+      const bBroken = checkResults[b.id] && !checkResults[b.id].ok
+      if (!!aBroken !== !!bBroken) return aBroken ? -1 : 1
+      if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1
+      if (sort === 'domain') {
+        const da = domainOf(a.url)
+        const db = domainOf(b.url)
+        if (!da && !db) return 0
+        if (!da) return 1
+        if (!db) return -1
+        return da.localeCompare(db)
+      }
+      return (b.id || 0) - (a.id || 0)
+    })
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
         ? api.patch(`/worlds/${worldId}/bookmarks/${editing.id}/`, payload)
         : api.post(`/worlds/${worldId}/bookmarks/`, payload),
-    onSuccess: () => qc.invalidateQueries(['bookmarks', String(worldId)]),
+    onSuccess: () => {
+      qc.invalidateQueries(['bookmarks', String(worldId)])
+    },
   })
   const undo = useUndo()
   const { notify } = useFeedback()
@@ -81,12 +150,72 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
   }
   const openEdit = (b) => {
     setEditing(b)
-    setForm({ title: '', description: '', url: '', ...b })
+    setForm({ title: b.title || '', url: b.url || '' })
     setOpen(true)
   }
   const submit = (e) => {
     e.preventDefault()
-    mutation.mutateAsync(form).then(() => setOpen(false))
+    const wasEditing = editing
+    mutation.mutateAsync({ title: form.title, url: form.url }).then((res) => {
+      setOpen(false)
+      if (wasEditing) {
+        // URL міг змінитись — старий статус недійсний, ефект нижче доперевірить
+        setCheckResults((prev) => {
+          const next = { ...prev }
+          delete next[wasEditing.id]
+          return next
+        })
+      } else if (res?.data?.id) {
+        checkSingle(res.data)
+      }
+    })
+  }
+
+  const togglePin = (b) => {
+    api
+      .patch(`/worlds/${worldId}/bookmarks/${b.id}/`, { is_pinned: !b.is_pinned })
+      .then(() => qc.invalidateQueries(['bookmarks', String(worldId)]))
+  }
+
+  const broken = bookmarks.filter((b) => checkResults[b.id] && !checkResults[b.id].ok)
+
+  // Автоперевірка щойно доданого посилання. Тост — тільки якщо бите.
+  const checkSingle = async (bookmark) => {
+    try {
+      const { data } = await api.post(`/worlds/${worldId}/bookmarks/check/`, {
+        ids: [bookmark.id],
+      })
+      const result = data?.[bookmark.id]
+      if (!result) return
+      setCheckResults((prev) => ({ ...prev, [bookmark.id]: result }))
+      if (!result.ok) notify(`1 ${brokenNoun(1)}`)
+    } catch {
+      // Не змогли перевірити — мовчимо, тост тільки для битих
+    }
+  }
+
+  // Мовчазна доперевірка відсутніх статусів при монтуванні: покриває
+  // перезавантаження сторінки та закладки з іншого пристрою. Тостів тут
+  // нема — тост тільки за дію користувача (додавання).
+  useEffect(() => {
+    const missing = bookmarks.filter((b) => !(b.id in checkResults)).map((b) => b.id)
+    if (missing.length === 0) return
+    let cancelled = false
+    api
+      .post(`/worlds/${worldId}/bookmarks/check/`, { ids: missing })
+      .then(({ data }) => {
+        if (cancelled) return
+        const results = data || {}
+        setCheckResults((prev) => ({ ...prev, ...results }))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [bookmarks, checkResults, worldId, setCheckResults])
+
+  const deleteBroken = () => {
+    broken.forEach(deleteBookmark)
   }
 
   return (
@@ -108,14 +237,45 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
       </div>
 
       {section.full && (
-        <input
-          type="search"
-          className={sharedStyles.wideSearch}
-          placeholder="Знайти закладку…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Пошук закладки"
-        />
+        <>
+          <input
+            type="search"
+            className={sharedStyles.wideSearch}
+            placeholder="Знайти закладку…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Пошук закладки"
+          />
+          <div className={styles.toolbarRow}>
+            <div className={styles.sortChips} role="group" aria-label="Сортування закладок">
+              {[
+                ['newest', 'Спочатку нові'],
+                ['domain', 'За доменом'],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={sort === value}
+                  className={`${styles.sortChip} ${sort === value ? styles.sortChipActive : ''}`}
+                  onClick={() => setSort(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {canEdit && broken.length > 0 && (
+              <div className={styles.checkGroup}>
+                <button
+                  type="button"
+                  className={styles.deleteBrokenBtn}
+                  onClick={deleteBroken}
+                >
+                  Видалити непрацюючі ({broken.length})
+                </button>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       <div
@@ -125,6 +285,8 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
       >
         {visibleBookmarks.map((b) => {
           const domain = domainOf(b.url)
+          const checked = checkResults[b.id]
+          const isBroken = checked && !checked.ok
           const openLink = () => window.open(b.url, '_blank', 'noopener')
           const copyLink = async (e) => {
             e.stopPropagation()
@@ -151,15 +313,19 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
               }}
             >
               <div className={styles.bookmarkIcon}>
-                <OpenInNewIcon fontSize="small" />
+                <Favicon domain={domain} />
               </div>
               <div className={styles.bookmarkInfo}>
                 <div className={styles.bookmarkTitleRow}>
-                  <div className={styles.bookmarkTitle}>{b.title}</div>
-                  {domain && <span className={styles.domainBadge}>{domain}</span>}
+                  <div
+                    className={`${styles.bookmarkTitle} ${isBroken ? styles.bookmarkTitleBroken : ''}`}
+                  >
+                    {b.is_pinned && <span title="Закріплено">📌 </span>}
+                    {b.title}
+                  </div>
+                  {isBroken && <span className={styles.brokenBadge}>Не працює</span>}
                 </div>
                 <div className={styles.bookmarkUrl}>{b.url}</div>
-                {b.description && <div className={styles.bookmarkDesc}>{b.description}</div>}
               </div>
               <div className={styles.rowActions}>
                 <RelationshipButton
@@ -174,6 +340,17 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
                 </IconButton>
                 {canEdit && (
                   <>
+                    <IconButton
+                      size="small"
+                      aria-label={b.is_pinned ? 'Відкріпити' : 'Закріпити'}
+                      title={b.is_pinned ? 'Відкріпити' : 'Закріпити'}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        togglePin(b)
+                      }}
+                    >
+                      {b.is_pinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+                    </IconButton>
                     <IconButton
                       size="small"
                       aria-label="Редагувати закладку"
@@ -233,13 +410,6 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
                 onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                 required
                 type="url"
-              />
-              <TextField
-                label="Опис"
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                multiline
-                minRows={2}
               />
             </div>
           </DialogContent>

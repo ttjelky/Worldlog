@@ -39,6 +39,7 @@ export default function TodosSection({ worldId, accent, userRole }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const [priorityFilter, setPriorityFilter] = useState(null)
   const canEdit = userRole && userRole !== 'viewer'
 
   const { data: allTodos = [] } = useQuery({
@@ -47,6 +48,7 @@ export default function TodosSection({ worldId, accent, userRole }) {
   })
   const { data: locations = [] } = useLocations(worldId)
   const todos = allTodos.filter((t) => !t.project)
+  const visibleTodos = priorityFilter ? todos.filter((t) => t.priority === priorityFilter) : todos
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -82,7 +84,7 @@ export default function TodosSection({ worldId, accent, userRole }) {
     })
 
   const deleteDone = () => {
-    todos.filter((t) => t.is_done).forEach(deleteTodo)
+    visibleTodos.filter((t) => t.is_done).forEach(deleteTodo)
   }
 
   const openNew = () => {
@@ -149,13 +151,30 @@ export default function TodosSection({ worldId, accent, userRole }) {
         </div>
       )}
 
+      {section.full && (
+        <div className={styles.priorityFilters} role="group" aria-label="Фільтр за пріоритетом">
+          {Object.entries(priorities).map(([value, [color, label]]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={priorityFilter === value}
+              className={`${styles.priorityFilterChip} ${priorityFilter === value ? styles.priorityFilterChipActive : ''}`}
+              onClick={() => setPriorityFilter((cur) => (cur === value ? null : value))}
+            >
+              <span className={styles.priorityDot} style={{ background: color }} />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div
         className={`${sharedStyles.body} ${styles.todoList} ${
           section.modal ? styles.todoListFull : ''
         } ${section.full ? styles.todoListWide : ''}`}
       >
-        {todos.map((t) => {
-          const [dot, label] = priorities[t.priority]
+        {visibleTodos.map((t) => {
+          const [dot, label] = priorities[t.priority] || priorities.medium
           return (
             <div
               key={t.id}
@@ -224,8 +243,12 @@ export default function TodosSection({ worldId, accent, userRole }) {
             </div>
           )
         })}
-        {todos.length === 0 && (
-          <p className={sharedStyles.emptyMsg}>Плани ще не складені. Додай перше завдання.</p>
+        {visibleTodos.length === 0 && (
+          <p className={sharedStyles.emptyMsg}>
+            {todos.length === 0
+              ? 'Плани ще не складені. Додай перше завдання.'
+              : 'Немає завдань з таким пріоритетом.'}
+          </p>
         )}
       </div>
 

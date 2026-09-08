@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 import re
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 
 from .models import (
     Bookmark,
@@ -135,6 +137,11 @@ def world_list_queryset(user):
             todos_done=Count('todos', filter=Q(todos__is_done=True), distinct=True),
             history_count=Count('history', distinct=True),
             epochs_count=Count('epochs', distinct=True),
+            notes_count=Count('notes', distinct=True),
+            projects_count=Count('projects', distinct=True),
+            bookmarks_count=Count('bookmarks', distinct=True),
+            ideas_count=Count('ideas', distinct=True),
+            wiki_count=Count('wiki_pages', distinct=True),
         )
     )
 
@@ -210,10 +217,12 @@ class LocationScreenshotViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        # У локації може бути лише одне фото — нове завантаження
-        # замінює попереднє
+        # Дозволяємо галерею: кожне завантаження додає фото, не видаляючи старі.
+        # Ліміт 8 фото на локацію, щоб не роздувати сховище.
         location_id = self.kwargs['location_id']
-        LocationScreenshot.objects.filter(location_id=location_id).delete()
+        if LocationScreenshot.objects.filter(location_id=location_id).count() >= 8:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError('Максимум 8 фото на локацію.')
         serializer.save(location_id=location_id)
 
 
@@ -307,7 +316,8 @@ class MembershipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         if self.action == 'create':
             return [permissions.IsAuthenticated(), IsWorldEditorOrAbove()]
         if self.action == 'destroy':
-            return [permissions.IsAuthenticated(), IsWorldOwner()]
+            # Видаляти може власник (будь-кого) або сам учасник (покинути світ)
+            return [permissions.IsAuthenticated(), IsOwnerOrMember()]
         return [permissions.IsAuthenticated()]
 
     def perform_create(self, serializer):
@@ -333,6 +343,11 @@ class MembershipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         if instance.user_id == world.owner_id:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied('Неможливо видалити власника світу.')
+        is_owner = world.owner_id == request.user.id
+        is_self = instance.user_id == request.user.id
+        if not (is_owner or is_self):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('Тільки власник або сам учасник може видалити доступ.')
         return super().destroy(request, *args, **kwargs)
 
 
@@ -357,10 +372,79 @@ class BookmarkViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = Bookmark.objects.all()
     serializer_class = BookmarkSerializer
 
+    def get_permissions(self):
+        # Перевірка посилань — операція читання, доступна всім учасникам
+        if self.action == 'check':
+            return [permissions.IsAuthenticated(), IsOwnerOrMember()]
+        return super().get_permissions()
+
+    @action(detail=False, methods=['post'], url_path='check')
+    def check(self, request, world_id=None):
+        """Перевірити доступність посилань: HEAD (з fallback на GET), таймаут 6с.
+
+        Body: {"ids": [...]} — без ids перевіряє всі. Ліміт 50 за раз.
+        Повертає {id: {"ok": bool, "status": int}}.
+        """
+        ids = request.data.get('ids') or []
+        qs = self.get_queryset()
+        if ids:
+            try:
+                ids = [int(i) for i in ids]
+            except (TypeError, ValueError):
+                ids = []
+            qs = qs.filter(pk__in=ids)
+        targets = list(qs[:50])
+        # Мережеві запити — паралельно, інакше пачка битих посилань
+        # з таймаутами клала б запит на хвилини
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            checked = list(pool.map(self._check_url, [b.url for b in targets]))
+        return Response({b.pk: res for b, res in zip(targets, checked)})
+
+    @staticmethod
+    def _check_url(url):
+        headers = {'User-Agent': 'WorldLog/1.0 link-check', 'Range': 'bytes=0-0'}
+        for method in ('HEAD', 'GET'):
+            try:
+                req = urllib.request.Request(url, method=method, headers=headers)
+                with urllib.request.urlopen(req, timeout=6) as resp:
+                    code = resp.getcode()
+                    if 200 <= code < 400:
+                        return {'ok': True, 'status': code}
+                    if method == 'HEAD':
+                        continue
+                    return {'ok': False, 'status': code}
+            except Exception:
+                if method == 'HEAD':
+                    continue
+                return {'ok': False, 'status': 0}
+        return {'ok': False, 'status': 0}
+
 
 class IdeaViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = Idea.objects.all()
     serializer_class = IdeaSerializer
+
+    @action(detail=True, methods=['post'])
+    def vote(self, request, world_id=None, pk=None):
+        """Голосування за ідею — доступне всім учасникам (і глядачам)."""
+        idea = self.get_object()
+        # Захист від накрутки в межах однієї сесії — фронт шле once, бек просто +1
+        idea.votes = (idea.votes or 0) + 1
+        idea.save(update_fields=['votes'])
+        return Response(IdeaSerializer(idea, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'])
+    def unvote(self, request, world_id=None, pk=None):
+        idea = self.get_object()
+        idea.votes = max(0, (idea.votes or 0) - 1)
+        idea.save(update_fields=['votes'])
+        return Response(IdeaSerializer(idea, context={'request': request}).data)
+
+    def get_permissions(self):
+        # Голосувати можуть всі учасники, змінювати — редактори+
+        if self.action in ('vote', 'unvote'):
+            return [permissions.IsAuthenticated(), IsOwnerOrMember()]
+        return super().get_permissions()
 
 
 class WikiPageViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):

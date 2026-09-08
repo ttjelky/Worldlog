@@ -52,7 +52,7 @@ const monthLabel = (d) => {
 }
 const empty = () => ({ title: '', description: '', priority: 'medium', due_date: todayStr() })
 
-export default function PlannerSection({ worldId, accent }) {
+export default function PlannerSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
@@ -60,6 +60,7 @@ export default function PlannerSection({ worldId, accent }) {
   const [form, setForm] = useState(empty())
   const [filter, setFilter] = useState(null)
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
+  const canEdit = !userRole || userRole !== 'viewer'
 
   const { data: todos = [] } = useQuery({
     queryKey: ['todos', String(worldId)],
@@ -241,7 +242,7 @@ export default function PlannerSection({ worldId, accent }) {
           Планер ({done}/{planned.length})
         </h3>
         <div className={styles.headerActions}>
-          {done > 0 && (
+          {done > 0 && canEdit && (
             <button
               type="button"
               className={styles.filterBtnDeleteDone}
@@ -255,9 +256,11 @@ export default function PlannerSection({ worldId, accent }) {
               </span>
             </button>
           )}
-          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
-            Нове завдання
-          </Button>
+          {canEdit && (
+            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
+              Нове завдання
+            </Button>
+          )}
         </div>
       </div>
 
@@ -292,7 +295,7 @@ export default function PlannerSection({ worldId, accent }) {
             <div
               key={t.id}
               className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''} ${isOverdue ? styles.todoItemOverdue : ''}`}
-              onClick={() => toggle.mutate(t)}
+              onClick={canEdit ? () => toggle.mutate(t) : undefined}
             >
               <Checkbox
                 className={styles.todoCheckbox}
@@ -322,24 +325,28 @@ export default function PlannerSection({ worldId, accent }) {
                 </span>
               </div>
               <div className={styles.rowActions}>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    openEdit(t)
-                  }}
-                >
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteTodo(t)
-                  }}
-                >
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
+                {canEdit && (
+                  <>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEdit(t)
+                      }}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteTodo(t)
+                      }}
+                    >
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
               </div>
             </div>
           )

@@ -16,6 +16,8 @@ class World(models.Model):
     start_date = models.DateField(null=True, blank=True)
     cover_image = models.ImageField(upload_to='world_covers/', blank=True, null=True)
     is_public = models.BooleanField(default=False)
+    game_version = models.CharField(max_length=50, blank=True)
+    server_address = models.CharField(max_length=200, blank=True)
 
     class Theme(models.TextChoices):
         SULFUR_CAVES = 'sulfur_caves', 'Сіркові печери'
@@ -40,9 +42,17 @@ class World(models.Model):
 
 
 class Player(models.Model):
+    class Status(models.TextChoices):
+        ALIVE = 'alive', 'Alive'
+        DEAD = 'dead', 'Dead'
+        MISSING = 'missing', 'Missing'
+
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='players')
     nickname = models.CharField(max_length=100)
     role_note = models.CharField(max_length=200, blank=True)
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.ALIVE
+    )
     avatar = models.ImageField(upload_to='player_avatars/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -227,6 +237,8 @@ class Note(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField(blank=True)
     tags = models.CharField(max_length=500, blank=True)
+    is_pinned = models.BooleanField(default=False)
+    color = models.CharField(max_length=20, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -241,6 +253,8 @@ class Bookmark(models.Model):
     title = models.CharField(max_length=200)
     url = models.URLField(max_length=500)
     description = models.TextField(blank=True)
+    tags = models.CharField(max_length=500, blank=True)
+    is_pinned = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -251,9 +265,18 @@ class Bookmark(models.Model):
 
 
 class Idea(models.Model):
+    class Status(models.TextChoices):
+        OPEN = 'open', 'Open'
+        ACCEPTED = 'accepted', 'Accepted'
+        REJECTED = 'rejected', 'Rejected'
+
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='ideas')
     title = models.CharField(max_length=200)
     content = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.OPEN
+    )
+    votes = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

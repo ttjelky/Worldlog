@@ -177,6 +177,48 @@
   justify-content: flex-end;
 }
 
+.priorityFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.priorityFilterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-radius 0.25s ease-out;
+}
+
+.priorityFilterChip:hover {
+  background: rgba(255, 255, 255, 0.26);
+  color: #ffffff;
+}
+
+.priorityFilterChipActive {
+  background: #ffffff;
+  border-radius: 26px;
+  color: #333;
+}
+
+.priorityFilterChipActive:hover {
+  background: #e9e9e9;
+  color: #1d1a22;
+}
+
 .filterBtnDeleteDone {
   display: inline-flex;
   align-items: center;
