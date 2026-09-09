@@ -451,12 +451,17 @@
   font-size: 50px !important;
   font-weight: 500 !important;
   color: var(--md-on-surface) !important;
-  padding: 32px 32px 0 !important;
+  padding: 32px 32px 44px !important;
   line-height: 1.2 !important;
+  /* Хедер пливе над контентом */
+  position: relative;
+  z-index: 2;
 }
 
 .dialogContent {
-  padding: 9px 32px 4px !important;
+  padding: 0 32px 44px !important;
+  /* Підтягуємо контент під хедер і футер — до самих країв вікна */
+  margin-top: -44px;
   overflow: visible !important;
 }
 
@@ -676,7 +681,11 @@
 }
 
 .dialogActions {
-  padding: 20px 24px 24px !important;
+  padding: 60px 24px 24px !important;
+  /* Футер пливе над контентом */
+  margin-top: -40px;
+  position: relative;
+  z-index: 2;
   justify-content: flex-end !important;
   gap: 8px !important;
 }

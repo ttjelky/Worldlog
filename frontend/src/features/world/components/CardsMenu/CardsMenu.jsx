@@ -111,7 +111,7 @@ function buildCardDefs(accents) {
   ]
 }
 
-export default function CardsMenu({ open, onClose, layout, onToggle, accentRed, accentGreen }) {
+export default function CardsMenu({ open, onClose, layout, onToggle, accentRed, accentGreen, paperStyle }) {
   const { cards } = layout
   const CARD_DEFS = buildCardDefs({ red: accentRed, green: accentGreen })
 
@@ -127,7 +127,7 @@ export default function CardsMenu({ open, onClose, layout, onToggle, accentRed, 
       maxWidth="lg"
       fullWidth
       slotProps={{
-        paper: { className: styles.paper },
+        paper: { className: styles.paper, style: paperStyle },
       }}
     >
       <div className={styles.header}>

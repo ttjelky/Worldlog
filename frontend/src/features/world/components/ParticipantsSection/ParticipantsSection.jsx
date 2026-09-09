@@ -37,7 +37,7 @@ const ROLE_CHIP_CLASS = {
   viewer: styles.roleViewer,
 }
 
-export function WorldAccessList({ worldId, userRole, world }) {
+export function WorldAccessList({ worldId, userRole, world, accent }) {
   const qc = useQueryClient()
   const isOwner = userRole === 'owner'
   const isEditor = userRole === 'editor' || isOwner
@@ -165,25 +165,28 @@ export function WorldAccessList({ worldId, userRole, world }) {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         worldId={worldId}
+        accent={accent}
       />
       <EditRoleDialog
         open={!!editTarget}
         onClose={() => setEditTarget(null)}
         participant={editTarget}
         worldId={worldId}
+        accent={accent}
       />
       <RemoveParticipantDialog
         open={!!removeTarget}
         onClose={() => setRemoveTarget(null)}
         participant={removeTarget}
         worldId={worldId}
+        accent={accent}
         onDelete={(id) => deleteMutation.mutateAsync(id).then(() => setRemoveTarget(null))}
       />
     </div>
   )
 }
 
-function AddParticipantDialog({ open, onClose, worldId }) {
+function AddParticipantDialog({ open, onClose, worldId, accent }) {
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [role, setRole] = useState('viewer')
@@ -225,7 +228,7 @@ function AddParticipantDialog({ open, onClose, worldId }) {
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      slotProps={{ paper: { className: sharedStyles.dialogPaper } }}
+      slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
     >
       <form onSubmit={handleSubmit}>
         <DialogTitle>Додати учасника</DialogTitle>
@@ -299,7 +302,7 @@ function AddParticipantDialog({ open, onClose, worldId }) {
   )
 }
 
-function EditRoleDialog({ open, onClose, participant, worldId }) {
+function EditRoleDialog({ open, onClose, participant, worldId, accent }) {
   const qc = useQueryClient()
   const [role, setRole] = useState(participant?.role || 'viewer')
 
@@ -319,7 +322,7 @@ function EditRoleDialog({ open, onClose, participant, worldId }) {
       onClose={onClose}
       maxWidth="xs"
       fullWidth
-      slotProps={{ paper: { className: sharedStyles.dialogPaper } }}
+      slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
     >
       <DialogTitle>Змінити роль</DialogTitle>
       <DialogContent>
@@ -358,7 +361,7 @@ function EditRoleDialog({ open, onClose, participant, worldId }) {
   )
 }
 
-function RemoveParticipantDialog({ open, onClose, participant, worldId, onDelete }) {
+function RemoveParticipantDialog({ open, onClose, participant, worldId, onDelete, accent }) {
   if (!participant) return null
 
   return (
@@ -366,7 +369,7 @@ function RemoveParticipantDialog({ open, onClose, participant, worldId, onDelete
       open={open}
       onClose={onClose}
       maxWidth="xs"
-      slotProps={{ paper: { className: sharedStyles.dialogPaper } }}
+      slotProps={{ paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } } }}
     >
       <DialogTitle>Видалити учасника?</DialogTitle>
       <DialogContent>

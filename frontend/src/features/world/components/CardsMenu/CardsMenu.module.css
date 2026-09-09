@@ -1,7 +1,8 @@
 /* ---------- Paper (overwrite default dialog) ---------- */
 
 .paper {
-  background: #fbf8ff !important;
+  background: var(--dialog-bg, #fbf8ff) !important;
+  color: var(--dialog-ink, #1d1a22);
   border-radius: 32px !important;
   box-shadow: 0 8px 40px rgba(29, 26, 34, 0.18) !important;
   overflow: hidden;
@@ -15,7 +16,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28px 32px 0;
+  padding: 28px 32px 40px;
+  /* Хедер пливе над контентом */
+  position: relative;
+  z-index: 2;
 }
 
 .title {
@@ -23,24 +27,41 @@
   font-weight: 500;
   font-size: 44px;
   letter-spacing: -0.03em;
-  color: #1d1a22;
+  color: var(--dialog-ink, #1d1a22);
   margin: 0;
 }
 
 .closeBtn {
-  color: #1d1a22 !important;
+  color: var(--dialog-ink, #1d1a22) !important;
   padding: 6px !important;
   border-radius: 50% !important;
 }
 
 .closeBtn:hover {
-  background: rgba(0, 0, 0, 0.08) !important;
+  background: color-mix(in srgb, var(--dialog-ink, #1d1a22) 8%, transparent) !important;
 }
 
 /* ---------- Content ---------- */
 
 .content {
-  padding: 20px 32px 28px !important;
+  /* Контент на всю висоту вікна: від краю до краю, без відступів */
+  padding: 0 32px !important;
+  /* Підтягуємо контент під хедер — до самого краю вікна */
+  margin-top: -40px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 56px,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 56px,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
 }
 
 /* ---------- Grid ---------- */
@@ -91,7 +112,7 @@
 .cellDesc {
   font-size: 16px;
   line-height: 1.4;
-  color: rgba(29, 26, 34, 0.6);
+  color: var(--dialog-muted, rgba(29, 26, 34, 0.6));
 }
 
 /* ---------- Add button ---------- */
@@ -109,21 +130,21 @@
   font-size: 16px;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
-  background: rgba(28, 28, 28, 0.06);
-  color: #1d1a22;
+  background: color-mix(in srgb, var(--dialog-ink, #1d1a22) 6%, transparent);
+  color: var(--dialog-ink, #1d1a22);
 }
 
 .addBtn:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: color-mix(in srgb, var(--dialog-ink, #1d1a22) 12%, transparent);
 }
 
 .addBtnActive {
-  background: #3c3c3c;
+  background: var(--accent, #3c3c3c);
   color: #ffffff;
 }
 
 .addBtnActive:hover {
-  background: #333333;
+  filter: brightness(0.92);
 }
 
 /* ---------- Locked badge ---------- */
@@ -135,8 +156,8 @@
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
-  color: rgba(29, 26, 34, 0.4);
-  background: rgba(0, 0, 0, 0.04);
+  color: var(--dialog-muted, rgba(29, 26, 34, 0.4));
+  background: color-mix(in srgb, var(--dialog-ink, #1d1a22) 5%, transparent);
 }
 
 /* ---------- Responsive ---------- */

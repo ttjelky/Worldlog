@@ -159,7 +159,7 @@ function InfoCard({ world, worldId, userRole, accent }) {
           </div>
         ))}
       </div>
-      <WorldAccessList worldId={worldId} userRole={userRole} world={world} />
+      <WorldAccessList worldId={worldId} userRole={userRole} world={world} accent={accent} />
       {!modal && overflowing && (
         <div className={styles.showMoreFade}>
           <button
@@ -1013,6 +1013,7 @@ export default function WorldDetail({ onBack }) {
           onToggle={onToggleCard}
           accentRed={red}
           accentGreen={green}
+          paperStyle={themeDialogStyle(world?.theme)}
         />
       </div>
     </LocationViewerProvider>

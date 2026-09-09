@@ -78,7 +78,7 @@
 /* ---- Статистика ---- */
 .statsRow {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 10px;
   margin-bottom: 16px;
 }
@@ -546,6 +546,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.75);
@@ -553,6 +554,26 @@
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.coordsPill:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+.countNote {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.photoRemovedHint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .participants {

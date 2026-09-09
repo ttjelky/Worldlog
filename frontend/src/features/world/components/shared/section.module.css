@@ -197,25 +197,61 @@
   font-size: 50px !important;
   font-weight: 500 !important;
   letter-spacing: -0.02em !important;
-  padding: 32px 32px 0 !important;
+  padding: 32px 32px 44px !important;
   line-height: 1.2 !important;
   color: var(--dialog-ink, #1d1a22) !important;
+  /* Хедер пливе над контентом: прозора зона + z-index, контент заходить
+     під неї і гаситься маскою рівно там, де закінчується текст */
+  position: relative;
+  z-index: 2;
 }
 
 .dialogPaper :global(.MuiDialogContent-root) {
-  padding: 9px 32px 4px !important;
+  /* Контент на всю висоту вікна: від краю до краю, без відступів */
+  padding: 0 32px !important;
+  /* Підтягуємо контент під хедер і футер — до самих країв вікна */
+  margin-top: -44px;
   overflow-y: auto !important;
   flex: 1;
   min-height: 0;
   scrollbar-width: none;
+  /* Контент іде під хедер/футер через fade: маска не залежить від кольору
+     теми, тому працює на всіх темах світу */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 56px,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 56px,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
 }
 
 .dialogPaper :global(.MuiDialogContent-root::-webkit-scrollbar) {
   display: none;
 }
 
+/* Форма всередині папера — flex-колонка, що стискається: інакше довга форма
+   розпирає папір до max-height, контент обрізається, а скрол не працює */
+.dialogPaper form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .dialogActions {
-  padding: 20px 24px 24px !important;
+  padding: 60px 24px 24px !important;
+  /* Футер пливе над контентом: контент заходить під прозору зону */
+  margin-top: -40px;
+  position: relative;
+  z-index: 2;
   justify-content: flex-end !important;
   gap: 8px !important;
   flex-shrink: 0;

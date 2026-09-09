@@ -24,6 +24,8 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import MenuBookIcon from '@mui/icons-material/MenuBook'
 import FlagIcon from '@mui/icons-material/Flag'
+import StarIcon from '@mui/icons-material/Star'
+import StarBorderIcon from '@mui/icons-material/StarBorder'
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import SportsMmaIcon from '@mui/icons-material/SportsMma'
@@ -36,12 +38,14 @@ import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
+import { useFeedback } from '../../../../shared/feedback/FeedbackProvider'
 import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import LocationBadgeText from '../shared/LocationBadgeText'
 import { useLocations } from '../shared/locationData'
 import styles from './HistorySection.module.css'
 
 const MS_IN_DAY = 86400000
+const TITLE_MAX = 200
 
 const eventTypes = [
   ['battle', 'Битва'],
@@ -91,6 +95,22 @@ function worldAgeInDays(world) {
   return Math.max(0, Math.floor((now - s) / MS_IN_DAY)) + 1
 }
 
+// Локальна дата YYYY-MM-DD (на відміну від toISOString, без зсуву UTC)
+function todayLocal() {
+  const d = new Date()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
+}
+
+// Стабільний рендер дат: date-only рядки парсимо як полудень,
+// щоб таймзона не зсувала день
+function fmtDate(value) {
+  if (!value) return ''
+  const d = new Date(`${String(value).slice(0, 10)}T12:00:00`)
+  return Number.isNaN(d.getTime()) ? String(value).slice(0, 10) : d.toLocaleDateString('uk-UA')
+}
+
 const empty = {
   title: '',
   description: '',
@@ -112,13 +132,18 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [pendingImage, setPendingImage] = useState(null)
+  const [removeImage, setRemoveImage] = useState(false)
+  const [gameDayTouched, setGameDayTouched] = useState(false)
   const [lightbox, setLightbox] = useState(null)
   const [epochFilter, setEpochFilter] = useState('current')
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState(null)
+  const [sortDir, setSortDir] = useState('asc')
+  const [importantOnly, setImportantOnly] = useState(false)
   const [epochDialog, setEpochDialog] = useState(false)
   const [closeEpoch, setCloseEpoch] = useState(null)
   const canEdit = userRole && userRole !== 'viewer'
+  const { notify } = useFeedback()
 
   const { data: events = [] } = useQuery({
     queryKey: ['history', String(worldId)],
@@ -139,15 +164,22 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       qc.invalidateQueries(['epochs', String(worldId)])
       qc.invalidateQueries(['world', String(worldId)])
     },
+    onError: () => notify('Не вдалося зберегти подію'),
   })
   const imageMutation = useMutation({
-    mutationFn: ({ id, file }) =>
-      api.patch(
-        `/worlds/${worldId}/history/${id}/`,
-        { image: file },
-        { headers: { 'Content-Type': 'multipart/form-data' } },
-      ),
+    mutationFn: ({ id, file }) => {
+      const data = new FormData()
+      data.append('image', file)
+      // Заголовок не ставимо — axios сам додасть multipart з boundary
+      return api.patch(`/worlds/${worldId}/history/${id}/`, data)
+    },
     onSuccess: () => qc.invalidateQueries(['history', String(worldId)]),
+    onError: () => notify('Не вдалося завантажити фото'),
+  })
+  const deleteImageMutation = useMutation({
+    mutationFn: (id) => api.patch(`/worlds/${worldId}/history/${id}/`, { image: null }),
+    onSuccess: () => qc.invalidateQueries(['history', String(worldId)]),
+    onError: () => notify('Не вдалося видалити фото'),
   })
   const epochMutation = useMutation({
     mutationFn: (payload) => api.post(`/worlds/${worldId}/epochs/`, payload),
@@ -155,6 +187,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       qc.invalidateQueries(['epochs', String(worldId)])
       qc.invalidateQueries(['world', String(worldId)])
     },
+    onError: () => notify('Не вдалося створити епоху'),
   })
   const epochCloseMutation = useMutation({
     mutationFn: ({ id, name }) => api.post(`/worlds/${worldId}/epochs/${id}/close/`, { name }),
@@ -162,6 +195,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       qc.invalidateQueries(['epochs', String(worldId)])
       qc.invalidateQueries(['world', String(worldId)])
     },
+    onError: () => notify('Не вдалося завершити епоху'),
   })
   const undo = useUndo()
   const deleteEvent = (h) =>
@@ -189,7 +223,10 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
     })
 
   useEffect(() => {
-    if (pendingImage?.url) URL.revokeObjectURL(pendingImage.url)
+    // Cleanup попереднього URL — повертаємо функцію, інакше відкличемо новий
+    return () => {
+      if (pendingImage?.url) URL.revokeObjectURL(pendingImage.url)
+    }
   }, [pendingImage])
 
   const activeEpochObj = useMemo(
@@ -202,10 +239,12 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
     [events],
   )
 
-  const openNew = () => {
+  const openNew = (presetEpochId) => {
     setEditing(null)
-    setForm({ ...empty, epoch: activeEpochObj?.id || '' })
+    setForm({ ...empty, date: todayLocal(), epoch: presetEpochId ?? activeEpochObj?.id ?? '' })
     setPendingImage(null)
+    setRemoveImage(false)
+    setGameDayTouched(false)
     setOpen(true)
   }
   const openEdit = (h) => {
@@ -217,19 +256,22 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       event_type: h.event_type,
       is_important: !!h.is_important,
       game_day: h.game_day ?? '',
-      epoch: h.epoch || activeEpochObj?.id || '',
+      epoch: h.epoch ?? '',
       coord_x: h.coordinates?.x ?? '',
       coord_y: h.coordinates?.y ?? '',
       coord_z: h.coordinates?.z ?? '',
       participants: h.participants_list || [],
     })
     setPendingImage(null)
+    setRemoveImage(false)
+    // Ігровий день уже заданий — дату більше не перераховуємо автоматично
+    setGameDayTouched(h.game_day != null)
     setOpen(true)
   }
 
   const addParticipant = (name) => {
-    const v = (name || '').trim()
-    if (!v || form.participants.includes(v)) return
+    const v = (name || '').replace(/,/g, '').trim()
+    if (!v || form.participants.some((p) => p.toLowerCase() === v.toLowerCase())) return
     setForm((f) => ({ ...f, participants: [...f.participants, v] }))
   }
   const removeParticipant = (name) =>
@@ -237,50 +279,80 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
 
   const submit = (e) => {
     e.preventDefault()
+    const title = form.title.trim()
+    if (title.length > TITLE_MAX) {
+      notify(`Заголовок задовгий (макс. ${TITLE_MAX} символів)`)
+      return
+    }
+    const rawCoords = [form.coord_x, form.coord_y, form.coord_z]
+    const filledCoords = rawCoords.filter((v) => v !== '')
+    if (filledCoords.length > 0 && filledCoords.length < 3) {
+      notify('Заповни всі три координати (X, Y, Z) або жодної')
+      return
+    }
     const payload = {
-      title: form.title,
+      title,
       description: form.description,
       date: form.date,
       event_type: form.event_type,
       is_important: form.is_important,
-      epoch: form.epoch || activeEpochObj?.id || null,
+      // При редагуванні порожня епоха = «без епохи», не перепризначаємо мовчки
+      epoch: form.epoch || (editing ? null : (activeEpochObj?.id ?? null)),
       participants: form.participants.join(', '),
     }
     if (form.game_day !== '') payload.game_day = Number(form.game_day)
-    if (form.coord_x !== '' && form.coord_y !== '' && form.coord_z !== '') {
-      payload.coord_x = Number(form.coord_x)
-      payload.coord_y = Number(form.coord_y)
-      payload.coord_z = Number(form.coord_z)
-    }
-    mutation.mutateAsync(payload).then(({ data }) => {
-      if (pendingImage?.file && data?.id) {
-        imageMutation.mutate({ id: data.id, file: pendingImage.file })
+    if (filledCoords.length === 3) {
+      const nums = filledCoords.map(Number)
+      if (nums.some((n) => !Number.isInteger(n))) {
+        notify('Координати — цілі числа')
+        return
       }
-      setOpen(false)
-    })
+      ;[payload.coord_x, payload.coord_y, payload.coord_z] = nums
+    } else if (editing && editing.coordinates) {
+      // Усі поля порожні, а були координати — явно очищуємо
+      payload.coord_x = null
+      payload.coord_y = null
+      payload.coord_z = null
+    }
+    if (!pendingImage?.file && removeImage && editing) payload.image = null
+    mutation
+      .mutateAsync(payload)
+      .then(({ data }) => {
+        if (pendingImage?.file && data?.id) {
+          imageMutation.mutate({ id: data.id, file: pendingImage.file })
+        }
+        setOpen(false)
+      })
+      .catch(() => {
+        // Тост уже показано в onError мутації
+      })
   }
+
+  // «Поточна епоха» без активної епохи = усі (інакше список порожній)
+  const visibleEpochId =
+    epochFilter === 'all' ? '' : activeEpochObj ? String(activeEpochObj.id) : ''
 
   const filtered = useMemo(() => {
     let list = [...events]
-    const epochId =
-      epochFilter === 'all'
-        ? ''
-        : epochFilter === 'current' && activeEpochObj
-          ? String(activeEpochObj.id)
-          : epochFilter
-    if (epochId && epochId !== 'all') list = list.filter((e) => String(e.epoch) === String(epochId))
+    if (visibleEpochId) list = list.filter((e) => String(e.epoch) === visibleEpochId)
     if (typeFilter) list = list.filter((e) => e.event_type === typeFilter)
+    if (importantOnly) list = list.filter((e) => e.is_important)
     const q = search.trim().toLowerCase()
     if (q) {
       list = list.filter((e) =>
-        `${e.title || ''} ${e.description || ''}`.toLowerCase().includes(q),
+        `${e.title || ''} ${e.description || ''} ${(e.participants_list || []).join(' ')} ${
+          e.date || ''
+        } ${e.game_day ?? ''}`
+          .toLowerCase()
+          .includes(q),
       )
     }
     list.sort((a, b) => {
-      return new Date(a.date) - new Date(b.date)
+      const diff = new Date(a.date) - new Date(b.date)
+      return sortDir === 'asc' ? diff : -diff
     })
     return list
-  }, [events, epochFilter, activeEpochObj, typeFilter, search])
+  }, [events, visibleEpochId, typeFilter, importantOnly, search, sortDir])
 
   const grouped = useMemo(() => {
     const byEpoch = new Map()
@@ -290,18 +362,16 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       byEpoch.get(key).push(e)
     }
     const result = []
-    const epochMap = new Map(epochs.map((x) => [String(x.id), x]))
-    for (const [key, list] of byEpoch) {
-      const ep = epochMap.get(key)
-      result.push({ epoch: ep || null, events: list })
+    const sortedEpochs = [...epochs].sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+    for (const ep of sortedEpochs) {
+      if (visibleEpochId && String(ep.id) !== visibleEpochId) continue
+      result.push({ epoch: ep, events: byEpoch.get(String(ep.id)) || [] })
     }
-    result.sort((a, b) => {
-      const ad = a.epoch ? new Date(a.epoch.start_date) : new Date(0)
-      const bd = b.epoch ? new Date(b.epoch.start_date) : new Date(0)
-      return ad - bd
-    })
+    // Без епохи — завжди останніми
+    const none = byEpoch.get('none') || []
+    if (none.length > 0) result.push({ epoch: null, events: none })
     return result
-  }, [filtered, epochs])
+  }, [filtered, epochs, visibleEpochId])
 
   const stats = useMemo(() => {
     const bossCount = events.filter((e) => e.event_type === 'boss').length
@@ -310,15 +380,37 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       total: events.length,
       bosses: bossCount,
       epochs: epochs.length,
+      important: events.filter((e) => e.is_important).length,
     }
   }, [events, epochs, world])
+
+  // Сортування список не порожнить, тому в «активні фільтри» не входить
+  const hasActiveFilters = typeFilter !== null || importantOnly || search.trim() !== ''
+
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify(filtered, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `history-world-${worldId}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const copyCoords = (coords) => {
+    if (!coords) return
+    navigator.clipboard
+      ?.writeText(`${coords.x} ${coords.y} ${coords.z}`)
+      .then(() => notify('Координати скопійовано'))
+      .catch(() => notify('Не вдалося скопіювати'))
+  }
 
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>Історія світу ({events.length})</h3>
         {canEdit && (
-          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openNew}>
+          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => openNew()}>
             Нова подія
           </Button>
         )}
@@ -336,9 +428,14 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
           <span className={styles.statLabel}>подій</span>
         </div>
         <div className={styles.stat}>
-          <LocalFireDepartmentIcon className={styles.statIcon} />
+          <DangerousIcon className={styles.statIcon} />
           <span className={styles.statValue}>{stats.bosses}</span>
           <span className={styles.statLabel}>босів</span>
+        </div>
+        <div className={styles.stat}>
+          <FlagIcon className={styles.statIcon} />
+          <span className={styles.statValue}>{stats.important}</span>
+          <span className={styles.statLabel}>важливих</span>
         </div>
         <div className={styles.stat}>
           <MenuBookIcon className={styles.statIcon} />
@@ -370,7 +467,47 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         >
           Поточна епоха
         </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+          title="Порядок дат"
+          aria-label={sortDir === 'asc' ? 'Спочатку давні, натисніть для зміни' : 'Спочатку нові, натисніть для зміни'}
+          className={styles.epochFilterButton}
+        >
+          {sortDir === 'asc' ? 'Давні ↑' : 'Нові ↓'}
+        </Button>
+        <Button
+          size="small"
+          variant={importantOnly ? 'contained' : 'outlined'}
+          aria-pressed={importantOnly}
+          onClick={() => setImportantOnly((v) => !v)}
+          title="Тільки важливі події"
+          startIcon={importantOnly ? <StarIcon /> : <StarBorderIcon />}
+          className={`${styles.epochFilterButton} ${
+            importantOnly ? styles.epochFilterButtonActive : ''
+          }`}
+        >
+          Важливі
+        </Button>
+        {events.length > 0 && (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={exportJson}
+            title="Завантажити видимі події як JSON"
+            className={styles.epochFilterButton}
+          >
+            Експорт
+          </Button>
+        )}
       </div>
+
+      {filtered.length !== events.length && (
+        <p className={styles.countNote}>
+          Показано {filtered.length} з {events.length}
+        </p>
+      )}
 
       {section.full && (
         <>
@@ -462,10 +599,10 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                   </div>
                   <div className={styles.epochMeta}>
                     <span>
-                      {new Date(epoch.start_date).toLocaleDateString('uk-UA')}
-                      {epoch.end_date ? ` — ${new Date(epoch.end_date).toLocaleDateString('uk-UA')}` : ''}
+                      {fmtDate(epoch.start_date)}
+                      {epoch.end_date ? ` — ${fmtDate(epoch.end_date)}` : ''}
                     </span>
-                    <span>· {epoch.events_count} подій</span>
+                    <span>· {list.length} подій</span>
                   </div>
                   {epoch.description && (
                     <p className={styles.epochDesc}>{epoch.description}</p>
@@ -473,7 +610,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 </div>
               )}
 
-              {epoch && list.length === 0 && (
+              {epoch && list.length === 0 && !hasActiveFilters && (
                 <div className={styles.epochEmptyState}>
                   <p className={styles.epochEmptyText}>Поки що подій немає.</p>
                   {canEdit && (
@@ -481,12 +618,16 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                       size="small"
                       className={styles.epochEmptyBtn}
                       startIcon={<AddIcon />}
-                      onClick={openNew}
+                      onClick={() => openNew(epoch.id)}
                     >
                       Додати першу
                     </Button>
                   )}
                 </div>
+              )}
+
+              {epoch && list.length === 0 && hasActiveFilters && (
+                <p className={styles.epochEmptyText}>Немає подій за обраними фільтрами.</p>
               )}
 
               <div
@@ -522,7 +663,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                             <div className={styles.eventLeft}>
                               <div className={styles.eventMeta}>
                                 <span className={styles.eventDate}>
-                                  {new Date(h.date).toLocaleDateString('uk-UA')}
+                                  {fmtDate(h.date)}
                                 </span>
                                 {h.game_day != null && (
                                   <span className={styles.gameDay}>· День {h.game_day}</span>
@@ -555,38 +696,60 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                                   />
                                 </p>
                               )}
-                              {(h.image_url || h.coordinates || (canEdit && !h.image_url)) && (
+                              {(h.image_url || h.coordinates || canEdit) && (
                                 <div className={styles.eventExtras}>
                                   {h.image_url && (
-                                    <button
-                                      type="button"
-                                      className={styles.thumbBtn}
-                                      aria-label={`Відкрити фото: ${h.title}`}
-                                      onClick={() => setLightbox(h.image_url)}
-                                    >
-                                      <img
-                                        src={h.image_url}
-                                        alt={h.title}
-                                        className={styles.thumb}
-                                      />
-                                    </button>
+                                    <>
+                                      <button
+                                        type="button"
+                                        className={styles.thumbBtn}
+                                        aria-label={`Відкрити фото: ${h.title}`}
+                                        onClick={() => setLightbox({ url: h.image_url, title: h.title })}
+                                      >
+                                        <img
+                                          src={h.image_url}
+                                          alt={h.title}
+                                          className={styles.thumb}
+                                        />
+                                      </button>
+                                      {canEdit && (
+                                        <IconButton
+                                          size="small"
+                                          aria-label="Видалити фото"
+                                          title="Видалити фото"
+                                          onClick={() => deleteImageMutation.mutate(h.id)}
+                                          disabled={deleteImageMutation.isPending}
+                                        >
+                                          <DeleteOutlinedIcon fontSize="small" />
+                                        </IconButton>
+                                      )}
+                                    </>
                                   )}
-                                  {canEdit && !h.image_url && (
-                                    <CardPhotoAdd worldId={worldId} eventId={h.id} />
+                                  {canEdit && (
+                                    <CardPhotoAdd
+                                      worldId={worldId}
+                                      eventId={h.id}
+                                      label={h.image_url ? 'Замінити' : 'Додати фото'}
+                                    />
                                   )}
                                   {h.coordinates && (
-                                    <span className={styles.coordsPill}>
+                                    <button
+                                      type="button"
+                                      className={styles.coordsPill}
+                                      title="Копіювати координати"
+                                      onClick={() => copyCoords(h.coordinates)}
+                                    >
                                       <LocationOnOutlinedIcon style={{ width: 14, height: 14 }} />
-                                      {h.coordinates.x} / {h.coordinates.y} / {h.coordinates.z}
-                                    </span>
+                                      {h.coordinates.x} / {h.coordinates.y} / {h.coordinates.z} ⧉
+                                    </button>
                                   )}
                                 </div>
                               )}
                               {(h.participants_list || []).length > 0 && (
                                 <div className={styles.participants}>
-                                  {(h.participants_list || []).map((p) => (
+                                  {(h.participants_list || []).map((p, i) => (
                                     <Chip
-                                      key={p}
+                                      key={`${p}-${i}`}
                                       label={p}
                                       size="small"
                                       className={styles.participantChip}
@@ -643,6 +806,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       <EpochDialog
         open={epochDialog}
         onClose={() => setEpochDialog(false)}
+        accent={accent}
         onSubmit={(name, description) =>
           epochMutation.mutateAsync({ name, description }).then(() => setEpochDialog(false))
         }
@@ -651,6 +815,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         open={closeEpoch !== null}
         onClose={() => setCloseEpoch(null)}
         epoch={closeEpoch}
+        accent={accent}
         onSubmit={(name) =>
           epochCloseMutation
             .mutateAsync({ id: closeEpoch.id, name })
@@ -717,10 +882,11 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 value={form.date}
                 onChange={(e) => {
                   const date = e.target.value
+                  const auto = gameDayForDate(date, world) ?? form.game_day
                   setForm((f) => ({
                     ...f,
                     date,
-                    game_day: gameDayForDate(date, world) ?? f.game_day,
+                    game_day: gameDayTouched ? f.game_day : auto,
                   }))
                 }}
                 InputLabelProps={{ shrink: true }}
@@ -729,7 +895,10 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 label="Ігровий день (авто, можна змінити)"
                 type="number"
                 value={form.game_day}
-                onChange={(e) => setForm((f) => ({ ...f, game_day: e.target.value }))}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, game_day: e.target.value }))
+                  setGameDayTouched(true)
+                }}
                 helperText={
                   world?.start_date
                     ? `Розраховується від старту світу (${world.start_date}).`
@@ -743,9 +912,9 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 onChange={(e) => setForm((f) => ({ ...f, epoch: e.target.value }))}
               >
                 {epochs.map((ep) => (
-                  <MenuItem key={ep.id} value={ep.id}>
+                  <MenuItem key={ep.id} value={ep.id} disabled={!editing && !ep.is_active}>
                     {ep.name}
-                    {ep.is_active ? ' (активна)' : ''}
+                    {ep.is_active ? ' (активна)' : ' (завершена)'}
                   </MenuItem>
                 ))}
                 {epochs.length === 0 && <MenuItem value="">— епох поки немає —</MenuItem>}
@@ -765,7 +934,16 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 onAdd={addParticipant}
                 onRemove={removeParticipant}
               />
-              <PhotoInput pending={pendingImage} onPick={setPendingImage} />
+              <PhotoInput
+                pending={pendingImage}
+                current={editing?.image_url}
+                removed={removeImage}
+                onPick={(v) => {
+                  setPendingImage(v)
+                  if (v) setRemoveImage(false)
+                }}
+                onRemoveCurrent={() => setRemoveImage(true)}
+              />
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>
@@ -791,7 +969,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
             <IconButton className={styles.lightboxClose} onClick={() => setLightbox(null)}>
               <CloseIcon />
             </IconButton>
-            <img src={lightbox} alt="Подія" className={styles.lightboxImg} />
+            <img src={lightbox.url} alt={lightbox.title || 'Фото події'} className={styles.lightboxImg} />
           </div>
         )}
       </Dialog>
@@ -799,17 +977,18 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   )
 }
 
-function CardPhotoAdd({ worldId, eventId }) {
+function CardPhotoAdd({ worldId, eventId, label = 'Додати фото' }) {
   const qc = useQueryClient()
   const ref = useRef(null)
+  const { notify } = useFeedback()
   const mutation = useMutation({
-    mutationFn: (file) =>
-      api.patch(
-        `/worlds/${worldId}/history/${eventId}/`,
-        { image: file },
-        { headers: { 'Content-Type': 'multipart/form-data' } },
-      ),
+    mutationFn: (file) => {
+      const data = new FormData()
+      data.append('image', file)
+      return api.patch(`/worlds/${worldId}/history/${eventId}/`, data)
+    },
     onSuccess: () => qc.invalidateQueries(['history', String(worldId)]),
+    onError: () => notify('Не вдалося завантажити фото'),
   })
   return (
     <>
@@ -830,13 +1009,13 @@ function CardPhotoAdd({ worldId, eventId }) {
         onClick={() => ref.current?.click()}
       >
         <AddPhotoAlternateIcon className={styles.addPhotoIcon} />
-        Додати фото
+        {label}
       </button>
     </>
   )
 }
 
-function PhotoInput({ pending, onPick }) {
+function PhotoInput({ pending, current, removed, onPick, onRemoveCurrent }) {
   const ref = useRef(null)
   return (
     <div className={styles.photoInput}>
@@ -865,6 +1044,17 @@ function PhotoInput({ pending, onPick }) {
             <CloseIcon fontSize="small" />
           </IconButton>
         </div>
+      )}
+      {!pending?.url && current && !removed && (
+        <div className={styles.pendingPhoto}>
+          <img src={current} alt="Поточне фото" />
+          <IconButton size="small" aria-label="Видалити поточне фото" onClick={onRemoveCurrent}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </div>
+      )}
+      {!pending?.url && current && removed && (
+        <p className={styles.photoRemovedHint}>Фото буде видалено після збереження</p>
       )}
     </div>
   )
@@ -922,9 +1112,15 @@ function ParticipantsInput({ participants, suggestions, onAdd, onRemove }) {
   )
 }
 
-function EpochDialog({ open, onClose, onSubmit }) {
+function EpochDialog({ open, onClose, onSubmit, accent }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  useEffect(() => {
+    if (open) {
+      setName('')
+      setDescription('')
+    }
+  }, [open])
   const submit = (e) => {
     e.preventDefault()
     if (!name.trim()) return
@@ -933,7 +1129,15 @@ function EpochDialog({ open, onClose, onSubmit }) {
     setDescription('')
   }
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{
+        paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+      }}
+    >
       <form onSubmit={submit}>
         <DialogTitle>Нова епоха</DialogTitle>
         <DialogContent>
@@ -945,6 +1149,7 @@ function EpochDialog({ open, onClose, onSubmit }) {
               autoFocus
               required
               fullWidth
+              inputProps={{ maxLength: TITLE_MAX }}
             />
             <TextField
               label="Опис (необов'язково)"
@@ -969,8 +1174,11 @@ function EpochDialog({ open, onClose, onSubmit }) {
   )
 }
 
-function CloseEpochDialog({ open, onClose, epoch, onSubmit }) {
+function CloseEpochDialog({ open, onClose, epoch, onSubmit, accent }) {
   const [name, setName] = useState('')
+  useEffect(() => {
+    if (open) setName('')
+  }, [open])
   const submit = (e) => {
     e.preventDefault()
     if (!name.trim()) return
@@ -978,7 +1186,15 @@ function CloseEpochDialog({ open, onClose, epoch, onSubmit }) {
     setName('')
   }
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{
+        paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
+      }}
+    >
       <form onSubmit={submit}>
         <DialogTitle>Завершити епоху «{epoch?.name}»</DialogTitle>
         <DialogContent>
@@ -990,6 +1206,7 @@ function CloseEpochDialog({ open, onClose, epoch, onSubmit }) {
               autoFocus
               required
               fullWidth
+              inputProps={{ maxLength: TITLE_MAX }}
             />
           </div>
         </DialogContent>
