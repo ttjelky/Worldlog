@@ -28,6 +28,7 @@ class World(models.Model):
         SKIES = 'skies', 'Небеса'
         DESERT = 'desert', 'Пустеля'
         WARM_OCEAN = 'warm_ocean', 'Океан'
+        PALE_GARDEN = 'pale_garden', 'Блідий сад'
 
     theme = models.CharField(
         max_length=20, choices=Theme.choices, default=Theme.SULFUR_CAVES
