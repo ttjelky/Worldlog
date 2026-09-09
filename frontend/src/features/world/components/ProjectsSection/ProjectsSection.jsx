@@ -328,7 +328,7 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
               key={value}
               type="button"
               aria-pressed={statusFilter === value}
-              className={`${styles.statusChip} ${statusFilter === value ? styles.statusChipActive : ''}`}
+              className={`${styles.statusFilterChip} ${statusFilter === value ? styles.statusFilterChipActive : ''}`}
               onClick={() => setStatusFilter((cur) => (cur === value ? null : value))}
             >
               {label}
