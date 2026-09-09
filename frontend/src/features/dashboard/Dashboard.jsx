@@ -181,8 +181,9 @@ function AddCardButton({ onClick }) {
   )
 }
 
-function OverviewPanel({ worlds, onOpenWorlds }) {
+function OverviewPanel({ worlds, isLoading, onOpenWorlds, onOpenWorld, onCreate }) {
   const total = worlds.length
+  const locations = worlds.reduce((s, w) => s + (w.locations_count || 0), 0)
   const pub = worlds.filter((w) => w.is_public).length
   const done = worlds.reduce((s, w) => s + (w.todos_done || 0), 0)
   const all = worlds.reduce((s, w) => s + (w.todos_count || 0), 0)
@@ -192,45 +193,115 @@ function OverviewPanel({ worlds, onOpenWorlds }) {
   const top = [...worlds]
     .sort((a, b) => getCompletionPercent(b) - getCompletionPercent(a))
     .slice(0, 4)
+  // Світи, що найбільше відстають, — полити корали
+  const attention = [...worlds]
+    .filter((w) => getCompletionPercent(w) < 100)
+    .sort((a, b) => getCompletionPercent(a) - getCompletionPercent(b))
+    .slice(0, 2)
+  // Останній торканий світ — швидке повернення в пригоду
+  const recent = [...worlds].sort(
+    (a, b) => new Date(b.updated_at) - new Date(a.updated_at),
+  )[0]
+  const recentDate =
+    recent && !Number.isNaN(new Date(recent.updated_at).getTime())
+      ? new Date(recent.updated_at).toLocaleDateString('uk-UA')
+      : null
 
   const tiles = [
-    ['Світи', total],
-    ['Публічні', pub],
-    ['Задач виконано', `${done}/${all}`],
-    ['Середній прогрес', `${avg}%`],
+    ['Світи', total, styles.tileCoral],
+    ['Локації', locations, styles.tilePeach],
+    ['Задач виконано', `${done}/${all}`, styles.tileSeafoam],
+    ['Середній прогрес', `${avg}%`, styles.tileSand],
+    ['Публічні', pub, styles.tileShell],
   ]
+  const leaderTones = ['coral', 'teal', 'sand', 'cactus']
+  const attentionTones = ['coral', 'teal']
 
   return (
     <>
-      <section className={styles.hero}>
-        <p className={styles.heroGreeting}>Загальна картина</p>
-        <h1 className={styles.heroTitle}>Огляд</h1>
-      </section>
+      {isLoading && <LinearProgress className={styles.overviewLoading} />}
 
-      <div className={styles.overviewTiles}>
-        {tiles.map(([label, value]) => (
-          <div key={label} className={styles.overviewTile}>
-            <span className={styles.overviewValue}>{value}</span>
-            <span className={styles.overviewLabel}>{label}</span>
-          </div>
-        ))}
-      </div>
-
-      {top.length > 0 && (
-        <>
-          <h2 className={styles.sectionSubtitle}>Лідери за прогресом</h2>
-          <div className={styles.grid}>
-            {top.map((w, i) => (
-              <WorldCard key={w.id} world={w} index={i} tone="violet" />
-            ))}
-          </div>
-        </>
+      {!isLoading && total === 0 && (
+        <div className={styles.emptyOcean}>
+          <p className={styles.emptyOceanTitle}>Твій океан ще порожній</p>
+          <p className={styles.emptyOceanSub}>
+            Створи перший світ — і корали почнуть рости.
+          </p>
+          <Button className={styles.overviewCta} onClick={onCreate}>
+            Створити світ
+          </Button>
+        </div>
       )}
 
-      <Button className={styles.overviewCta} onClick={onOpenWorlds}>
-        Перейти до моїх світів
-        <ArrowForwardIcon fontSize="small" />
-      </Button>
+      {!isLoading && total > 0 && (
+        <>
+          <div className={styles.overviewTiles}>
+            {tiles.map(([label, value, tone]) => (
+              <div key={label} className={`${styles.overviewTile} ${tone}`}>
+                <span className={styles.overviewValue}>{value}</span>
+                <span className={styles.overviewLabel}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          {recent && (
+            <button
+              type="button"
+              className={styles.continueCard}
+              onClick={() => onOpenWorld(recent.id)}
+            >
+              <span className={styles.continueLabel}>Продовжити пригоду</span>
+              <span className={styles.continueName}>{recent.name}</span>
+              <span className={styles.continueMeta}>
+                {recentDate ? `Оновлено ${recentDate} · ` : ''}
+                {recent.todos_done || 0}/{recent.todos_count || 0} задач
+              </span>
+              <span className={styles.continueBar}>
+                <span
+                  className={styles.continueFill}
+                  style={{ width: `${getCompletionPercent(recent)}%` }}
+                />
+              </span>
+              <span className={styles.continueOpen}>
+                Відкрити світ
+                <ArrowForwardIcon fontSize="small" />
+              </span>
+            </button>
+          )}
+
+          {attention.length > 0 && (
+            <>
+              <h2 className={styles.sectionSubtitle}>Потребують уваги</h2>
+              <div className={styles.grid}>
+                {attention.map((w, i) => (
+                  <WorldCard key={w.id} world={w} index={i} tone={attentionTones[i % 2]} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {top.length > 0 && (
+            <>
+              <h2 className={styles.sectionSubtitle}>Лідери за прогресом</h2>
+              <div className={styles.grid}>
+                {top.map((w, i) => (
+                  <WorldCard
+                    key={w.id}
+                    world={w}
+                    index={i}
+                    tone={leaderTones[i % leaderTones.length]}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          <Button className={styles.overviewCta} onClick={onOpenWorlds}>
+            Перейти до моїх світів
+            <ArrowForwardIcon fontSize="small" />
+          </Button>
+        </>
+      )}
     </>
   )
 }
@@ -274,9 +345,10 @@ export default function Dashboard() {
     : 0
 
   return (
-    <div className={styles.appShell}>
+    <div className={`${styles.appShell} ${activePage === 'overview' ? styles.appShellOverview : ''}`}>
       <Navbar
         activePage={activePage}
+        logoSrc={activePage === 'overview' ? '/worldlog-logo-ocean.png' : '/worldlog-logo-purple.png'}
         onNavigate={(id) => {
           if (id === 'home' || id === 'overview') switchTab(id)
           else goSection(id, navigate)
@@ -285,7 +357,13 @@ export default function Dashboard() {
 
       <div className={styles.page}>
         {activePage === 'overview' ? (
-          <OverviewPanel worlds={worlds} onOpenWorlds={() => navigate('/app/worlds')} />
+          <OverviewPanel
+            worlds={worlds}
+            isLoading={isLoading}
+            onOpenWorlds={() => navigate('/app/worlds')}
+            onOpenWorld={(id) => navigate(`/app/worlds/${id}`)}
+            onCreate={openCreate}
+          />
         ) : (
           <>
             <section className={styles.hero}>
