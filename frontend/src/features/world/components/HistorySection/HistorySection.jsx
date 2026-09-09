@@ -2,13 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
-  Checkbox,
   Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   IconButton,
   MenuItem,
   TextField,
@@ -19,7 +17,6 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
 import CloseIcon from '@mui/icons-material/Close'
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import MenuBookIcon from '@mui/icons-material/MenuBook'
@@ -44,7 +41,6 @@ import LocationBadgeText from '../shared/LocationBadgeText'
 import { useLocations } from '../shared/locationData'
 import styles from './HistorySection.module.css'
 
-const MS_IN_DAY = 86400000
 const TITLE_MAX = 200
 
 const eventTypes = [
@@ -75,24 +71,6 @@ const typeColors = {
   discovery: '#4caf7d',
   achievement: '#e6b44d',
   other: '#9aa0a6',
-}
-
-function gameDayForDate(dateValue, world) {
-  const start = world?.start_date || world?.created_at?.slice(0, 10)
-  if (!start) return null
-  const d = new Date(`${dateValue}T12:00:00`)
-  const s = new Date(`${start}T12:00:00`)
-  if (Number.isNaN(d.getTime())) return null
-  return Math.max(0, Math.round((d - s) / MS_IN_DAY)) + 1
-}
-
-function worldAgeInDays(world) {
-  const start = world?.start_date || world?.created_at?.slice(0, 10)
-  if (!start) return 0
-  const s = new Date(`${start}T12:00:00`)
-  const now = new Date()
-  if (Number.isNaN(s.getTime())) return 0
-  return Math.max(0, Math.floor((now - s) / MS_IN_DAY)) + 1
 }
 
 // Локальна дата YYYY-MM-DD (на відміну від toISOString, без зсуву UTC)
@@ -133,7 +111,6 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   const [form, setForm] = useState(empty)
   const [pendingImage, setPendingImage] = useState(null)
   const [removeImage, setRemoveImage] = useState(false)
-  const [gameDayTouched, setGameDayTouched] = useState(false)
   const [lightbox, setLightbox] = useState(null)
   const [epochFilter, setEpochFilter] = useState('current')
   const [search, setSearch] = useState('')
@@ -144,6 +121,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   const [closeEpoch, setCloseEpoch] = useState(null)
   const canEdit = userRole && userRole !== 'viewer'
   const { notify } = useFeedback()
+  const photoInputRef = useRef(null)
 
   const { data: events = [] } = useQuery({
     queryKey: ['history', String(worldId)],
@@ -154,6 +132,10 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
     queryFn: () => api.get(`/worlds/${worldId}/epochs/`).then((r) => r.data),
   })
   const { data: locations = [] } = useLocations(worldId)
+  const { data: players = [] } = useQuery({
+    queryKey: ['players', String(worldId)],
+    queryFn: () => api.get(`/worlds/${worldId}/players/`).then((r) => r.data),
+  })
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -234,9 +216,13 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
     [epochs],
   )
 
-  const knownParticipants = useMemo(
-    () => Array.from(new Set(events.flatMap((e) => e.participants_list || []))),
-    [events],
+  const availablePlayers = useMemo(
+    () =>
+      players
+        .map((p) => p.nickname)
+        .filter((n) => n && !form.participants.includes(n))
+        .sort((a, b) => a.localeCompare(b, 'uk')),
+    [players, form.participants],
   )
 
   const openNew = (presetEpochId) => {
@@ -244,7 +230,6 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
     setForm({ ...empty, date: todayLocal(), epoch: presetEpochId ?? activeEpochObj?.id ?? '' })
     setPendingImage(null)
     setRemoveImage(false)
-    setGameDayTouched(false)
     setOpen(true)
   }
   const openEdit = (h) => {
@@ -264,14 +249,12 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
     })
     setPendingImage(null)
     setRemoveImage(false)
-    // Ігровий день уже заданий — дату більше не перераховуємо автоматично
-    setGameDayTouched(h.game_day != null)
     setOpen(true)
   }
 
   const addParticipant = (name) => {
-    const v = (name || '').replace(/,/g, '').trim()
-    if (!v || form.participants.some((p) => p.toLowerCase() === v.toLowerCase())) return
+    const v = (name || '').trim()
+    if (!v || form.participants.includes(v)) return
     setForm((f) => ({ ...f, participants: [...f.participants, v] }))
   }
   const removeParticipant = (name) =>
@@ -376,13 +359,12 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   const stats = useMemo(() => {
     const bossCount = events.filter((e) => e.event_type === 'boss').length
     return {
-      ageDays: worldAgeInDays(world),
       total: events.length,
       bosses: bossCount,
       epochs: epochs.length,
       important: events.filter((e) => e.is_important).length,
     }
-  }, [events, epochs, world])
+  }, [events, epochs])
 
   // Сортування список не порожнить, тому в «активні фільтри» не входить
   const hasActiveFilters = typeFilter !== null || importantOnly || search.trim() !== ''
@@ -417,11 +399,6 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       </div>
 
       <div className={styles.statsRow}>
-        <div className={styles.stat}>
-          <CalendarMonthIcon className={styles.statIcon} />
-          <span className={styles.statValue}>{stats.ageDays}</span>
-          <span className={styles.statLabel}>днів світу</span>
-        </div>
         <div className={styles.stat}>
           <AutoAwesomeIcon className={styles.statIcon} />
           <span className={styles.statValue}>{stats.total}</span>
@@ -510,10 +487,10 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       )}
 
       {section.full && (
-        <>
+        <div className={styles.searchFilterRow}>
           <input
             type="search"
-            className={sharedStyles.wideSearch}
+            className={`${sharedStyles.wideSearch} ${styles.rowSearch}`}
             placeholder="Знайти подію…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -532,7 +509,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
               </button>
             ))}
           </div>
-        </>
+        </div>
       )}
 
       <div
@@ -836,14 +813,40 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
           <DialogTitle>{editing ? 'Редагувати подію' : 'Нова подія'}</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
-              <LocationRichTextEditor
-                worldId={worldId}
-                label="Заголовок"
-                value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                required
-                autoFocus
-              />
+              <div className={styles.titleRow}>
+                <div className={styles.titleField}>
+                  <LocationRichTextEditor
+                    worldId={worldId}
+                    label="Заголовок"
+                    value={form.title}
+                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                    required
+                    autoFocus
+                  />
+                </div>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      setPendingImage({ file, url: URL.createObjectURL(file) })
+                      setRemoveImage(false)
+                    }
+                    e.target.value = ''
+                  }}
+                />
+                <Button
+                  size="small"
+                  startIcon={<ImageOutlinedIcon />}
+                  onClick={() => photoInputRef.current?.click()}
+                  title={pendingImage ? 'Замінити зображення' : 'Додати зображення'}
+                >
+                  {pendingImage ? 'Замінити зображення' : 'Додати зображення'}
+                </Button>
+              </div>
               <LocationRichTextEditor
                 worldId={worldId}
                 label="Опис"
@@ -880,30 +883,14 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 label="Реальна дата"
                 type="date"
                 value={form.date}
-                onChange={(e) => {
-                  const date = e.target.value
-                  const auto = gameDayForDate(date, world) ?? form.game_day
-                  setForm((f) => ({
-                    ...f,
-                    date,
-                    game_day: gameDayTouched ? f.game_day : auto,
-                  }))
-                }}
+                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
                 InputLabelProps={{ shrink: true }}
               />
               <TextField
-                label="Ігровий день (авто, можна змінити)"
+                label="Ігровий день"
                 type="number"
                 value={form.game_day}
-                onChange={(e) => {
-                  setForm((f) => ({ ...f, game_day: e.target.value }))
-                  setGameDayTouched(true)
-                }}
-                helperText={
-                  world?.start_date
-                    ? `Розраховується від старту світу (${world.start_date}).`
-                    : 'Встанови дату старту світу, щоб рахувати автоматично.'
-                }
+                onChange={(e) => setForm((f) => ({ ...f, game_day: e.target.value }))}
               />
               <TextField
                 select
@@ -919,31 +906,79 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 ))}
                 {epochs.length === 0 && <MenuItem value="">— епох поки немає —</MenuItem>}
               </TextField>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={form.is_important}
-                    onChange={(e) => setForm((f) => ({ ...f, is_important: e.target.checked }))}
+              <div className={styles.metaRow}>
+                <Button
+                  size="small"
+                  startIcon={form.is_important ? <StarIcon /> : <StarBorderIcon />}
+                  onClick={() => setForm((f) => ({ ...f, is_important: !f.is_important }))}
+                  aria-pressed={form.is_important}
+                  title="Позначити подію як важливу"
+                  className={`${styles.importantBtn} ${form.is_important ? styles.importantBtnActive : ''}`}
+                >
+                  Важлива подія
+                </Button>
+                <TextField
+                  select
+                  label="Учасники"
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) addParticipant(e.target.value)
+                  }}
+                  className={styles.participantSelect}
+                  disabled={availablePlayers.length === 0}
+                  helperText={
+                    players.length === 0
+                      ? 'Спочатку додай гравців у картці «Гравці»'
+                      : 'Обери гравця зі списку'
+                  }
+                >
+                  {availablePlayers.map((n) => (
+                    <MenuItem key={n} value={n}>
+                      {n}
+                    </MenuItem>
+                  ))}
+                  {availablePlayers.length === 0 && (
+                    <MenuItem value="" disabled>
+                      {players.length === 0 ? 'Гравців поки немає' : 'Усіх уже додано'}
+                    </MenuItem>
+                  )}
+                </TextField>
+              </div>
+              {form.participants.length > 0 && (
+                <div className={styles.participants}>
+                  {form.participants.map((p, i) => (
+                    <Chip
+                      key={`${p}-${i}`}
+                      label={p}
+                      size="small"
+                      onDelete={() => removeParticipant(p)}
+                      deleteIcon={<CloseIcon fontSize="small" />}
+                      className={styles.participantChip}
+                    />
+                  ))}
+                </div>
+              )}
+              {(pendingImage?.url || (editing?.image_url && !removeImage)) && (
+                <div className={styles.pendingPhoto}>
+                  <img
+                    src={pendingImage?.url || editing?.image_url}
+                    alt={pendingImage?.url ? 'Превʼю' : 'Поточне фото'}
                   />
-                }
-                label="Важлива подія"
-              />
-              <ParticipantsInput
-                participants={form.participants}
-                suggestions={knownParticipants}
-                onAdd={addParticipant}
-                onRemove={removeParticipant}
-              />
-              <PhotoInput
-                pending={pendingImage}
-                current={editing?.image_url}
-                removed={removeImage}
-                onPick={(v) => {
-                  setPendingImage(v)
-                  if (v) setRemoveImage(false)
-                }}
-                onRemoveCurrent={() => setRemoveImage(true)}
-              />
+                  <IconButton
+                    size="small"
+                    aria-label={pendingImage?.url ? 'Прибрати фото' : 'Видалити поточне фото'}
+                    onClick={() => {
+                      if (pendingImage?.url) setPendingImage(null)
+                      else setRemoveImage(true)
+                    }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </div>
+              )}
+              {editing?.image_url && removeImage && !pendingImage?.url && (
+                <p className={styles.photoRemovedHint}>Фото буде видалено після збереження</p>
+              )}
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>
@@ -1012,103 +1047,6 @@ function CardPhotoAdd({ worldId, eventId, label = 'Додати фото' }) {
         {label}
       </button>
     </>
-  )
-}
-
-function PhotoInput({ pending, current, removed, onPick, onRemoveCurrent }) {
-  const ref = useRef(null)
-  return (
-    <div className={styles.photoInput}>
-      <input
-        ref={ref}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0]
-          if (file) onPick({ file, url: URL.createObjectURL(file) })
-          e.target.value = ''
-        }}
-      />
-      <Button
-        variant="outlined"
-        onClick={() => ref.current?.click()}
-        startIcon={<ImageOutlinedIcon />}
-      >
-        {pending ? 'Замінити зображення' : 'Додати зображення'}
-      </Button>
-      {pending?.url && (
-        <div className={styles.pendingPhoto}>
-          <img src={pending.url} alt="Прев'ю" />
-          <IconButton size="small" onClick={() => onPick(null)}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </div>
-      )}
-      {!pending?.url && current && !removed && (
-        <div className={styles.pendingPhoto}>
-          <img src={current} alt="Поточне фото" />
-          <IconButton size="small" aria-label="Видалити поточне фото" onClick={onRemoveCurrent}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </div>
-      )}
-      {!pending?.url && current && removed && (
-        <p className={styles.photoRemovedHint}>Фото буде видалено після збереження</p>
-      )}
-    </div>
-  )
-}
-
-function ParticipantsInput({ participants, suggestions, onAdd, onRemove }) {
-  const [value, setValue] = useState('')
-  const filtered = suggestions.filter((s) => !participants.includes(s))
-  return (
-    <div>
-      <TextField
-        label="Учасники"
-        size="small"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            if (value.trim()) onAdd(value)
-            setValue('')
-          }
-        }}
-        helperText="Введи ім'я та натисни Enter"
-      />
-      {filtered.length > 0 && value && (
-        <div className={styles.suggestions}>
-          {filtered
-            .filter((s) => s.toLowerCase().includes(value.toLowerCase()))
-            .map((s) => (
-              <Chip
-                key={s}
-                label={s}
-                size="small"
-                onClick={() => {
-                  onAdd(s)
-                  setValue('')
-                }}
-                className={styles.suggestionChip}
-              />
-            ))}
-        </div>
-      )}
-      <div className={styles.participants}>
-        {participants.map((p) => (
-          <Chip
-            key={p}
-            label={p}
-            size="small"
-            onDelete={() => onRemove(p)}
-            className={styles.participantChip}
-          />
-        ))}
-      </div>
-    </div>
   )
 }
 

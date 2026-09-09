@@ -236,33 +236,19 @@ class HistoryEventViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     serializer_class = HistoryEventSerializer
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
-    def _finalize(self, serializer):
-        """Підрахувати ігровий день від дня старту світу, якщо його
-        не задали вручну."""
-        world_id = self.kwargs['world_id']
-        data = serializer.validated_data
-        if 'game_day' not in data:
-            world = World.objects.filter(pk=world_id).first()
-            event_date = data.get('date') or getattr(serializer.instance, 'date', None)
-            if world and world.start_date and event_date:
-                data['game_day'] = (event_date - world.start_date).days + 1
-        return data
-
     def perform_create(self, serializer):
         world_id = self.kwargs['world_id']
         data = serializer.validated_data
         epoch = (data.get('epoch')
                  or Epoch.objects.filter(world_id=world_id, end_date__isnull=True).first()
                  or Epoch.objects.filter(world_id=world_id).order_by('-created_at').first())
-        data = self._finalize(serializer)
         data['world_id'] = world_id
         if epoch:
             data['epoch'] = epoch
         serializer.save(**data)
 
     def perform_update(self, serializer):
-        data = self._finalize(serializer)
-        serializer.save(**data)
+        serializer.save()
 
 
 class EpochViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):

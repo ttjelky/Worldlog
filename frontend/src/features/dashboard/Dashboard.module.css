@@ -459,7 +459,7 @@
 }
 
 .dialogContent {
-  padding: 0 32px 44px !important;
+  padding: 28px 32px 44px !important;
   /* Підтягуємо контент під хедер і футер — до самих країв вікна */
   margin-top: -44px;
   overflow: visible !important;

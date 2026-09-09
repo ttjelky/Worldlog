@@ -207,8 +207,9 @@
 }
 
 .dialogPaper :global(.MuiDialogContent-root) {
-  /* Контент на всю висоту вікна: від краю до краю, без відступів */
-  padding: 0 32px !important;
+  /* Повітря зверху/знизу, щоб контент не тонув у фейді; низ ширший,
+     бо футер заходить під контент */
+  padding: 28px 32px 40px !important;
   /* Підтягуємо контент під хедер і футер — до самих країв вікна */
   margin-top: -44px;
   overflow-y: auto !important;
@@ -220,15 +221,15 @@
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    #000 56px,
-    #000 calc(100% - 40px),
+    #000 28px,
+    #000 calc(100% - 24px),
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    #000 56px,
-    #000 calc(100% - 40px),
+    #000 28px,
+    #000 calc(100% - 24px),
     transparent 100%
   );
 }

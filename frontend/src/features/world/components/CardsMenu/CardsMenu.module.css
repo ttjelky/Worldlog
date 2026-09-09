@@ -44,22 +44,22 @@
 /* ---------- Content ---------- */
 
 .content {
-  /* Контент на всю висоту вікна: від краю до краю, без відступів */
-  padding: 0 32px !important;
+  /* Повітря зверху/знизу, щоб контент не тонув у фейді */
+  padding: 28px 32px !important;
   /* Підтягуємо контент під хедер — до самого краю вікна */
   margin-top: -40px;
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    #000 56px,
-    #000 calc(100% - 40px),
+    #000 28px,
+    #000 calc(100% - 24px),
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    #000 56px,
-    #000 calc(100% - 40px),
+    #000 28px,
+    #000 calc(100% - 24px),
     transparent 100%
   );
 }

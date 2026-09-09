@@ -134,7 +134,7 @@ export default function TodosSection({ worldId, accent, userRole }) {
               startIcon={<AddIcon />}
               onClick={openNew}
             >
-              Нове завдання
+              Нове todo
             </Button>
           )}
         </div>
