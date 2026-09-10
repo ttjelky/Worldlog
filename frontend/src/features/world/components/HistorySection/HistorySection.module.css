@@ -10,13 +10,36 @@
   max-height: none;
 }
 
-/* Повноекранний режим: групи епох у дві колонки */
+/* ---- Тулбар: кнопки ліворуч, міні-статистика праворуч ---- */
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  /* Стати завжди рівно з кнопками, яка б ті не мали висоту */
+  align-items: stretch;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.toolbar .filters {
+  order: 1;
+  flex: 1 1 320px;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.toolbar .statsRow {
+  order: 2;
+  margin-bottom: 0;
+}
+
+/* Повноекранний режим: епоха на всю ширину, події змійкою */
 .timelineWide {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px 16px;
-  align-items: start;
   align-content: start;
+  align-items: start;
 }
 
 .timelineWide > :not(.epochBlock) {
@@ -64,8 +87,8 @@
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.16);
+  color: color-mix(in srgb, white 85%, var(--accent, #1d1a22));
+  background: color-mix(in srgb, white 16%, var(--accent, #1d1a22));
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -74,7 +97,7 @@
 }
 
 .typeChip:hover {
-  background: rgba(255, 255, 255, 0.26);
+  background: color-mix(in srgb, white 26%, var(--accent, #1d1a22));
   color: #ffffff;
 }
 
@@ -95,10 +118,10 @@
   }
 }
 
-/* ---- Статистика ---- */
+/* ---- Статистика: міні-смужка ---- */
 .statsRow {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 16px;
 }
@@ -109,26 +132,27 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  gap: 7px;
+  padding: 0 14px;
+  height: auto;
+  align-self: stretch;
+  border-radius: 999px;
+  box-shadow: none;
+  background: color-mix(in srgb, black 18%, var(--accent, #1d1a22));
   text-align: left;
   overflow: hidden;
 }
 
 .statIcon {
-  width: 20px !important;
-  height: 20px !important;
-  color: rgba(255, 255, 255, 0.85);
+  width: 16px !important;
+  height: 16px !important;
+  color: color-mix(in srgb, white 85%, var(--accent, #1d1a22));
   flex-shrink: 0;
 }
 
 .statValue {
   font-weight: 800;
-  font-size: 24px;
+  font-size: 18px;
   color: #ffffff;
   line-height: 1;
 }
@@ -136,22 +160,21 @@
 .statLabel {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.72);
+  color: color-mix(in srgb, white 72%, var(--accent, #1d1a22));
 }
 
 /* ---- Фільтри ---- */
 .filters {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 16px;
 }
 
 .epochFilterButton {
   border-radius: 999px !important;
-  border-color: color-mix(in srgb, var(--accent, #1d1a22) 55%, #000000) !important;
+  border: none !important;
   color: #ffffff !important;
   background: color-mix(in srgb, var(--accent, #1d1a22) 38%, #000000) !important;
   text-transform: none !important;
@@ -160,12 +183,10 @@
 }
 
 .epochFilterButton:hover {
-  border-color: color-mix(in srgb, var(--accent, #1d1a22) 68%, #000000) !important;
   background: color-mix(in srgb, var(--accent, #1d1a22) 50%, #000000) !important;
 }
 
 .epochFilterButtonActive {
-  border-color: color-mix(in srgb, var(--accent, var(--page-active-bg, #1d1a22)) 72%, #000000) !important;
   color: #ffffff !important;
   background: color-mix(in srgb, var(--accent, var(--page-active-bg, #1d1a22)) 72%, #000000) !important;
 }
@@ -175,34 +196,66 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* Контейнер для container query: вузька картка сама складає
+     літопис в односторонню стрічку */
+  container-type: inline-size;
 }
 
+/* Епоха: номер і назва в один ряд */
 .epochHeader {
-  position: relative;
-  padding: 12px 16px 12px 20px;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 10px 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
-.epochHeader::before {
+.chapterKicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 2px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.chapterKicker::before,
+.chapterKicker::after {
   content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--accent, var(--page-active-bg, #1d1a22));
-  opacity: 0.55;
+  height: 1px;
+  width: min(140px, 20vw);
+  flex-shrink: 0;
+  background: color-mix(in srgb, white 25%, var(--accent, #1d1a22));
+}
+
+/* Події поза епохами — тонкий розділювач */
+.noneDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: color-mix(in srgb, white 50%, var(--accent, #1d1a22));
+}
+
+.noneDivider::before,
+.noneDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, white 15%, var(--accent, #1d1a22));
 }
 
 .epochTopRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  display: contents;
 }
 
 .epochTitleRow {
@@ -213,45 +266,12 @@
   min-width: 0;
 }
 
-.epochMark {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
-  flex-shrink: 0;
-}
-
-.epochMarkActive {
-  background: #4caf7d;
-  box-shadow: 0 0 0 4px rgba(76, 175, 125, 0.22);
-}
-
 .epochName {
   font-weight: 800;
-  font-size: 17px;
+  font-size: clamp(26px, 4vw, 36px);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   color: #ffffff;
-}
-
-.epochActiveBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(76, 175, 125, 0.18);
-  color: #a6e8c0;
-  border: 1px solid rgba(76, 175, 125, 0.45);
-}
-
-.epochActiveDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #4caf7d;
 }
 
 .epochHeaderActions {
@@ -259,46 +279,50 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .epochCloseBtn {
   color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
+  border: none !important;
   border-radius: 999px !important;
   text-transform: none !important;
   font-size: 12px !important;
   font-weight: 600 !important;
   padding: 4px 12px !important;
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, white 8%, var(--accent, #1d1a22));
 }
 
 .epochCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
-  border-color: rgba(255, 255, 255, 0.6) !important;
+  background: color-mix(in srgb, white 16%, var(--accent, #1d1a22)) !important;
 }
 
 .epochDeleteBtn {
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: color-mix(in srgb, white 70%, var(--accent, #1d1a22)) !important;
 }
 
 .epochDeleteBtn:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
+  background: color-mix(in srgb, white 14%, var(--accent, #1d1a22)) !important;
   color: #ffffff !important;
 }
 
 .epochMeta {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: color-mix(in srgb, white 60%, var(--accent, #1d1a22));
   margin-top: 6px;
   display: flex;
+  justify-content: center;
   gap: 6px;
   flex-wrap: wrap;
 }
 
 .epochDesc {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.72);
+  color: color-mix(in srgb, white 72%, var(--accent, #1d1a22));
   margin: 6px 0 0;
+  text-align: center;
+  max-width: 62ch;
 }
 
 .epochEmpty {
@@ -307,7 +331,7 @@
 
 .epochBtn {
   color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.14) !important;
+  background: color-mix(in srgb, white 14%, var(--accent, #1d1a22)) !important;
   border-radius: 999px !important;
   text-transform: none !important;
   font-size: 12.5px !important;
@@ -316,30 +340,33 @@
 }
 
 .epochBtn:hover {
-  background: rgba(255, 255, 255, 0.24) !important;
+  background: color-mix(in srgb, white 24%, var(--accent, #1d1a22)) !important;
 }
 
 .epochEmptyState {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   gap: 8px;
   padding: 14px 18px;
   border-radius: 14px;
-  border: 1px dashed rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.04);
-  margin-left: 46px;
+  background: color-mix(in srgb, white 6%, var(--accent, #1d1a22));
+}
+
+.epochBlock > .epochEmptyText {
+  text-align: center;
 }
 
 .epochEmptyText {
   margin: 0;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: color-mix(in srgb, white 60%, var(--accent, #1d1a22));
 }
 
 .epochEmptyBtn {
   color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.14) !important;
+  background: color-mix(in srgb, white 14%, var(--accent, #1d1a22)) !important;
   border-radius: 999px !important;
   text-transform: none !important;
   font-size: 12.5px !important;
@@ -347,12 +374,154 @@
 }
 
 .epochEmptyBtn:hover {
-  background: rgba(255, 255, 255, 0.24) !important;
+  background: color-mix(in srgb, white 24%, var(--accent, #1d1a22)) !important;
 }
 
 .epochTimeline {
   position: relative;
   padding-left: 46px;
+}
+
+/* Літопис у повноекранному режимі: епоха на всю ширину, події чергуються
+   ліворуч/праворуч від центрального хребта. Кожен ряд — subgrid
+   (картка | хребет | картка), усі позиції задані явно. */
+.timelineWide .epochTimeline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+  gap: 0 16px;
+  padding-left: 0;
+}
+
+.timelineWide .event {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  padding-bottom: 0;
+  min-width: 0;
+}
+
+.timelineWide .eventTrack {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  width: auto;
+  bottom: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timelineWide .event:nth-child(odd) .eventCardWrap {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.timelineWide .event:nth-child(even) .eventCardWrap {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.timelineWide .eventCardWrap {
+  margin-left: 0;
+}
+
+.timelineWide .eventTrack .node {
+  margin-top: 14px;
+}
+
+.timelineWide .nodeImportant {
+  margin-top: 11px;
+}
+
+.timelineWide .rail {
+  top: 0;
+}
+
+.timelineWide .event:first-child .rail {
+  top: 26px;
+}
+
+.timelineWide .event:last-child .rail {
+  bottom: auto;
+  height: 30px;
+}
+
+.timelineWide .event:first-child:last-child .rail {
+  display: none;
+}
+
+.timelineWide .eventCard {
+  margin-bottom: 14px;
+}
+
+/* Картка ліворуч від хребта: дзеркалимо рядок — дата до лінії,
+   дії на зовнішній край. DOM-порядок не чіпаємо (a11y/фокус).
+   Тільки коли хребет реально по центру (широкий контейнер). */
+@container (min-width: 601px) {
+  .timelineWide .event:nth-child(odd) .eventHeader {
+    flex-direction: row-reverse;
+  }
+
+  /* Вміст — теж до хребта: текст праворуч, ряди навпаки */
+  .timelineWide .event:nth-child(odd) .eventLeft {
+    text-align: right;
+  }
+
+  .timelineWide .event:nth-child(odd) .eventMeta {
+    justify-content: flex-end;
+  }
+
+  .timelineWide .event:nth-child(odd) .eventExtras {
+    flex-direction: row-reverse;
+  }
+
+  .timelineWide .event:nth-child(odd) .eventDesc {
+    text-align: right;
+  }
+}
+
+/* Широкий контейнер: велика книжкова глава */
+@container (min-width: 601px) {
+  .timelineWide .chapterKicker {
+    font-size: clamp(30px, 4.5vw, 48px);
+    font-weight: 400;
+    letter-spacing: -0.06em;
+  }
+
+  .timelineWide .epochName {
+    font-size: clamp(32px, 5vw, 46px);
+  }
+}
+
+/* Вузький контейнер (міні-картка): одностороння стрічка зліва */
+@container (max-width: 600px) {
+  .timelineWide .epochTimeline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .timelineWide .event {
+    display: flex;
+  }
+
+  .timelineWide .eventTrack {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+  }
+
+  .timelineWide .eventCardWrap {
+    margin-left: 52px;
+  }
+
+  .timelineWide .chapterKicker {
+    font-size: 20px;
+  }
+
+  .timelineWide .epochName {
+    font-size: 22px;
+  }
 }
 
 /* ---- Події ---- */
@@ -370,17 +539,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 24px;
+  width: 40px;
 }
 
 .rail {
   position: absolute;
   left: 50%;
-  top: 18px;
+  top: 44px;
   bottom: 0;
-  width: 2px;
+  width: 3px;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.22);
+  background: color-mix(in srgb, white 28%, var(--accent, #1d1a22));
+  border-radius: 999px;
   z-index: 1;
 }
 
@@ -388,54 +558,133 @@
   display: none;
 }
 
+/* Вузол-віха: іконка типу на кольорі події */
 .node {
   position: relative;
-  width: 16px;
-  height: 16px;
+  width: 30px;
+  height: 30px;
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--type-color, #9aa0a6);
-  margin-top: 6px;
+  margin-top: 10px;
   z-index: 2;
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 4px color-mix(in srgb, white 14%, var(--accent, #1d1a22));
+}
+
+.nodeIcon {
+  width: 16px !important;
+  height: 16px !important;
+  color: #ffffff;
 }
 
 .nodeImportant {
-  width: 20px;
-  height: 20px;
-  margin-top: 4px;
-  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.22), 0 0 14px var(--type-color, #e8855a);
+  width: 36px;
+  height: 36px;
+  margin-top: 7px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, white 24%, var(--accent, #1d1a22)), 0 0 16px var(--type-color, #e8855a);
+}
+
+.nodeImportant .nodeIcon {
+  width: 18px !important;
+  height: 18px !important;
 }
 
 .eventCardWrap {
   flex: 1;
   min-width: 0;
-  margin-left: 34px;
+  margin-left: 52px;
 }
 
 .eventCard {
-  border-radius: 14px;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.09);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, white 10%, var(--accent, #1d1a22));
 }
 
 .eventCardImportant {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, white 20%, var(--accent, #1d1a22));
+}
+
+/* Скелетони, доки їде список подій */
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonCard {
+  height: 120px;
+  border-radius: 22px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, white 8%, var(--accent, #1d1a22)) 25%,
+    color-mix(in srgb, white 18%, var(--accent, #1d1a22)) 50%,
+    color-mix(in srgb, white 8%, var(--accent, #1d1a22)) 75%
+  );
+  background-size: 400px 100%;
+  animation: historyShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes historyShimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonCard {
+    animation: none;
+  }
 }
 
 .eventHeader {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
 }
 
 .eventLeft {
   min-width: 0;
   flex: 1;
+}
+
+/* Блок дати запису літопису */
+.dateBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 54px;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.dateDay {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.dateMonth {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: color-mix(in srgb, white 62%, var(--accent, #1d1a22));
+}
+
+.dateGameDay {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: color-mix(in srgb, white 50%, var(--accent, #1d1a22));
 }
 
 .eventMeta {
@@ -445,65 +694,51 @@
   flex-wrap: wrap;
 }
 
-.eventDate {
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.62);
-}
-
-.gameDay {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.5);
-}
-
 .importantPill {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   padding: 2px 9px;
   border-radius: 999px;
-  background: rgba(232, 133, 90, 0.24);
+  background: color-mix(in srgb, #e8855a 32%, var(--accent, #1d1a22));
   color: #f6b993;
-  border: 1px solid rgba(232, 133, 90, 0.35);
 }
 
 .eventTitle {
   font-family: inherit;
-  font-weight: 700;
-  font-size: 15.5px;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.02em;
   color: #ffffff;
-  margin-top: 4px;
-  line-height: 1.25;
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+  margin-top: 6px;
 }
 
-.typeBadge {
-  display: inline-flex;
+/* Книжковий орнамент-розділювач між заголовком і текстом */
+.rule {
+  display: flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 8px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #ffffff;
-  padding: 3px 11px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--type-color, #9aa0a6) 26%, transparent);
-  border: 1px solid color-mix(in srgb, var(--type-color, #9aa0a6) 55%, transparent);
+  gap: 8px;
+  margin: 10px 0 2px;
+  color: color-mix(in srgb, white 40%, var(--accent, #1d1a22));
+  font-size: 13px;
   line-height: 1;
 }
 
-.typeBadgeIcon {
-  width: 15px !important;
-  height: 15px !important;
+.rule::before,
+.rule::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: color-mix(in srgb, white 22%, var(--accent, #1d1a22));
 }
 
 .eventDesc {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.72);
-  margin: 3px 0 0;
+  line-height: 1.55;
+  color: color-mix(in srgb, white 72%, var(--accent, #1d1a22));
+  margin: 8px 0 0;
 }
 
 .eventExtras {
@@ -514,27 +749,51 @@
   margin-top: 10px;
 }
 
-.thumbBtn {
+.eventExtras :global(.MuiIconButton-root) {
+  color: color-mix(in srgb, white 60%, var(--accent, #1d1a22));
+  padding: 4px;
+}
+
+.eventExtras :global(.MuiIconButton-root:hover) {
+  background: color-mix(in srgb, white 18%, var(--accent, #1d1a22));
+  color: #ffffff;
+}
+
+/* Фото-ілюстрація запису на всю ширину */
+.heroPhotoBtn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
   padding: 0;
   border: none;
-  background: none;
-  cursor: pointer;
-  border-radius: 10px;
+  border-radius: 14px;
   overflow: hidden;
+  background: none;
+  cursor: zoom-in;
   line-height: 0;
 }
 
-.thumb {
-  width: 84px;
-  height: 60px;
+.heroPhoto {
+  width: 100%;
+  max-height: 110px;
+  aspect-ratio: 21 / 9;
   object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  transition: transform 0.15s ease;
+  display: block;
 }
 
-.thumbBtn:hover .thumb {
-  transform: scale(1.05);
+/* Учасники — кружечки з ініціалами */
+.personBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: color-mix(in srgb, white 20%, var(--accent, #1d1a22));
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .addPhotoBtn {
@@ -543,9 +802,9 @@
   gap: 6px;
   padding: 7px 12px;
   border-radius: 12px;
-  border: 1px dashed rgba(255, 255, 255, 0.4);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.85);
+  border: none;
+  background: color-mix(in srgb, white 8%, var(--accent, #1d1a22));
+  color: color-mix(in srgb, white 85%, var(--accent, #1d1a22));
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -553,8 +812,7 @@
 }
 
 .addPhotoBtn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, white 16%, var(--accent, #1d1a22));
   color: #ffffff;
 }
 
@@ -570,16 +828,15 @@
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, white 75%, var(--accent, #1d1a22));
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, black 18%, var(--accent, #1d1a22));
+  border: none;
   cursor: pointer;
 }
 
 .coordsPill:hover {
-  border-color: rgba(255, 255, 255, 0.35);
   color: #ffffff;
 }
 
@@ -587,14 +844,14 @@
   margin: 0 0 10px;
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
+  color: color-mix(in srgb, white 60%, var(--accent, #1d1a22));
 }
 
 .photoRemovedHint {
   margin: 4px 0 0;
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.65);
+  color: color-mix(in srgb, white 65%, var(--accent, #1d1a22));
 }
 
 .participants {
@@ -607,9 +864,9 @@
 .participantChip {
   font-size: 11px !important;
   height: 24px !important;
-  background: rgba(255, 255, 255, 0.13) !important;
+  background: color-mix(in srgb, white 13%, var(--accent, #1d1a22)) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border: none !important;
 }
 
 .participantChip :global(.MuiChip-label) {
@@ -617,24 +874,25 @@
 }
 
 .participantChip :global(.MuiChip-deleteIcon) {
-  color: rgba(255, 255, 255, 0.7);
+  color: color-mix(in srgb, white 70%, var(--accent, #1d1a22));
 }
 
 .rowActions {
   display: flex;
-  gap: 0;
+  flex-direction: column;
+  gap: 2px;
   flex-shrink: 0;
-  margin-left: 6px;
+  margin-left: 2px;
 }
 
 .rowActions :global(.MuiIconButton-root) {
-  color: rgba(255, 255, 255, 0.6);
+  color: color-mix(in srgb, white 60%, var(--accent, #1d1a22));
   padding: 6px;
   border-radius: 10px;
 }
 
 .rowActions :global(.MuiIconButton-root:hover) {
-  background: rgba(255, 255, 255, 0.18);
+  background: color-mix(in srgb, white 18%, var(--accent, #1d1a22));
   color: #ffffff;
 }
 
@@ -700,7 +958,7 @@
   position: absolute;
   top: -8px;
   right: -8px;
-  background: rgba(0, 0, 0, 0.6);
+  background: #000000;
   color: #fff;
 }
 
@@ -766,35 +1024,34 @@
 }
 
 /* ---- Лайтбокс ---- */
-.lightbox {
-  position: relative;
-  padding: 8px;
-}
-
-.lightboxImg {
-  max-width: 80vw;
-  max-height: 80vh;
-  border-radius: 12px;
+/* Фото в модалці ExpandableCard */
+.heroPhotoFull {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(70vh, 760px);
+  object-fit: contain;
+  border-radius: 18px;
   display: block;
 }
 
-.lightboxClose {
-  position: absolute !important;
-  top: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.5) !important;
-  color: #fff !important;
+/* Вікно рівно за розміром фото: перебиваємо фіксований бокс модалки.
+   Без анімацій — миттєве відкриття/закриття (див. проп instant). */
+.photoModal.photoModal {
+  top: 50% !important;
+  left: 50% !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: min(920px, calc(100vw - 48px)) !important;
+  max-height: calc(100vh - 48px) !important;
+  transform: translate(-50%, -50%);
+  animation: none;
 }
 
 /* ---- Мобільна адаптивність ---- */
 @media (max-width: 760px) {
   .statsRow {
-    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
-  }
-
-  .statValue {
-    font-size: 24px;
   }
 
   .epochTimeline {
@@ -802,7 +1059,28 @@
   }
 
   .eventCardWrap {
-    margin-left: 22px;
+    margin-left: 48px;
+  }
+
+  /* Вузько: літопис складається в односторонню стрічку */
+  .timelineWide .epochTimeline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .timelineWide .event {
+    display: flex;
+  }
+
+  .timelineWide .eventTrack {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+  }
+
+  .timelineWide .eventCardWrap {
+    margin-left: 52px;
   }
 
   .epochEmptyState {
@@ -810,12 +1088,15 @@
     padding: 12px 14px;
   }
 
-  .epochTopRow {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .epochCloseBtn {
     align-self: flex-start;
+  }
+
+  .dateBlock {
+    min-width: 44px;
+  }
+
+  .dateDay {
+    font-size: 22px;
   }
 }

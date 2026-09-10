@@ -31,6 +31,11 @@ export default function ExpandableCard({
   expandedContent = null,
   wide = false,
   extraWide = false,
+  // Додатковий клас на вікно модалки (напр. автопідгін розміру під контент).
+  // Необов'язковий, на решту карток не впливає.
+  modalClassName = '',
+  // Миттєве відкриття/закриття без фаз анімації (переглядачі фото тощо).
+  instant = false,
 }) {
   const cardRef = useRef(null)
   const modalRef = useRef(null)
@@ -49,6 +54,16 @@ export default function ExpandableCard({
   const [full, setFull] = useState(false)
   const [fullAnim, setFullAnim] = useState(null)
   const fullTimer = useRef(null)
+  // Страховка закриття: якщо кастомний клас модалки (modalClassName)
+  // перебиває анімацію стиснення, її animationend не прийде — тоді
+  // йдемо у фазу фейду таймером. Нормальний шлях встигає раніше.
+  const closeTimer = useRef(null)
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+  }, [])
 
   const open = useCallback(() => {
     const el = cardRef.current
@@ -60,18 +75,34 @@ export default function ExpandableCard({
     setFull(false)
     setFullAnim(null)
     if (fullTimer.current) clearTimeout(fullTimer.current)
+    clearCloseTimer()
     setExpanded(true)
     document.body.style.overflow = 'hidden'
-  }, [])
+  }, [clearCloseTimer])
 
   const close = useCallback(() => {
+    document.body.style.overflow = ''
+    if (instant) {
+      clearCloseTimer()
+      if (fullTimer.current) clearTimeout(fullTimer.current)
+      setClosing(false)
+      setFading(false)
+      setFull(false)
+      setFullAnim(null)
+      setExpanded(false)
+      return
+    }
     setClosing(true)
     setFading(false)
     setFull(false)
     setFullAnim(null)
     if (fullTimer.current) clearTimeout(fullTimer.current)
-    document.body.style.overflow = ''
-  }, [])
+    clearCloseTimer()
+    closeTimer.current = setTimeout(() => {
+      closeTimer.current = null
+      setFading(true)
+    }, 400)
+  }, [clearCloseTimer, instant])
 
   const toggleFull = useCallback(() => {
     if (fullTimer.current) clearTimeout(fullTimer.current)
@@ -92,6 +123,7 @@ export default function ExpandableCard({
   useEffect(
     () => () => {
       if (fullTimer.current) clearTimeout(fullTimer.current)
+      if (closeTimer.current) clearTimeout(closeTimer.current)
     },
     [],
   )
@@ -133,7 +165,10 @@ export default function ExpandableCard({
     // Кінець CSS-анімації (стиснення форми) — фаза 1 завершена, картка вже
     // нерухомо стоїть на фінальному місці. Тепер вмикаємо короткий фейд.
     if (e.target !== modalRef.current) return
-    if (closing && !fading) setFading(true)
+    if (closing && !fading) {
+      clearCloseTimer()
+      setFading(true)
+    }
   }
 
   const onModalTransitionEnd = (e) => {
@@ -203,7 +238,7 @@ export default function ExpandableCard({
                 tabIndex={-1}
                 className={`${styles.modal} ${wide ? styles.modalWide : ''} ${
                   extraWide ? styles.modalExtraWide : ''
-                } ${
+                } ${modalClassName} ${
                   closing ? styles.modalClosing : ''
                 } ${fading ? styles.modalFadingOut : ''} ${
                   fullAnim === 'in' ? styles.modalFullIn : ''

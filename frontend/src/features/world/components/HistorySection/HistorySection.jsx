@@ -31,7 +31,7 @@ import DangerousIcon from '@mui/icons-material/Dangerous'
 import TravelExploreIcon from '@mui/icons-material/TravelExplore'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import api from '../../../../api'
-import { useExpandableCard } from '../shared/ExpandableCard'
+import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import RelationshipButton from '../shared/RelationshipButton'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
@@ -89,6 +89,39 @@ function fmtDate(value) {
   return Number.isNaN(d.getTime()) ? String(value).slice(0, 10) : d.toLocaleDateString('uk-UA')
 }
 
+// Номер розділу римськими цифрами, як у книзі
+function roman(n) {
+  const table = [
+    [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+    [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+    [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I'],
+  ]
+  let out = ''
+  let rest = Math.max(1, Math.floor(n))
+  for (const [value, numeral] of table) {
+    while (rest >= value) {
+      out += numeral
+      rest -= value
+    }
+  }
+  return out
+}
+
+// День і місяць для блоку дати запису
+function dayParts(dateValue) {
+  const d = new Date(`${String(dateValue || '').slice(0, 10)}T12:00:00`)
+  if (Number.isNaN(d.getTime())) return { day: '•', month: '' }
+  return {
+    day: String(d.getDate()),
+    month: d.toLocaleDateString('uk-UA', { month: 'short' }).replace(/\./g, ''),
+  }
+}
+
+function initial(name) {
+  const c = (name || '').trim()[0]
+  return (c || '?').toUpperCase()
+}
+
 const empty = {
   title: '',
   description: '',
@@ -111,7 +144,6 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   const [form, setForm] = useState(empty)
   const [pendingImage, setPendingImage] = useState(null)
   const [removeImage, setRemoveImage] = useState(false)
-  const [lightbox, setLightbox] = useState(null)
   const [epochFilter, setEpochFilter] = useState('current')
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState(null)
@@ -123,7 +155,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
   const { notify } = useFeedback()
   const photoInputRef = useRef(null)
 
-  const { data: events = [] } = useQuery({
+  const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['history', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/history/`).then((r) => r.data),
   })
@@ -398,6 +430,8 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         )}
       </div>
 
+      <div className={styles.toolbar}>
+      {section.full && (
       <div className={styles.statsRow}>
         <div className={styles.stat}>
           <AutoAwesomeIcon className={styles.statIcon} />
@@ -420,6 +454,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
           <span className={styles.statLabel}>епох</span>
         </div>
       </div>
+      )}
 
       <div className={styles.filters} role="group" aria-label="Фільтр епох">
         <Button
@@ -479,6 +514,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
           </Button>
         )}
       </div>
+      </div>
 
       {filtered.length !== events.length && (
         <p className={styles.countNote}>
@@ -487,7 +523,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       )}
 
       {section.full && (
-        <div className={styles.searchFilterRow}>
+      <div className={styles.searchFilterRow}>
           <input
             type="search"
             className={`${sharedStyles.wideSearch} ${styles.rowSearch}`}
@@ -512,12 +548,19 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         </div>
       )}
 
+      {eventsLoading && events.length === 0 ? (
+        <div className={styles.skeletonList} aria-hidden="true">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className={styles.skeletonCard} />
+          ))}
+        </div>
+      ) : (
       <div
         className={`${sharedStyles.body} ${styles.timeline} ${
           section.modal ? styles.timelineFull : ''
-        } ${section.full ? styles.timelineWide : ''}`}
+        } ${styles.timelineWide}`}
       >
-        {epochs.length === 0 && canEdit ? (
+      {epochs.length === 0 && canEdit ? (
           <div className={styles.epochEmpty}>
             <p className={sharedStyles.emptyMsg}>
               Ще немає епох. Створи першу, щоб групувати історію світу.
@@ -532,23 +575,17 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
           <p className={sharedStyles.emptyMsg}>Немає подій за обраними фільтрами.</p>
         )}
 
-        {grouped.map(({ epoch, events: list }) => {
+        {grouped.map(({ epoch, events: list }, gi) => {
           const epEvents = list
           const allImportant = epEvents.every((e) => e.is_important)
           return (
             <div key={epoch ? epoch.id : 'none'} className={styles.epochBlock}>
-              {epoch && (
+              {epoch ? (
                 <div className={styles.epochHeader}>
+                  <span className={styles.chapterKicker}>Розділ {roman(gi + 1)}</span>
                   <div className={styles.epochTopRow}>
                     <div className={styles.epochTitleRow}>
-                      <div className={`${styles.epochMark} ${epoch.is_active ? styles.epochMarkActive : ''}`} />
                       <span className={styles.epochName}>{epoch.name}</span>
-                      {epoch.is_active && (
-                        <span className={styles.epochActiveBadge}>
-                          <span className={styles.epochActiveDot} />
-                          активна
-                        </span>
-                      )}
                     </div>
                     <div className={styles.epochHeaderActions}>
                       {canEdit && epoch.is_active && (
@@ -585,6 +622,10 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                     <p className={styles.epochDesc}>{epoch.description}</p>
                   )}
                 </div>
+              ) : (
+                <div className={styles.noneDivider} aria-hidden="true">
+                  <span>Поза епохами</span>
+                </div>
               )}
 
               {epoch && list.length === 0 && !hasActiveFilters && (
@@ -616,6 +657,8 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                   const Icon = typeIcons[h.event_type] || MoreHorizIcon
                   const color = typeColors[h.event_type] || typeColors.other
                   const label = typeLabels[h.event_type] || typeLabels.other
+                  const { day, month } = dayParts(h.date)
+                  const people = h.participants_list || []
                   return (
                     <div
                       key={h.id}
@@ -627,7 +670,10 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                         <div
                           className={`${styles.node} ${h.is_important ? styles.nodeImportant : ''}`}
                           style={{ '--type-color': color }}
-                        />
+                          title={label}
+                        >
+                          <Icon className={styles.nodeIcon} />
+                        </div>
                         {hi < list.length - 1 && <div className={styles.rail} />}
                       </div>
                       <div className={styles.eventCardWrap}>
@@ -637,33 +683,58 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                           }`}
                         >
                           <div className={styles.eventHeader}>
+                            <div className={styles.dateBlock}>
+                              <span className={styles.dateDay}>{day}</span>
+                              {month && <span className={styles.dateMonth}>{month}</span>}
+                              {h.game_day != null && (
+                                <span className={styles.dateGameDay}>День {h.game_day}</span>
+                              )}
+                            </div>
                             <div className={styles.eventLeft}>
+                            {h.is_important && (
                               <div className={styles.eventMeta}>
-                                <span className={styles.eventDate}>
-                                  {fmtDate(h.date)}
-                                </span>
-                                {h.game_day != null && (
-                                  <span className={styles.gameDay}>· День {h.game_day}</span>
-                                )}
-                                {h.is_important && (
-                                  <span className={styles.importantPill}>важлива</span>
-                                )}
+                                <span className={styles.importantPill}>важлива</span>
                               </div>
-                              <div className={styles.eventTitle}>
-                                <LocationBadgeText
-                                  text={h.title}
-                                  worldId={worldId}
-                                  locations={locations}
-                                />
-                              </div>
-                              <div
-                                className={styles.typeBadge}
-                                style={{ '--type-color': color }}
+                            )}
+                            <div className={styles.eventTitle}>
+                              <LocationBadgeText
+                                text={h.title}
+                                worldId={worldId}
+                                locations={locations}
+                              />
+                            </div>
+                            {h.image_url && (
+                              <ExpandableCard
+                                clickOpens
+                                showExpandBtn={false}
+                                instant
+                                modalClassName={styles.photoModal}
+                                expandedContent={() => (
+                                  <img
+                                    src={h.image_url}
+                                    alt={h.title}
+                                    className={styles.heroPhotoFull}
+                                  />
+                                )}
                               >
-                                <Icon className={styles.typeBadgeIcon} />
-                                {label}
-                              </div>
-                              {h.description && (
+                                <button
+                                  type="button"
+                                  className={styles.heroPhotoBtn}
+                                  aria-label={`Відкрити фото: ${h.title}`}
+                                >
+                                  <img
+                                    src={h.image_url}
+                                    alt={h.title}
+                                    className={styles.heroPhoto}
+                                  />
+                                </button>
+                              </ExpandableCard>
+                            )}
+                            {h.description && (
+                              <>
+                                <div className={styles.rule} aria-hidden="true">
+                                  <span>❦</span>
+                                </div>
                                 <p className={styles.eventDesc}>
                                   <LocationBadgeText
                                     text={h.description}
@@ -672,42 +743,26 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                                     small
                                   />
                                 </p>
-                              )}
-                              {(h.image_url || h.coordinates || canEdit) && (
+                              </>
+                            )}
+                              {(canEdit || h.coordinates || people.length > 0) && (
                                 <div className={styles.eventExtras}>
-                                  {h.image_url && (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className={styles.thumbBtn}
-                                        aria-label={`Відкрити фото: ${h.title}`}
-                                        onClick={() => setLightbox({ url: h.image_url, title: h.title })}
-                                      >
-                                        <img
-                                          src={h.image_url}
-                                          alt={h.title}
-                                          className={styles.thumb}
-                                        />
-                                      </button>
-                                      {canEdit && (
-                                        <IconButton
-                                          size="small"
-                                          aria-label="Видалити фото"
-                                          title="Видалити фото"
-                                          onClick={() => deleteImageMutation.mutate(h.id)}
-                                          disabled={deleteImageMutation.isPending}
-                                        >
-                                          <DeleteOutlinedIcon fontSize="small" />
-                                        </IconButton>
-                                      )}
-                                    </>
+                                  {canEdit && !h.image_url && (
+                                    <CardPhotoAdd worldId={worldId} eventId={h.id} label="Додати фото" />
                                   )}
-                                  {canEdit && (
-                                    <CardPhotoAdd
-                                      worldId={worldId}
-                                      eventId={h.id}
-                                      label={h.image_url ? 'Замінити' : 'Додати фото'}
-                                    />
+                                  {canEdit && h.image_url && (
+                                    <>
+                                      <CardPhotoAdd worldId={worldId} eventId={h.id} label="Замінити" />
+                                      <IconButton
+                                        size="small"
+                                        aria-label="Видалити фото"
+                                        title="Видалити фото"
+                                        onClick={() => deleteImageMutation.mutate(h.id)}
+                                        disabled={deleteImageMutation.isPending}
+                                      >
+                                        <DeleteOutlinedIcon fontSize="small" />
+                                      </IconButton>
+                                    </>
                                   )}
                                   {h.coordinates && (
                                     <button
@@ -720,17 +775,10 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                                       {h.coordinates.x} / {h.coordinates.y} / {h.coordinates.z} ⧉
                                     </button>
                                   )}
-                                </div>
-                              )}
-                              {(h.participants_list || []).length > 0 && (
-                                <div className={styles.participants}>
-                                  {(h.participants_list || []).map((p, i) => (
-                                    <Chip
-                                      key={`${p}-${i}`}
-                                      label={p}
-                                      size="small"
-                                      className={styles.participantChip}
-                                    />
+                                  {people.map((p, i) => (
+                                    <span key={`${p}-${i}`} className={styles.personBadge} title={p}>
+                                      {initial(p)}
+                                    </span>
                                   ))}
                                 </div>
                               )}
@@ -779,6 +827,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
           </p>
         )}
       </div>
+      )}
 
       <EpochDialog
         open={epochDialog}
@@ -990,23 +1039,6 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
             </Button>
           </DialogActions>
         </form>
-      </Dialog>
-
-      <Dialog
-        open={!!lightbox}
-        onClose={() => setLightbox(null)}
-        slotProps={{
-          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
-        }}
-      >
-        {lightbox && (
-          <div className={styles.lightbox}>
-            <IconButton className={styles.lightboxClose} onClick={() => setLightbox(null)}>
-              <CloseIcon />
-            </IconButton>
-            <img src={lightbox.url} alt={lightbox.title || 'Фото події'} className={styles.lightboxImg} />
-          </div>
-        )}
       </Dialog>
     </div>
   )
