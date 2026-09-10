@@ -1,3 +1,8 @@
+/* Ширина модалки історії: між wide і extraWide */
+:global(.wl-history-modal.wl-history-modal) {
+  --expanded-w: min(960px, calc(100vw - 48px));
+}
+
 .timeline {
   position: relative;
   padding-left: 4px;
@@ -33,7 +38,7 @@
   margin-bottom: 0;
 }
 
-/* Повноекранний режим: епоха на всю ширину, події змійкою */
+/* Повноекранний режим: розділ на всю ширину, події змійкою */
 .timelineWide {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -191,7 +196,7 @@
   background: color-mix(in srgb, var(--accent, var(--page-active-bg, #1d1a22)) 72%, #000000) !important;
 }
 
-/* ---- Епохи ---- */
+/* ---- Розділи ---- */
 .epochBlock {
   display: flex;
   flex-direction: column;
@@ -201,7 +206,7 @@
   container-type: inline-size;
 }
 
-/* Епоха: номер і назва в один ряд */
+/* Розділ: номер і назва в один ряд */
 .epochHeader {
   background: transparent;
   border: none;
@@ -219,7 +224,7 @@
   justify-content: center;
   gap: 16px;
   width: 100%;
-  margin-bottom: 2px;
+  margin-bottom: 0;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -235,7 +240,7 @@
   background: color-mix(in srgb, white 25%, var(--accent, #1d1a22));
 }
 
-/* Події поза епохами — тонкий розділювач */
+/* Події поза розділами — тонкий розділювач */
 .noneDivider {
   display: flex;
   align-items: center;
@@ -281,6 +286,7 @@
   flex-shrink: 0;
   margin-left: auto;
   margin-right: auto;
+  margin-top: 12px;
 }
 
 .epochCloseBtn {
@@ -382,7 +388,7 @@
   padding-left: 46px;
 }
 
-/* Літопис у повноекранному режимі: епоха на всю ширину, події чергуються
+/* Літопис у повноекранному режимі: розділ на всю ширину, події чергуються
    ліворуч/праворуч від центрального хребта. Кожен ряд — subgrid
    (картка | хребет | картка), усі позиції задані явно. */
 .timelineWide .epochTimeline {
@@ -635,6 +641,54 @@
   100% {
     background-position: 200px 0;
   }
+}
+
+/* ---- Міні-обкладинка згорнутої картки: якір розділу + свіжі рядки ---- */
+.miniCover {
+  display: flex;
+  flex-direction: column;
+}
+
+.miniList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.miniRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, white 8%, var(--accent, #1d1a22));
+  min-width: 0;
+}
+
+.miniDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.miniDate {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: color-mix(in srgb, white 62%, var(--accent, #1d1a22));
+}
+
+.miniTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
 }
 
 @media (prefers-reduced-motion: reduce) {

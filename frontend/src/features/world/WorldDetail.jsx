@@ -496,7 +496,7 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
       </ExpandableCard>
     ),
     history: () => (
-      <ExpandableCard>
+      <ExpandableCard modalClassName="wl-history-modal">
         <HistorySection worldId={worldId} accent={red} userRole={userRole} world={world} />
       </ExpandableCard>
     ),

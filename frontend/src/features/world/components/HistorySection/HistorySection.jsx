@@ -201,7 +201,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       qc.invalidateQueries(['epochs', String(worldId)])
       qc.invalidateQueries(['world', String(worldId)])
     },
-    onError: () => notify('Не вдалося створити епоху'),
+    onError: () => notify('Не вдалося створити розділ'),
   })
   const epochCloseMutation = useMutation({
     mutationFn: ({ id, name }) => api.post(`/worlds/${worldId}/epochs/${id}/close/`, { name }),
@@ -209,7 +209,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       qc.invalidateQueries(['epochs', String(worldId)])
       qc.invalidateQueries(['world', String(worldId)])
     },
-    onError: () => notify('Не вдалося завершити епоху'),
+    onError: () => notify('Не вдалося завершити розділ'),
   })
   const undo = useUndo()
   const deleteEvent = (h) =>
@@ -233,7 +233,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         ['history', String(worldId)],
         ['world', String(worldId)],
       ],
-      message: `Епоху «${e.name}» видалено`,
+      message: `Розділ «${e.name}» видалено`,
     })
 
   useEffect(() => {
@@ -311,7 +311,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       date: form.date,
       event_type: form.event_type,
       is_important: form.is_important,
-      // При редагуванні порожня епоха = «без епохи», не перепризначаємо мовчки
+      // При редагуванні порожній розділ = «без розділу», не перепризначаємо мовчки
       epoch: form.epoch || (editing ? null : (activeEpochObj?.id ?? null)),
       participants: form.participants.join(', '),
     }
@@ -343,7 +343,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       })
   }
 
-  // «Поточна епоха» без активної епохи = усі (інакше список порожній)
+  // «Поточний розділ» без активного розділу = усі (інакше список порожній)
   const visibleEpochId =
     epochFilter === 'all' ? '' : activeEpochObj ? String(activeEpochObj.id) : ''
 
@@ -382,7 +382,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       if (visibleEpochId && String(ep.id) !== visibleEpochId) continue
       result.push({ epoch: ep, events: byEpoch.get(String(ep.id)) || [] })
     }
-    // Без епохи — завжди останніми
+    // Без розділу — завжди останніми
     const none = byEpoch.get('none') || []
     if (none.length > 0) result.push({ epoch: null, events: none })
     return result
@@ -397,6 +397,19 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       important: events.filter((e) => e.is_important).length,
     }
   }, [events, epochs])
+
+  // Міні-обкладинка: де ми зараз + 3 найсвіжіші події (без фільтрів —
+  // їх не видно в міні, тож і не застосовуємо)
+  const miniAnchor = useMemo(() => {
+    if (events.length === 0 || !activeEpochObj) return null
+    const gi = grouped.findIndex((g) => g.epoch && String(g.epoch.id) === String(activeEpochObj.id))
+    return gi >= 0 ? `Розділ ${roman(gi + 1)} · ${activeEpochObj.name}` : activeEpochObj.name
+  }, [events.length, activeEpochObj, grouped])
+
+  const miniLatest = useMemo(
+    () => [...events].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3),
+    [events],
+  )
 
   // Сортування список не порожнить, тому в «активні фільтри» не входить
   const hasActiveFilters = typeFilter !== null || importantOnly || search.trim() !== ''
@@ -430,6 +443,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         )}
       </div>
 
+      {section.modal && (
       <div className={styles.toolbar}>
       {section.full && (
       <div className={styles.statsRow}>
@@ -451,12 +465,12 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         <div className={styles.stat}>
           <MenuBookIcon className={styles.statIcon} />
           <span className={styles.statValue}>{stats.epochs}</span>
-          <span className={styles.statLabel}>епох</span>
+          <span className={styles.statLabel}>розділів</span>
         </div>
       </div>
       )}
 
-      <div className={styles.filters} role="group" aria-label="Фільтр епох">
+      <div className={styles.filters} role="group" aria-label="Фільтр розділів">
         <Button
           size="small"
           variant={epochFilter === 'all' ? 'contained' : 'outlined'}
@@ -466,7 +480,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
             epochFilter === 'all' ? styles.epochFilterButtonActive : ''
           }`}
         >
-          Усі епохи
+          Усі розділи
         </Button>
         <Button
           size="small"
@@ -477,7 +491,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
             epochFilter === 'current' ? styles.epochFilterButtonActive : ''
           }`}
         >
-          Поточна епоха
+          Поточний розділ
         </Button>
         <Button
           size="small"
@@ -515,8 +529,9 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         )}
       </div>
       </div>
+      )}
 
-      {filtered.length !== events.length && (
+      {section.modal && filtered.length !== events.length && (
         <p className={styles.countNote}>
           Показано {filtered.length} з {events.length}
         </p>
@@ -554,6 +569,38 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
             <div key={i} className={styles.skeletonCard} />
           ))}
         </div>
+      ) : !section.modal ? (
+        <div className={styles.miniCover}>
+          {events.length === 0 ? (
+            <p className={sharedStyles.emptyMsg}>
+              Літопис порожній. Зафіксуй першу подію світу.
+            </p>
+          ) : (
+            <>
+              {miniAnchor && (
+                <div className={styles.noneDivider}>
+                  <span>{miniAnchor}</span>
+                </div>
+              )}
+              <div className={styles.miniList}>
+                {miniLatest.map((h) => {
+                  const color = typeColors[h.event_type] || typeColors.other
+                  return (
+                    <div key={h.id} className={styles.miniRow}>
+                      <span className={styles.miniDot} style={{ background: color }} />
+                      <span className={styles.miniDate}>
+                        {fmtDate(h.date).slice(0, 5)}
+                      </span>
+                      <span className={styles.miniTitle}>
+                        <LocationBadgeText text={h.title} worldId={worldId} locations={locations} />
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
       ) : (
       <div
         className={`${sharedStyles.body} ${styles.timeline} ${
@@ -563,10 +610,10 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
       {epochs.length === 0 && canEdit ? (
           <div className={styles.epochEmpty}>
             <p className={sharedStyles.emptyMsg}>
-              Ще немає епох. Створи першу, щоб групувати історію світу.
+              Ще немає розділів. Створи перший, щоб групувати історію світу.
             </p>
             <Button size="small" onClick={() => setEpochDialog(true)} className={styles.epochBtn}>
-              Створити епоху
+              Створити розділ
             </Button>
           </div>
         ) : null}
@@ -596,7 +643,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                           startIcon={<FlagIcon />}
                           onClick={() => setCloseEpoch(epoch)}
                         >
-                          Завершити епоху
+                          Завершити розділ
                         </Button>
                       )}
                       {canEdit && !epoch.is_active && !epoch.events_count && (
@@ -604,7 +651,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                           size="small"
                           onClick={() => deleteEpoch(epoch)}
                           className={styles.epochDeleteBtn}
-                          aria-label="Видалити епоху"
+                          aria-label="Видалити розділ"
                         >
                           <DeleteOutlinedIcon fontSize="small" />
                         </IconButton>
@@ -624,7 +671,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 </div>
               ) : (
                 <div className={styles.noneDivider} aria-hidden="true">
-                  <span>Поза епохами</span>
+                  <span>Поза розділами</span>
                 </div>
               )}
 
@@ -943,17 +990,17 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
               />
               <TextField
                 select
-                label="Епоха"
+                label="Розділ"
                 value={form.epoch || ''}
                 onChange={(e) => setForm((f) => ({ ...f, epoch: e.target.value }))}
               >
                 {epochs.map((ep) => (
                   <MenuItem key={ep.id} value={ep.id} disabled={!editing && !ep.is_active}>
                     {ep.name}
-                    {ep.is_active ? ' (активна)' : ' (завершена)'}
+                    {ep.is_active ? ' (активний)' : ' (завершений)'}
                   </MenuItem>
                 ))}
-                {epochs.length === 0 && <MenuItem value="">— епох поки немає —</MenuItem>}
+                {epochs.length === 0 && <MenuItem value="">— розділів поки немає —</MenuItem>}
               </TextField>
               <div className={styles.metaRow}>
                 <Button
@@ -1109,11 +1156,11 @@ function EpochDialog({ open, onClose, onSubmit, accent }) {
       }}
     >
       <form onSubmit={submit}>
-        <DialogTitle>Нова епоха</DialogTitle>
+        <DialogTitle>Новий розділ</DialogTitle>
         <DialogContent>
           <div className={sharedStyles.formFields}>
             <TextField
-              label="Назва епохи"
+              label="Назва розділу"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
@@ -1166,11 +1213,11 @@ function CloseEpochDialog({ open, onClose, epoch, onSubmit, accent }) {
       }}
     >
       <form onSubmit={submit}>
-        <DialogTitle>Завершити епоху «{epoch?.name}»</DialogTitle>
+        <DialogTitle>Завершити розділ «{epoch?.name}»</DialogTitle>
         <DialogContent>
           <div className={sharedStyles.formFields}>
             <TextField
-              label="Назва нової епохи"
+              label="Назва нового розділу"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus

@@ -257,19 +257,19 @@ class EpochViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def close(self, request, world_id=None, pk=None):
-        """Завершити епоху й почати нову"""
+        """Завершити розділ й почати новий"""
         from django.utils import timezone
         from django.core.exceptions import ValidationError as DjangoValidationError
         from rest_framework.exceptions import ValidationError
 
         epoch = self.get_object()
         if epoch.end_date is not None:
-            raise ValidationError('Епоху вже завершено.')
+            raise ValidationError('Розділ вже завершено.')
         new_name = (request.data.get('name') or '').strip()
         if not new_name:
-            raise ValidationError({'name': 'Вкажіть назву нової епохи.'})
+            raise ValidationError({'name': 'Вкажіть назву нового розділу.'})
         if Epoch.objects.filter(world_id=epoch.world_id, name=new_name).exists():
-            raise ValidationError({'name': 'Епоха з такою назвою вже існує.'})
+            raise ValidationError({'name': 'Розділ з такою назвою вже існує.'})
 
         epoch.end_date = timezone.localdate()
         epoch.save(update_fields=['end_date'])
@@ -286,7 +286,7 @@ class EpochViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         from rest_framework.exceptions import ValidationError
         epoch = self.get_object()
         if epoch.events.exists():
-            raise ValidationError('Не можна видалити епоху, що містить події.')
+            raise ValidationError('Не можна видалити розділ, що містить події.')
         return super().destroy(request, *args, **kwargs)
 
 
