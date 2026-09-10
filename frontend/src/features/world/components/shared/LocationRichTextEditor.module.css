@@ -155,3 +155,82 @@
 .option svg {
   color: rgba(29, 26, 34, 0.5);
 }
+
+/* ---------- Темний варіант: редагування прямо на кольоровій картці ----------
+   Плаваючий label підфарбовуємо кольором картки (var(--accent) — це фон
+   картки-секції), щоб перекрити рамку так само, як світлий фон у діалозі. */
+.dark {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark:hover {
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.dark.focused {
+  border-color: #ffffff;
+}
+
+.dark .editable {
+  color: #ffffff;
+}
+
+.dark .editable:empty::before {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.dark .label {
+  background: var(--accent, transparent);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dark:hover .label {
+  color: #ffffff;
+}
+
+.dark.focused .label,
+.dark .labelFloat {
+  background: var(--accent, transparent);
+  color: #ffffff;
+}
+
+.dark .badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.dark .badge:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* ---------- Bare-варіант: письмо прямо в контенті (Notion/Apple Notes) ----------
+   Без рамки й фону — текст виглядає як звичайний контент картки.
+   Блок іде ПІСЛЯ .dark, щоб скидати його рамку/фон при комбінації dark+bare. */
+.bare {
+  border-color: transparent;
+  background: transparent;
+}
+
+.bare:hover {
+  border-color: transparent;
+  background: transparent;
+}
+
+.bare.focused {
+  border-color: transparent;
+  border-width: 1px;
+  margin: 0;
+  background: transparent;
+}
+
+.dark.bare.focused {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.bare .editable {
+  padding: 4px 8px;
+  margin: 0 -8px;
+  min-height: 0;
+  border-radius: 10px;
+}

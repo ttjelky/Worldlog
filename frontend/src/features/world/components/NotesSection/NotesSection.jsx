@@ -1,15 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  TextField,
-} from '@mui/material'
+import { Button, IconButton } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
@@ -32,7 +25,7 @@ const parseTags = (tags) =>
         .filter(Boolean)
     : []
 
-function NoteDetails({ note, worldId, locations, accent, canEdit, onClose, onEdit, onDelete }) {
+function NoteDetails({ note, worldId, locations, accent, canEdit, onEdit, onDelete }) {
   const tags = parseTags(note.tags)
 
   return (
@@ -66,6 +59,7 @@ function NoteDetails({ note, worldId, locations, accent, canEdit, onClose, onEdi
             sourceId={note.id}
             name={note.title}
             accent={accent}
+            className={styles.actionBtn}
           />
           {canEdit && (
             <>
@@ -83,10 +77,343 @@ function NoteDetails({ note, worldId, locations, accent, canEdit, onClose, onEdi
   )
 }
 
+// Редактор нотатки в дусі Notion/Apple Notes — показується в ТІЙ САМІЙ
+// розгорнутій модалці замість перегляду: жодних рамок-інпутів, назва й зміст
+// пишуться прямо в тексті нотатки.
+const titleTextStyle = {
+  fontSize: 'clamp(24px, 4vw, 36px)',
+  fontWeight: 500,
+  letterSpacing: '-0.03em',
+  lineHeight: 1.15,
+  color: '#ffffff',
+}
+
+const contentTextStyle = {
+  fontSize: '15px',
+  lineHeight: 1.55,
+  color: 'rgba(255, 255, 255, 0.88)',
+}
+
+// Заголовок — один рядок: переноси з contenteditable зливаємо в пробіли.
+const cleanTitle = (value) => value.replace(/\s*\n+\s*/g, ' ').trim()
+
+// Теги в режимі редагування: бейджики з хрестиком для видалення
+// та кнопка «+» для додавання нового.
+function TagsEditor({ tags, onAdd, onRemove }) {
+  const [adding, setAdding] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  const commit = () => {
+    const parts = draft
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean)
+    if (parts.length > 0) onAdd(parts)
+    setDraft('')
+    setAdding(false)
+  }
+  const cancel = () => {
+    setDraft('')
+    setAdding(false)
+  }
+
+  return (
+    <div className={styles.editTags}>
+      {tags.map((tag) => (
+        <span key={tag} className={styles.editTag}>
+          {tag}
+          <button
+            type="button"
+            className={styles.tagRemove}
+            aria-label={`Видалити тег «${tag}»`}
+            onClick={() => onRemove(tag)}
+          >
+            <CloseIcon sx={{ fontSize: 16 }} />
+          </button>
+        </span>
+      ))}
+      {adding ? (
+        <input
+          type="text"
+          className={styles.tagInput}
+          aria-label="Новий тег"
+          placeholder="Назва тега…"
+          value={draft}
+          autoFocus
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              e.stopPropagation()
+              commit()
+            } else if (e.key === 'Escape') {
+              e.stopPropagation()
+              cancel()
+            }
+          }}
+          onBlur={commit}
+        />
+      ) : (
+        <button
+          type="button"
+          className={styles.addTagBtn}
+          aria-label="Додати тег"
+          title="Додати тег"
+          onClick={() => setAdding(true)}
+        >
+          <AddIcon sx={{ fontSize: 16 }} />
+        </button>
+      )}
+    </div>
+  )
+}
+
+function NoteEditor({ worldId, accent, form, setForm, saving, isNew, onSave, onCancel }) {
+  const canSave = cleanTitle(form.title).length > 0 && !saving
+  const submit = (e) => {
+    e.preventDefault()
+    if (canSave) onSave()
+  }
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      if (canSave) onSave()
+    }
+  }
+
+  return (
+    <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
+      <form onSubmit={submit} onKeyDown={onKeyDown} className={styles.editorForm}>
+        <div className={styles.detailsHead}>
+          <LocationRichTextEditor
+            bare
+            dark
+            worldId={worldId}
+            label="Назва нотатки"
+            value={form.title}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            autoFocus
+            placeholder="Назва"
+            editableStyle={titleTextStyle}
+          />
+        </div>
+        <TagsEditor
+          tags={parseTags(form.tags)}
+          onAdd={(parts) =>
+            setForm((f) => {
+              const next = [...parseTags(f.tags)]
+              for (const p of parts) if (!next.includes(p)) next.push(p)
+              return { ...f, tags: next.join(', ') }
+            })
+          }
+          onRemove={(tag) =>
+            setForm((f) => ({
+              ...f,
+              tags: parseTags(f.tags)
+                .filter((t) => t !== tag)
+                .join(', '),
+            }))
+          }
+        />
+        <div className={styles.editorBody}>
+          <LocationRichTextEditor
+            bare
+            dark
+            worldId={worldId}
+            label="Зміст нотатки"
+            value={form.content}
+            onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
+            multiline
+            minRows={6}
+            placeholder="Почніть писати…"
+            editableStyle={contentTextStyle}
+          />
+        </div>
+        <div className={styles.editorFooter}>
+          <span className={styles.editorHint}>Ctrl + Enter — зберегти</span>
+          <span className={styles.editorActions}>
+            <button type="button" className={styles.cancelBtn} onClick={onCancel}>
+              Скасувати
+            </button>
+            <button type="submit" className={styles.saveBtn} disabled={!canSave}>
+              {saving ? 'Збереження…' : isNew ? 'Створити' : 'Зберегти'}
+            </button>
+          </span>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+// Відкриває власну модалку одразу після монтування —
+// чернетка нової нотатки масштабується з місця у списку.
+function AutoOpen() {
+  const { open } = useExpandableCard()
+  useEffect(() => {
+    open()
+  }, [open])
+  return null
+}
+
+// Згорнутий рядок нотатки. Редагування відкриває модалку
+// цієї ж нотатки одразу в режимі редагування.
+function NoteRow({ note, worldId, locations, accent, canEdit, onEdit, onDelete }) {
+  const { open } = useExpandableCard()
+  const handleEdit = (e) => {
+    e.stopPropagation()
+    onEdit(note)
+    open()
+  }
+
+  return (
+    <div className={styles.noteItem}>
+      <div className={styles.noteContent}>
+        <div className={styles.noteTitle}>
+          <LocationBadgeText text={note.title} worldId={worldId} locations={locations} />
+        </div>
+        {note.content && (
+          <div className={styles.noteDesc}>
+            <LocationBadgeText text={note.content} worldId={worldId} locations={locations} small />
+          </div>
+        )}
+        {note.tags && (
+          <div className={styles.noteTags}>
+            {parseTags(note.tags).map((tag) => (
+              <span key={tag} className={styles.noteTag}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className={styles.rowActions}>
+        <RelationshipButton
+          worldId={worldId}
+          sourceType="note"
+          sourceId={note.id}
+          name={note.title}
+          accent={accent}
+        />
+        {canEdit && (
+          <>
+            <IconButton size="small" aria-label="Редагувати нотатку" onClick={handleEdit}>
+              <EditOutlinedIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              aria-label="Видалити нотатку"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(note)
+              }}
+            >
+              <DeleteOutlinedIcon fontSize="small" />
+            </IconButton>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function NoteItemCard({
+  note,
+  worldId,
+  locations,
+  accent,
+  canEdit,
+  isEditing,
+  form,
+  setForm,
+  saving,
+  onEdit,
+  onSave,
+  onCancelEdit,
+  onDelete,
+  onDiscardEdit,
+}) {
+  return (
+    <ExpandableCard
+      clickOpens
+      showExpandBtn={false}
+      onClose={onDiscardEdit}
+      expandedContent={({ close }) =>
+        isEditing ? (
+          <NoteEditor
+            worldId={worldId}
+            accent={accent}
+            form={form}
+            setForm={setForm}
+            saving={saving}
+            isNew={false}
+            onSave={onSave}
+            onCancel={onCancelEdit}
+          />
+        ) : (
+          <NoteDetails
+            note={note}
+            worldId={worldId}
+            locations={locations}
+            accent={accent}
+            canEdit={canEdit}
+            onEdit={() => onEdit(note)}
+            onDelete={() => {
+              onDelete(note)
+              close()
+            }}
+          />
+        )
+      }
+    >
+      <NoteRow
+        note={note}
+        worldId={worldId}
+        locations={locations}
+        accent={accent}
+        canEdit={canEdit}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    </ExpandableCard>
+  )
+}
+
+function NewNoteCard({ worldId, accent, form, setForm, saving, onSave, onDiscard }) {
+  const draftTitle = form.title.trim()
+
+  return (
+    <ExpandableCard
+      showExpandBtn={false}
+      onClose={onDiscard}
+      expandedContent={({ close }) => (
+        <NoteEditor
+          worldId={worldId}
+          accent={accent}
+          form={form}
+          setForm={setForm}
+          saving={saving}
+          isNew
+          onSave={() => onSave(close)}
+          onCancel={close}
+        />
+      )}
+    >
+      <AutoOpen />
+      <div className={styles.noteItem}>
+        <div className={styles.noteContent}>
+          <div className={`${styles.noteTitle} ${draftTitle ? '' : styles.draftTitle}`}>
+            {draftTitle || 'Нова нотатка…'}
+          </div>
+        </div>
+      </div>
+    </ExpandableCard>
+  )
+}
+
 export default function NotesSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
-  const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [creating, setCreating] = useState(false)
   const [form, setForm] = useState(empty)
   const [activeTag, setActiveTag] = useState(null)
   const [search, setSearch] = useState('')
@@ -100,9 +427,9 @@ export default function NotesSection({ worldId, accent, userRole }) {
   const { data: locations = [] } = useLocations(worldId)
 
   const mutation = useMutation({
-    mutationFn: (payload) =>
-      editing
-        ? api.patch(`/worlds/${worldId}/notes/${editing.id}/`, payload)
+    mutationFn: ({ id, payload }) =>
+      id
+        ? api.patch(`/worlds/${worldId}/notes/${id}/`, payload)
         : api.post(`/worlds/${worldId}/notes/`, payload),
     onSuccess: () => qc.invalidateQueries(['notes', String(worldId)]),
   })
@@ -121,18 +448,38 @@ export default function NotesSection({ worldId, accent, userRole }) {
     })
 
   const openNew = () => {
-    setEditing(null)
+    setEditingId(null)
     setForm(empty)
-    setOpen(true)
+    setCreating(true)
   }
   const openEdit = (n) => {
-    setEditing(n)
+    setEditingId(n.id)
     setForm({ title: n.title, content: n.content || '', tags: n.tags || '' })
-    setOpen(true)
   }
-  const submit = (e) => {
-    e.preventDefault()
-    mutation.mutateAsync(form).then(() => setOpen(false))
+  // Скидання при закритті модалки будь-яким способом
+  // (фон, Escape): незбережені зміни відкидаються.
+  const discardEdit = () => setEditingId(null)
+  const discardCreate = () => {
+    setCreating(false)
+    setForm(empty)
+  }
+  // Збереження редагування лишає модалку відкритою — повертаємось до перегляду.
+  const saveEdit = () => {
+    const title = cleanTitle(form.title)
+    if (!title || mutation.isPending) return
+    mutation.mutate(
+      { id: editingId, payload: { ...form, title } },
+      { onSuccess: () => setEditingId(null) },
+    )
+  }
+  // Створення закриває модалку — нова нотатка лишається у списку.
+  const saveCreate = (close) => {
+    const title = cleanTitle(form.title)
+    if (!title || mutation.isPending) return
+    mutation.mutate(
+      { id: null, payload: { ...form, title } },
+      { onSuccess: () => close() },
+    )
   }
 
   const allTags = [...new Set(notes.flatMap((n) => parseTags(n.tags)))]
@@ -195,137 +542,42 @@ export default function NotesSection({ worldId, accent, userRole }) {
           section.full ? styles.noteListWide : ''
         }`}
       >
+        {canEdit && creating && (
+          <NewNoteCard
+            worldId={worldId}
+            accent={accent}
+            form={form}
+            setForm={setForm}
+            saving={mutation.isPending}
+            onSave={saveCreate}
+            onDiscard={discardCreate}
+          />
+        )}
         {filteredNotes.map((n) => (
-          <ExpandableCard
+          <NoteItemCard
             key={n.id}
-            clickOpens
-            showExpandBtn={false}
-            expandedContent={({ close }) => (
-              <NoteDetails
-                note={n}
-                worldId={worldId}
-                locations={locations}
-                accent={accent}
-                canEdit={canEdit}
-                onClose={close}
-                onEdit={() => openEdit(n)}
-                onDelete={() => {
-                  deleteNote(n)
-                  close()
-                }}
-              />
-            )}
-          >
-            <div className={styles.noteItem}>
-              <div className={styles.noteContent}>
-                <div className={styles.noteTitle}>
-                  <LocationBadgeText text={n.title} worldId={worldId} locations={locations} />
-                </div>
-                {n.content && (
-                  <div className={styles.noteDesc}>
-                    <LocationBadgeText text={n.content} worldId={worldId} locations={locations} small />
-                  </div>
-                )}
-                {n.tags && (
-                  <div className={styles.noteTags}>
-                    {parseTags(n.tags).map((tag) => (
-                      <span key={tag} className={styles.noteTag}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className={styles.rowActions}>
-                <RelationshipButton
-                  worldId={worldId}
-                  sourceType="note"
-                  sourceId={n.id}
-                  name={n.title}
-                  accent={accent}
-                />
-                {canEdit && (
-                  <>
-                    <IconButton
-                      size="small"
-                      aria-label="Редагувати нотатку"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        openEdit(n)
-                      }}
-                    >
-                      <EditOutlinedIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      aria-label="Видалити нотатку"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        deleteNote(n)
-                      }}
-                    >
-                      <DeleteOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </>
-                )}
-              </div>
-            </div>
-          </ExpandableCard>
+            note={n}
+            worldId={worldId}
+            locations={locations}
+            accent={accent}
+            canEdit={canEdit}
+            isEditing={editingId === n.id}
+            form={form}
+            setForm={setForm}
+            saving={mutation.isPending}
+            onEdit={openEdit}
+            onSave={saveEdit}
+            onCancelEdit={discardEdit}
+            onDelete={deleteNote}
+            onDiscardEdit={discardEdit}
+          />
         ))}
-        {filteredNotes.length === 0 && (
+        {filteredNotes.length === 0 && !creating && (
           <p className={sharedStyles.emptyMsg}>
             {notes.length === 0 ? 'Нотаток ще немає. Додай першу.' : 'Нічого не знайдено.'}
           </p>
         )}
       </div>
-
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        slotProps={{
-          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
-        }}
-      >
-        <form onSubmit={submit}>
-          <DialogTitle>{editing ? 'Редагувати нотатку' : 'Нова нотатка'}</DialogTitle>
-          <DialogContent>
-            <div className={sharedStyles.formFields}>
-              <LocationRichTextEditor
-                worldId={worldId}
-                label="Назва"
-                value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                required
-                autoFocus
-              />
-              <LocationRichTextEditor
-                worldId={worldId}
-                label="Зміст"
-                value={form.content}
-                onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-                multiline
-                minRows={3}
-              />
-              <TextField
-                label="Теги (через кому)"
-                value={form.tags}
-                onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
-                placeholder="наприклад: ідея, важливо, планування"
-              />
-            </div>
-          </DialogContent>
-          <DialogActions className={sharedStyles.dialogActions}>
-            <Button onClick={() => setOpen(false)} className={sharedStyles.dialogBtnCancel}>
-              Скасувати
-            </Button>
-            <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
-              Зберегти
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
     </div>
   )
 }

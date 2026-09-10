@@ -19,6 +19,9 @@ export default function RelationshipButton({
   sourceId,
   name,
   accent,
+  // Необов'язковий клас на IconButton (напр. щоб зрівняти вигляд
+  // з сусідніми кнопками у футері модалки).
+  className = '',
 }) {
   const [open, setOpen] = useState(false)
 
@@ -27,6 +30,7 @@ export default function RelationshipButton({
       <Tooltip title="Зв'язки">
         <IconButton
           size="small"
+          className={className || undefined}
           aria-label="Зв'язки"
           onClick={(e) => {
             e.stopPropagation()

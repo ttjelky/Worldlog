@@ -147,6 +147,13 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  /* Група дій завжди внизу модалки: при короткому контенті притискається
+     до низу, при довгому — липне до низу вікна й пливе над контентом. */
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: auto;
+  padding-bottom: 4px;
 }
 
 .actionBtns {
@@ -156,6 +163,7 @@
   background: rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   padding: 2px 6px;
+  box-shadow: 0 4px 16px rgba(13, 13, 15, 0.25);
 }
 
 .detailsClose {
@@ -227,8 +235,177 @@
   white-space: pre-wrap;
 }
 
+/* ---------- Редактор нотатки прямо в модалці (Notion/Apple Notes) ----------
+   Жодних рамок-інпутів: назва й зміст пишуться прямо в тексті нотатки. */
+
+.editorForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.editorBody {
+  flex: 1;
+}
+
+/* ---------- Теги-бейджики в режимі редагування ---------- */
+
+.editTags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.editTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  box-sizing: border-box;
+  font-size: 13px;
+  padding: 0 6px 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.tagRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  padding: 2px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.tagRemove:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.addTagBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.addTagBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.tagInput {
+  height: 32px;
+  box-sizing: border-box;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  border-radius: 999px;
+  padding: 0 10px;
+  outline: none;
+  min-width: 110px;
+}
+
+.tagInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.tagInput:focus {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.editorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.editorHint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.editorActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.cancelBtn {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.saveBtn {
+  border: none;
+  background: #ffffff;
+  color: #1d1a22;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #e9e9e9;
+}
+
+.saveBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.draftTitle {
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+}
+
 @media (max-width: 640px) {
   .noteListWide {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editorHint {
+    display: none;
   }
 }

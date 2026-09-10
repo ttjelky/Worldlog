@@ -22,6 +22,9 @@ export const ExpandableCardContext = createContext({
  *                     expandedContent({ close }), де close закриває модалку
  * - wide            — ширша розгорнута модалка (для секції локацій)
  * - extraWide       — ще просторіша модалка (для секції вікі)
+ * - onClose           — необов'язковий колбек, викликається коли модалка
+ *                     повністю закрилась (після анімації). Зручно, щоб
+ *                     скинути стан редагування/чернетки всередині.
  */
 export default function ExpandableCard({
   children,
@@ -36,6 +39,9 @@ export default function ExpandableCard({
   modalClassName = '',
   // Миттєве відкриття/закриття без фаз анімації (переглядачі фото тощо).
   instant = false,
+  // Викликається один раз при переході expanded: true -> false
+  // (після завершення анімації закриття).
+  onClose = null,
 }) {
   const cardRef = useRef(null)
   const modalRef = useRef(null)
@@ -127,6 +133,20 @@ export default function ExpandableCard({
     },
     [],
   )
+
+  // Сповіщаємо батька про повне закриття модалки (після анімації),
+  // щоб можна було скинути внутрішній стан (редагування, чернетка).
+  // Завжди викликаємо актуальний колбек через ref, щоб не залежати
+  // від замикань. На монтуванні не викликається.
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+  const wasExpandedRef = useRef(false)
+  useEffect(() => {
+    if (wasExpandedRef.current && !expanded) {
+      onCloseRef.current?.()
+    }
+    wasExpandedRef.current = expanded
+  }, [expanded])
 
   const onBackdropClick = (e) => {
     if (e.target !== e.currentTarget) return

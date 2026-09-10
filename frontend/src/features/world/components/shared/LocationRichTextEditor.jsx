@@ -210,6 +210,15 @@ export default function LocationRichTextEditor({
   placeholder = '',
   required,
   autoFocus,
+  // Темний варіант для редагування прямо на кольоровій картці
+  // (білий текст на напівпрозорому фоні замість світлого діалогу).
+  dark = false,
+  // Bare-варіант у дусі Notion/Apple Notes: без рамки й плаваючого
+  // лейбла — текст виглядає як звичайний контент, типографіка
+  // задається через editableStyle.
+  bare = false,
+  // Додаткові inline-стилі зони редагування (розмір/колір шрифту тощо).
+  editableStyle,
 }) {
   const { data: fetchedLocations = [] } = useLocations(worldId)
   const locations = locationsProp ?? fetchedLocations
@@ -360,7 +369,12 @@ export default function LocationRichTextEditor({
       } else if (e.key === UP) {
         e.preventDefault()
         setHighlight((h) => (h - 1 + suggestions.length) % suggestions.length)
-      } else if (e.key === ENTER || e.key === TAB) {
+      } else if (
+        e.key === ENTER ||
+        e.key === TAB
+      ) {
+        // Ctrl/Cmd+Enter зарезервовано для «зберегти» у батьківській формі.
+        if (e.metaKey || e.ctrlKey || e.altKey) return
         e.preventDefault()
         commitToken(suggestions[highlight])
       } else if (e.key === ESCAPE) {
@@ -425,7 +439,11 @@ export default function LocationRichTextEditor({
   }, [showPopup, suggestions.length])
 
   return (
-    <div className={`${styles.root} ${focused ? styles.focused : ''}`}>
+    <div
+      className={`${styles.root} ${focused ? styles.focused : ''} ${dark ? styles.dark : ''} ${
+        bare ? styles.bare : ''
+      }`}
+    >
       <div
         ref={editableRef}
         className={`${styles.editable} ${multiline ? styles.multiline : ''}`}
@@ -433,8 +451,9 @@ export default function LocationRichTextEditor({
         suppressContentEditableWarning
         role="textbox"
         aria-multiline={multiline || undefined}
+        aria-label={bare ? label : undefined}
         data-placeholder={placeholder}
-        style={rowStyle}
+        style={{ ...rowStyle, ...editableStyle }}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         onKeyUp={onKeyUp}
@@ -443,10 +462,12 @@ export default function LocationRichTextEditor({
         onMouseUp={onMouseUp}
         autoFocus={autoFocus}
       />
-      <label className={`${styles.label} ${focused || value ? styles.labelFloat : ''}`}>
-        {label}
-        {required && <span className={styles.required}> *</span>}
-      </label>
+      {!bare && (
+        <label className={`${styles.label} ${focused || value ? styles.labelFloat : ''}`}>
+          {label}
+          {required && <span className={styles.required}> *</span>}
+        </label>
+      )}
 
       {showPopup &&
         createPortal(
