@@ -18,6 +18,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined'
+import SearchIcon from '@mui/icons-material/Search'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
@@ -518,14 +519,17 @@ export default function LocationsSection({ worldId, accent, userRole }) {
 
       {section.full && (
         <>
-          <input
-            type="search"
-            className={sharedStyles.wideSearch}
-            placeholder="Знайти локацію…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Пошук локації"
-          />
+          <div className={sharedStyles.searchWrap}>
+            <SearchIcon className={sharedStyles.searchIcon} aria-hidden="true" />
+            <input
+              type="search"
+              className={sharedStyles.wideSearch}
+              placeholder="Знайти локацію…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Пошук локації"
+            />
+          </div>
           <div className={styles.catChips} role="group" aria-label="Фільтр за категорією">
             {categories.map(([value, label]) => (
               <button

@@ -16,6 +16,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import PushPinIcon from '@mui/icons-material/PushPin'
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
+import SearchIcon from '@mui/icons-material/Search'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
@@ -238,14 +239,17 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
 
       {section.full && (
         <>
-          <input
-            type="search"
-            className={sharedStyles.wideSearch}
-            placeholder="Знайти закладку…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Пошук закладки"
-          />
+          <div className={sharedStyles.searchWrap}>
+            <SearchIcon className={sharedStyles.searchIcon} aria-hidden="true" />
+            <input
+              type="search"
+              className={sharedStyles.wideSearch}
+              placeholder="Знайти закладку…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Пошук закладки"
+            />
+          </div>
           <div className={styles.toolbarRow}>
             <div className={styles.sortChips} role="group" aria-label="Сортування закладок">
               {[

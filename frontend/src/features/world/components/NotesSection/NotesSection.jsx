@@ -5,6 +5,7 @@ import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import SearchIcon from '@mui/icons-material/Search'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
@@ -527,14 +528,17 @@ export default function NotesSection({ worldId, accent, userRole }) {
       )}
 
       {section.full && (
-        <input
-          type="search"
-          className={sharedStyles.wideSearch}
-          placeholder="Знайти нотатку…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Пошук нотатки"
-        />
+        <div className={sharedStyles.searchWrap}>
+          <SearchIcon className={sharedStyles.searchIcon} aria-hidden="true" />
+          <input
+            type="search"
+            className={sharedStyles.wideSearch}
+            placeholder="Знайти нотатку…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Пошук нотатки"
+          />
+        </div>
       )}
 
       <div

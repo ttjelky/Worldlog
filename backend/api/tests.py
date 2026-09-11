@@ -586,7 +586,7 @@ class WikiTests(TestCase):
     def test_graph_includes_relationships_between_non_wiki_entities(self):
         loc_a = self.world.locations.create(name='Печера', x=1, y=1, z=1)
         loc_b = self.world.locations.create(name='Замок', x=2, y=2, z=2)
-        project = self.world.projects.create(title='Фортеця', status='active')
+        project = self.world.projects.create(title='Фортеця')
         todo = self.world.todos.create(title='Побудувати стіну')
 
         self.world.relationships.create(
@@ -772,3 +772,60 @@ class EpochTests(TestCase):
         )
         resp = self.client.get('/api/worlds/{}/history/'.format(self.world.pk))
         self.assertEqual(resp.data[0]['participants_list'], ['Альдар', 'Грім', 'Зоря'])
+
+
+class ProjectTodoTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='projuser', email='proj@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        self.project = self.world.projects.create(title='Будівництво')
+
+    def todos_url(self, path=''):
+        return '/api/worlds/{}/todos/{}'.format(self.world.pk, path)
+
+    def projects_url(self, path=''):
+        return '/api/worlds/{}/projects/{}'.format(self.world.pk, path)
+
+    def test_project_due_date_roundtrip(self):
+        resp = self.client.patch(
+            self.projects_url('{}/'.format(self.project.pk)),
+            {'due_date': '2026-12-31'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['due_date'], '2026-12-31')
+
+    def test_new_project_todos_go_on_top(self):
+        first = self.client.post(
+            self.todos_url(), {'title': 'Перше', 'project': self.project.pk}, format='json'
+        ).data
+        second = self.client.post(
+            self.todos_url(), {'title': 'Друге', 'project': self.project.pk}, format='json'
+        ).data
+        self.assertLess(second['order'], first['order'])
+
+    def test_reorder_todos(self):
+        a = self.world.todos.create(title='A', project=self.project)
+        b = self.world.todos.create(title='B', project=self.project)
+        resp = self.client.post(
+            self.todos_url('reorder/'),
+            {'project': self.project.pk, 'ids': [b.pk, a.pk]}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        orders = {
+            t.pk: t.order for t in self.project.todos.filter(pk__in=[a.pk, b.pk])
+        }
+        self.assertLess(orders[b.pk], orders[a.pk])
+
+    def test_reorder_rejects_foreign_todos(self):
+        other = self.user.worlds.create(name='Інший світ')
+        alien = other.todos.create(title='Чуже')
+        mine = self.world.todos.create(title='Моє', project=self.project)
+        resp = self.client.post(
+            self.todos_url('reorder/'),
+            {'project': self.project.pk, 'ids': [mine.pk, alien.pk]}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

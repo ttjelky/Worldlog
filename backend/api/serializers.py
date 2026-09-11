@@ -256,6 +256,7 @@ class TodoItemSerializer(serializers.ModelSerializer):
             'is_done',
             'priority',
             'due_date',
+            'order',
             'created_at',
         )
         read_only_fields = ('world', 'created_at')
@@ -463,7 +464,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ('id', 'world', 'title', 'description', 'status', 'progress', 'todos_count', 'todos_done', 'created_at')
+        fields = ('id', 'world', 'title', 'description', 'due_date', 'progress', 'todos_count', 'todos_done', 'created_at')
         read_only_fields = ('world',)
 
     def get_progress(self, obj):

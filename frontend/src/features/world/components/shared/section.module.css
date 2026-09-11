@@ -71,6 +71,29 @@
   background: rgba(255, 255, 255, 0.18);
 }
 
+/* Пошук з іконкою лупи: інпут обгортається в .searchWrap,
+   відступ під іконку й обнулення марджина — автоматично */
+.searchWrap {
+  position: relative;
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.searchWrap > .wideSearch {
+  margin-bottom: 0;
+  padding-left: 38px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px !important;
+  color: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+
 /* Блок вмісту картки — зайвий контент скролиться всередині картки,
    щоб усі картки мали однакову висоту.
    Нижній паддінг — «пусте місце», яке скролиться разом зі списком,

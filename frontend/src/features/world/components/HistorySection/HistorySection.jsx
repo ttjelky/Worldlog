@@ -30,6 +30,7 @@ import ConstructionIcon from '@mui/icons-material/Construction'
 import DangerousIcon from '@mui/icons-material/Dangerous'
 import TravelExploreIcon from '@mui/icons-material/TravelExplore'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
+import SearchIcon from '@mui/icons-material/Search'
 import api from '../../../../api'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
@@ -539,14 +540,17 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
 
       {section.full && (
       <div className={styles.searchFilterRow}>
-          <input
-            type="search"
-            className={`${sharedStyles.wideSearch} ${styles.rowSearch}`}
-            placeholder="Знайти подію…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Пошук події"
-          />
+          <div className={`${sharedStyles.searchWrap} ${styles.rowSearch}`}>
+            <SearchIcon className={sharedStyles.searchIcon} aria-hidden="true" />
+            <input
+              type="search"
+              className={sharedStyles.wideSearch}
+              placeholder="Знайти подію…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Пошук події"
+            />
+          </div>
           <div className={styles.typeChips} role="group" aria-label="Фільтр за типом події">
             {eventTypes.map(([value, label]) => (
               <button

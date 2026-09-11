@@ -104,18 +104,12 @@ class LocationScreenshot(models.Model):
 
 
 class Project(models.Model):
-    class Status(models.TextChoices):
-        PLANNING = 'planning', 'Planning'
-        ACTIVE = 'active', 'Active'
-        COMPLETED = 'completed', 'Completed'
-        ON_HOLD = 'on_hold', 'On Hold'
-
+    # Статус проєкту — похідний (draft/planning/in_progress/completed),
+    # обчислюється фронтендом із кількості завдань. Окремого поля нема.
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name='projects')
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    status = models.CharField(
-        max_length=20, choices=Status.choices, default=Status.PLANNING
-    )
+    due_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -147,6 +141,8 @@ class TodoItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     is_done = models.BooleanField(default=False)
+    # Ручний порядок у межах проєкту (менше — вище). Нові стають нагору.
+    order = models.IntegerField(default=0)
     priority = models.CharField(
         max_length=10, choices=Priority.choices, default=Priority.MEDIUM
     )

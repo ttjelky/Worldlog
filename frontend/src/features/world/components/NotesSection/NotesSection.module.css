@@ -357,8 +357,8 @@
 }
 
 .cancelBtn {
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: transparent;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
   font-family: inherit;
   font-weight: 600;
@@ -370,7 +370,7 @@
 }
 
 .cancelBtn:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .saveBtn {

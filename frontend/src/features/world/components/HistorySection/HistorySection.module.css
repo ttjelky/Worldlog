@@ -74,6 +74,7 @@
 .searchFilterRow .rowSearch {
   flex: 1 1 220px;
   min-width: 0;
+  display: flex;
   margin-bottom: 0;
 }
 

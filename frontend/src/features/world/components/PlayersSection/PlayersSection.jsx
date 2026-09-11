@@ -13,6 +13,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import SearchIcon from '@mui/icons-material/Search'
 import api from '../../../../api'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
@@ -94,14 +95,17 @@ export default function PlayersSection({ worldId, accent, userRole }) {
       </div>
 
       {section.full && (
-        <input
-          type="search"
-          className={sharedStyles.wideSearch}
-          placeholder="Знайти гравця…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Пошук гравця"
-        />
+        <div className={sharedStyles.searchWrap}>
+          <SearchIcon className={sharedStyles.searchIcon} aria-hidden="true" />
+          <input
+            type="search"
+            className={sharedStyles.wideSearch}
+            placeholder="Знайти гравця…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Пошук гравця"
+          />
+        </div>
       )}
 
       <div

@@ -1,18 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  TextField,
-} from '@mui/material'
+import { Button, Checkbox, IconButton } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import CheckIcon from '@mui/icons-material/Check'
+import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import SearchIcon from '@mui/icons-material/Search'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
@@ -37,6 +32,14 @@ const statusColors = {
   completed: '#8FE3A0',
 }
 
+const priorities = {
+  low: ['#B7EAC7', 'Низький'],
+  medium: ['#FFE29A', 'Середній'],
+  high: ['#FFB199', 'Високий'],
+  urgent: ['#FF8A80', 'Терміновий'],
+}
+const priorityCycle = ['medium', 'high', 'urgent', 'low']
+
 function calcStatus(todosCount, doneCount) {
   if (todosCount === 0) return 'draft'
   if (doneCount === 0) return 'planning'
@@ -44,46 +47,131 @@ function calcStatus(todosCount, doneCount) {
   return 'completed'
 }
 
-const empty = { title: '', description: '' }
+const fmtDate = (iso, opts) => {
+  if (!iso) return ''
+  const d = new Date(typeof iso === 'string' && iso.length === 10 ? `${iso}T00:00:00` : iso)
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString('uk-UA', opts ?? { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
-function ProjectDetails({ project, worldId, locations, accent, canEdit, onClose, onEdit, onDelete }) {
+const isOverdueDate = (iso) => {
+  if (!iso) return false
+  return new Date(iso) < new Date(new Date().toDateString())
+}
+
+const empty = { title: '', description: '', due_date: '' }
+const cleanTitle = (value) => value.replace(/\s*\n+\s*/g, ' ').trim()
+
+const titleTextStyle = {
+  fontSize: 'clamp(24px, 4vw, 36px)',
+  fontWeight: 500,
+  letterSpacing: '-0.03em',
+  lineHeight: 1.15,
+  color: '#ffffff',
+}
+
+const descTextStyle = {
+  fontSize: '15px',
+  lineHeight: 1.45,
+  color: 'rgba(255, 255, 255, 0.85)',
+}
+
+function ProjectDetails({
+  project,
+  worldId,
+  locations,
+  accent,
+  canEdit,
+  onEdit,
+  onDelete,
+}) {
   const qc = useQueryClient()
   const [newTodo, setNewTodo] = useState('')
+  const [newPriority, setNewPriority] = useState('medium')
+  const [newDue, setNewDue] = useState('')
+  const [todoSearch, setTodoSearch] = useState('')
+  const [bulkBusy, setBulkBusy] = useState(false)
+  // Перетягування як в оверлеї редагування: { id, over } + FLIP-анімація.
+  const [drag, setDrag] = useState(null)
+  const flipSnapshotRef = useRef(null)
   const undo = useUndo()
+  // Повноекранний режим модалки — туду в дві колонки.
+  const { full: isFullScreen } = useExpandableCard()
+
+  const todosKey = ['todos', String(worldId)]
+  const projectsKey = ['projects', String(worldId)]
+  const worldKey = ['world', String(worldId)]
+  const invalidateAll = () => {
+    qc.invalidateQueries(todosKey)
+    qc.invalidateQueries(projectsKey)
+    qc.invalidateQueries(worldKey)
+  }
 
   const { data: allTodos = [] } = useQuery({
-    queryKey: ['todos', String(project.world)],
-    queryFn: () => api.get(`/worlds/${project.world}/todos/`).then((r) => r.data),
+    queryKey: todosKey,
+    queryFn: () => api.get(`/worlds/${worldId}/todos/`).then((r) => r.data),
   })
   const todos = allTodos.filter((t) => String(t.project) === String(project.id))
+  const sortedTodos = [...todos].sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0) || b.id - a.id,
+  )
+  const q = todoSearch.trim().toLowerCase()
+  const visibleTodos = q
+    ? sortedTodos.filter((t) => (t.title || '').toLowerCase().includes(q))
+    : sortedTodos
+  const dndEnabled = canEdit && !q
 
   const addTodo = useMutation({
-    mutationFn: (title) =>
-      api.post(`/worlds/${project.world}/todos/`, { project: project.id, title }),
+    mutationFn: ({ title, priority, due_date }) =>
+      api.post(`/worlds/${worldId}/todos/`, {
+        project: project.id,
+        title,
+        priority,
+        due_date,
+      }),
     onSuccess: () => {
-      qc.invalidateQueries(['todos', String(project.world)])
-      qc.invalidateQueries(['projects', String(project.world)])
+      // Поле чистимо лише після успіху — при помилці текст лишається.
+      setNewTodo('')
+      invalidateAll()
     },
   })
 
+  // Оптимістичний тогл: чекбокс і прогрес оновлюються миттєво.
   const toggleTodo = useMutation({
     mutationFn: ({ id, is_done }) =>
-      api.patch(`/worlds/${project.world}/todos/${id}/`, { is_done: !is_done }),
-    onSuccess: () => {
-      qc.invalidateQueries(['todos', String(project.world)])
-      qc.invalidateQueries(['projects', String(project.world)])
+      api.patch(`/worlds/${worldId}/todos/${id}/`, { is_done: !is_done }),
+    onMutate: async ({ id, is_done }) => {
+      const next = !is_done
+      await qc.cancelQueries({ queryKey: todosKey })
+      await qc.cancelQueries({ queryKey: projectsKey })
+      const prevTodos = qc.getQueryData(todosKey)
+      const prevProjects = qc.getQueryData(projectsKey)
+      qc.setQueryData(todosKey, (old) =>
+        (old ?? []).map((x) => (x.id === id ? { ...x, is_done: next } : x)),
+      )
+      qc.setQueryData(projectsKey, (old) =>
+        (old ?? []).map((p) =>
+          p.id === project.id
+            ? { ...p, todos_done: Math.max(0, (p.todos_done ?? 0) + (next ? 1 : -1)) }
+            : p,
+        ),
+      )
+      return { prevTodos, prevProjects }
     },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prevTodos) qc.setQueryData(todosKey, ctx.prevTodos)
+      if (ctx?.prevProjects) qc.setQueryData(projectsKey, ctx.prevProjects)
+    },
+    onSettled: invalidateAll,
   })
 
   const deleteTodo = (id) => {
     const t = todos.find((x) => x.id === id)
     undo.deleteItem({
       id,
-      url: `/worlds/${project.world}/todos/${id}/`,
-      queryKeys: [
-        ['todos', String(project.world)],
-        ['projects', String(project.world)],
-      ],
+      url: `/worlds/${worldId}/todos/${id}/`,
+      queryKeys: [todosKey, projectsKey, worldKey],
       message: `Завдання «${t?.title || 'завдання'}» видалено`,
       nouns: ['завдання', 'завдання', 'завдань'],
     })
@@ -91,27 +179,173 @@ function ProjectDetails({ project, worldId, locations, accent, canEdit, onClose,
 
   const handleAddTodo = () => {
     const title = newTodo.trim()
-    if (!title) return
-    setNewTodo('')
-    addTodo.mutate(title)
+    if (!title || addTodo.isPending) return
+    addTodo.mutate({ title, priority: newPriority, due_date: newDue || null })
+  }
+
+  const allDone = todos.length > 0 && todos.every((t) => t.is_done)
+  const toggleAll = async () => {
+    if (bulkBusy || todos.length === 0) return
+    const target = !allDone
+    setBulkBusy(true)
+    try {
+      await Promise.all(
+        todos
+          .filter((t) => t.is_done !== target)
+          .map((t) =>
+            api.patch(`/worlds/${worldId}/todos/${t.id}/`, { is_done: target }),
+          ),
+      )
+    } finally {
+      setBulkBusy(false)
+      invalidateAll()
+    }
+  }
+
+  const deleteDone = () => {
+    todos.filter((t) => t.is_done).forEach((t) => deleteTodo(t.id))
+  }
+
+  const moveTodo = async (fromId, toId) => {
+    const ids = sortedTodos.map((t) => t.id)
+    const from = ids.indexOf(fromId)
+    if (from === -1) return
+    ids.splice(from, 1)
+    const to = toId == null ? ids.length : ids.indexOf(toId)
+    if (to === -1) return
+    ids.splice(to, 0, fromId)
+    if (ids.join(',') === sortedTodos.map((t) => t.id).join(',')) return
+    const prev = qc.getQueryData(todosKey)
+    qc.setQueryData(todosKey, (old) =>
+      (old ?? []).map((t) => {
+        const i = ids.indexOf(t.id)
+        return i === -1 ? t : { ...t, order: i }
+      }),
+    )
+    try {
+      await api.post(`/worlds/${worldId}/todos/reorder/`, {
+        project: project.id,
+        ids,
+      })
+    } catch {
+      if (prev) qc.setQueryData(todosKey, prev)
+    } finally {
+      invalidateAll()
+    }
+  }
+
+  // FLIP-анімація як в оверлеї: знімок позицій рядків ДО зміни порядку,
+  // після рендеру рядки анімовано «перелітають» на нові місця.
+  const snapshotTodoRects = () => {
+    const snapshot = {}
+    sortedTodos.forEach((t) => {
+      const el = document.getElementById(`todo-slot-${t.id}`)
+      if (el) snapshot[t.id] = el.getBoundingClientRect()
+    })
+    flipSnapshotRef.current = snapshot
+  }
+
+  useLayoutEffect(() => {
+    const snapshot = flipSnapshotRef.current
+    if (!snapshot) return
+    flipSnapshotRef.current = null
+    const moves = []
+    Object.keys(snapshot).forEach((key) => {
+      const el = document.getElementById(`todo-slot-${key}`)
+      if (!el) return
+      const before = snapshot[key]
+      const after = el.getBoundingClientRect()
+      const dx = before.left - after.left
+      const dy = before.top - after.top
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return
+      moves.push({ el, dx, dy })
+    })
+    if (moves.length === 0) return
+    moves.forEach(({ el, dx, dy }) => {
+      el.style.willChange = 'transform'
+      el.style.transition = 'none'
+      el.style.transform = `translate(${dx}px, ${dy}px)`
+    })
+    // eslint-disable-next-line no-unused-expressions
+    document.body.offsetHeight
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        moves.forEach(({ el }) => {
+          el.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          el.style.transform = ''
+          const cleanup = () => {
+            el.style.transition = ''
+            el.style.willChange = ''
+            el.removeEventListener('transitionend', cleanup)
+          }
+          el.addEventListener('transitionend', cleanup)
+        })
+      })
+    })
+  }, [todos])
+
+  const onTodoDragStart = (e, id) => {
+    if (!dndEnabled) return
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(id))
+    requestAnimationFrame(() => setDrag({ id }))
+  }
+
+  const onTodoDragOver = (e, id) => {
+    if (!drag || !dndEnabled) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDrag((d) => (d && d.over !== id ? { ...d, over: id } : d))
+  }
+
+  const onTodoDrop = (e, targetId) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!drag || !dndEnabled) return
+    const sourceId = drag.id
+    setDrag(null)
+    if (sourceId === targetId) return
+    snapshotTodoRects()
+    moveTodo(sourceId, targetId)
+  }
+
+  // Скидання в кінець списку (на контейнер, а не на рядок).
+  const onTodoDropEnd = (e) => {
+    e.preventDefault()
+    if (!drag || !dndEnabled) return
+    const sourceId = drag.id
+    setDrag(null)
+    snapshotTodoRects()
+    moveTodo(sourceId, null)
   }
 
   const doneCount = todos.filter((t) => t.is_done).length
   const progress = todos.length ? Math.round((doneCount / todos.length) * 100) : 0
   const status = calcStatus(todos.length, doneCount)
+  const projectOverdue = project.due_date && status !== 'completed' && isOverdueDate(project.due_date)
+  const [prioDot, prioLabel] = priorities[newPriority] || priorities.medium
 
   return (
     <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
       <div className={styles.detailsHead}>
-          <h3 className={styles.detailsTitle}>
-            <LocationBadgeText text={project.title} worldId={worldId} locations={locations} />
-            <span
-              className={styles.statusBadge}
-              style={{ background: statusColors[status] + '33', color: statusColors[status] }}
-            >
-              {statusLabels[status]}
-            </span>
-          </h3>
+        <h3 className={styles.detailsTitle}>
+          <LocationBadgeText text={project.title} worldId={worldId} locations={locations} />
+          <span
+            className={styles.statusBadge}
+            style={{ background: statusColors[status] + '33', color: statusColors[status] }}
+          >
+            {statusLabels[status]}
+          </span>
+        </h3>
+        {project.due_date && (
+          <span
+            className={`${styles.dueChip} ${projectOverdue ? styles.dueOverdue : ''}`}
+            title={projectOverdue ? 'Прострочено' : `Дедлайн: ${fmtDate(project.due_date)}`}
+          >
+            {projectOverdue ? 'Прострочено · ' : 'Дедлайн: '}
+            {fmtDate(project.due_date)}
+          </span>
+        )}
       </div>
 
       {project.description && (
@@ -136,13 +370,36 @@ function ProjectDetails({ project, worldId, locations, accent, canEdit, onClose,
       <div className={styles.todosSection}>
         {canEdit && (
           <div className={styles.todoAdd}>
-            <TextField
-              size="small"
+            <input
+              type="text"
+              className={styles.quickInput}
               placeholder="Нове завдання…"
+              aria-label="Нове завдання"
               value={newTodo}
               onChange={(e) => setNewTodo(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
-              className={styles.todoInput}
+            />
+            <button
+              type="button"
+              className={styles.priorityCycle}
+              title={`Пріоритет: ${prioLabel} (натисни, щоб змінити)`}
+              aria-label={`Пріоритет нового завдання: ${prioLabel}`}
+              onClick={() =>
+                setNewPriority(
+                  (cur) => priorityCycle[(priorityCycle.indexOf(cur) + 1) % priorityCycle.length],
+                )
+              }
+            >
+              <span className={styles.priorityDot} style={{ background: prioDot }} />
+              {prioLabel}
+            </button>
+            <input
+              type="date"
+              className={styles.quickDue}
+              aria-label="Дедлайн нового завдання"
+              title="Дедлайн нового завдання"
+              value={newDue}
+              onChange={(e) => setNewDue(e.target.value)}
             />
             <IconButton
               className={styles.todoAddBtn}
@@ -155,68 +412,334 @@ function ProjectDetails({ project, worldId, locations, accent, canEdit, onClose,
           </div>
         )}
 
-        <div className={styles.todoList}>
-          {todos.map((t) => (
-            <div
-              key={t.id}
-              className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''}`}
-              onClick={canEdit ? () => toggleTodo.mutate({ id: t.id, is_done: t.is_done }) : undefined}
-              style={canEdit ? { cursor: 'pointer' } : undefined}
-              role={canEdit ? 'checkbox' : undefined}
-              aria-checked={canEdit ? t.is_done : undefined}
-              tabIndex={canEdit ? 0 : undefined}
-              onKeyDown={
-                canEdit
-                  ? (e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        toggleTodo.mutate({ id: t.id, is_done: t.is_done })
-                      }
-                    }
-                  : undefined
-              }
-            >
-              <Checkbox
-                checked={t.is_done}
-                onClick={(e) => e.stopPropagation()}
-                onChange={canEdit ? () => toggleTodo.mutate({ id: t.id, is_done: t.is_done }) : undefined}
-                disabled={!canEdit}
-                size="small"
-                className={styles.todoCheckbox}
-              />
-              <span className={styles.todoTitle}>{t.title}</span>
-              {canEdit && (
-                <IconButton
-                  size="small"
-                  className={styles.todoDelete}
-                  aria-label="Видалити завдання"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteTodo(t.id)
-                  }}
+        {todos.length > 0 && (
+          <div className={styles.todoTools}>
+            {todos.length >= 4 && (
+              <div className={styles.toolSearchWrap}>
+                <SearchIcon className={sharedStyles.searchIcon} aria-hidden="true" />
+                <input
+                  type="search"
+                  className={styles.toolSearch}
+                  placeholder="Знайти завдання…"
+                  aria-label="Пошук завдання в проєкті"
+                  value={todoSearch}
+                  onChange={(e) => setTodoSearch(e.target.value)}
+                />
+              </div>
+            )}
+            {canEdit && (
+              <>
+                <button
+                  type="button"
+                  className={styles.toolBtn}
+                  onClick={toggleAll}
+                  disabled={bulkBusy}
                 >
-                  <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
-              )}
-            </div>
-          ))}
+                  {allDone ? 'Зняти всі' : 'Позначити всі'}
+                </button>
+                {doneCount > 0 && (
+                  <button
+                    type="button"
+                    className={styles.filterBtnDeleteDone}
+                    onClick={deleteDone}
+                    title="Видалити виконані"
+                    aria-label="Видалити виконані"
+                  >
+                    <span className={styles.deleteDoneIcon}>
+                      <DeleteOutlinedIcon fontSize="small" />
+                      <CheckIcon className={styles.deleteDoneCheck} />
+                    </span>
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        <div
+          className={`${styles.todoList} ${isFullScreen ? styles.todoListTwoCol : ''}`}
+          onDragOver={dndEnabled ? (e) => e.preventDefault() : undefined}
+          onDrop={dndEnabled ? onTodoDropEnd : undefined}
+        >
+          {visibleTodos.map((t) => {
+            const [dot, label] = priorities[t.priority] || priorities.medium
+            const showPriority = t.priority && t.priority !== 'medium'
+            const overdue = !t.is_done && isOverdueDate(t.due_date)
+            const toggle = () => toggleTodo.mutate({ id: t.id, is_done: t.is_done })
+            return (
+              <div
+                key={t.id}
+                id={`todo-slot-${t.id}`}
+                className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''} ${
+                  drag?.id === t.id ? styles.todoDragging : ''
+                } ${drag?.over === t.id ? styles.todoDragOver : ''}`}
+                draggable={dndEnabled}
+                onDragStart={dndEnabled ? (e) => onTodoDragStart(e, t.id) : undefined}
+                onDragOver={dndEnabled ? (e) => onTodoDragOver(e, t.id) : undefined}
+                onDrop={dndEnabled ? (e) => onTodoDrop(e, t.id) : undefined}
+                onDragEnd={() => setDrag(null)}
+                onClick={canEdit ? toggle : undefined}
+                style={canEdit ? { cursor: 'pointer' } : undefined}
+                role={canEdit ? 'checkbox' : undefined}
+                aria-checked={canEdit ? t.is_done : undefined}
+                tabIndex={canEdit ? 0 : undefined}
+                onKeyDown={
+                  canEdit
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          toggle()
+                        }
+                      }
+                    : undefined
+                }
+              >
+                {dndEnabled && (
+                  <DragIndicatorIcon className={styles.dragHandle} aria-hidden="true" />
+                )}
+                <Checkbox
+                  checked={t.is_done}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={canEdit ? toggle : undefined}
+                  disabled={!canEdit}
+                  size="small"
+                  className={styles.todoCheckbox}
+                />
+                <div className={styles.todoMain}>
+                  <span className={styles.todoTitle}>{t.title}</span>
+                  {(showPriority || t.due_date) && (
+                    <span className={styles.todoMeta}>
+                      {showPriority && (
+                        <span className={styles.miniChip}>
+                          <span className={styles.miniDot} style={{ background: dot }} />
+                          {label}
+                        </span>
+                      )}
+                      {t.due_date && (
+                        <span
+                          className={`${styles.miniChip} ${overdue ? styles.dueOverdue : ''}`}
+                          title={overdue ? `Прострочено: ${fmtDate(t.due_date)}` : fmtDate(t.due_date)}
+                        >
+                          {fmtDate(t.due_date, { day: 'numeric', month: 'short' })}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </div>
+                {canEdit && (
+                  <IconButton
+                    size="small"
+                    className={styles.todoDelete}
+                    aria-label="Видалити завдання"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteTodo(t.id)
+                    }}
+                  >
+                    <DeleteOutlinedIcon fontSize="small" />
+                  </IconButton>
+                )}
+              </div>
+            )
+          })}
+          {todos.length > 0 && visibleTodos.length === 0 && (
+            <p className={styles.noTodos}>Нічого не знайдено.</p>
+          )}
         </div>
       </div>
 
       <div className={styles.detailsFooter}>
+        <div className={styles.actionBtns}>
+          <RelationshipButton
+            worldId={worldId}
+            sourceType="project"
+            sourceId={project.id}
+            name={project.title}
+            accent={accent}
+            className={styles.actionBtn}
+          />
+          {canEdit && (
+            <>
+              <IconButton className={styles.actionBtn} aria-label="Редагувати проєкт" onClick={onEdit}>
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+              <IconButton className={styles.actionBtn} aria-label="Видалити проєкт" onClick={onDelete}>
+                <DeleteOutlinedIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Inline-редактор проєкту в дусі нотаток: назва, опис і дедлайн
+// пишуться прямо в модалці, без окремого діалогу.
+function ProjectEditor({ worldId, accent, form, setForm, saving, isNew, onSave, onCancel }) {
+  const canSave = cleanTitle(form.title).length > 0 && !saving
+  const submit = (e) => {
+    e.preventDefault()
+    if (canSave) onSave()
+  }
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      if (canSave) onSave()
+    }
+  }
+
+  return (
+    <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
+      <form onSubmit={submit} onKeyDown={onKeyDown} className={styles.editorForm}>
+        <div className={styles.detailsHead}>
+          <LocationRichTextEditor
+            bare
+            dark
+            worldId={worldId}
+            label="Назва проєкту"
+            value={form.title}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            autoFocus
+            placeholder="Назва"
+            editableStyle={titleTextStyle}
+          />
+        </div>
+        <div className={styles.editorBody}>
+          <LocationRichTextEditor
+            bare
+            dark
+            worldId={worldId}
+            label="Опис проєкту"
+            value={form.description}
+            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            multiline
+            minRows={3}
+            placeholder="Опис…"
+            editableStyle={descTextStyle}
+          />
+        </div>
+        <div className={styles.dueRow}>
+          <span className={styles.dueLabel}>Дедлайн</span>
+          <input
+            type="date"
+            className={styles.dueInput}
+            aria-label="Дедлайн проєкту"
+            value={form.due_date}
+            onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
+          />
+          {form.due_date && (
+            <button
+              type="button"
+              className={styles.dueClear}
+              aria-label="Прибрати дедлайн"
+              title="Прибрати дедлайн"
+              onClick={() => setForm((f) => ({ ...f, due_date: '' }))}
+            >
+              <CloseIcon sx={{ fontSize: 16 }} />
+            </button>
+          )}
+        </div>
+        <div className={styles.editorFooter}>
+          <span className={styles.editorHint}>Ctrl + Enter — зберегти</span>
+          <span className={styles.editorActions}>
+            <button type="button" className={styles.cancelBtn} onClick={onCancel}>
+              Скасувати
+            </button>
+            <button type="submit" className={styles.saveBtn} disabled={!canSave}>
+              {saving ? 'Збереження…' : isNew ? 'Створити' : 'Зберегти'}
+            </button>
+          </span>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+// Відкриває власну модалку одразу після монтування —
+// чернетка нового проєкту масштабується з місця у списку.
+function AutoOpen() {
+  const { open } = useExpandableCard()
+  useEffect(() => {
+    open()
+  }, [open])
+  return null
+}
+
+// Згорнутий рядок проєкту. Редагування відкриває модалку
+// цього ж проєкту одразу в режимі редагування.
+function ProjectRow({ project: p, worldId, locations, accent, canEdit, onEdit, onDelete }) {
+  const { open } = useExpandableCard()
+  const pStatus = calcStatus(p.todos_count ?? 0, p.todos_done ?? 0)
+  const overdueRow = p.due_date && pStatus !== 'completed' && isOverdueDate(p.due_date)
+  const handleEdit = (e) => {
+    e.stopPropagation()
+    onEdit(p)
+    open()
+  }
+
+  return (
+    <div className={styles.projectItem}>
+      <div className={styles.projectTitle}>
+        <LocationBadgeText text={p.title} worldId={worldId} locations={locations} />
+        <span
+          className={styles.statusChip}
+          style={{
+            background: statusColors[pStatus] + '33',
+            color: statusColors[pStatus],
+          }}
+        >
+          {statusLabels[pStatus]}
+        </span>
+      </div>
+      {p.description && (
+        <div className={styles.projectDesc}>
+          <LocationBadgeText text={p.description} worldId={worldId} locations={locations} small />
+        </div>
+      )}
+      {(p.todos_count ?? 0) > 0 ? (
+        <>
+          <div className={styles.progressBar}>
+            <div
+              className={styles.progressFill}
+              style={{ width: `${p.progress ?? 0}%` }}
+            />
+          </div>
+          <div className={styles.progressText}>
+            {p.todos_done ?? 0} із {p.todos_count ?? 0} завдань ({p.progress ?? 0}%)
+          </div>
+        </>
+      ) : (
+        <div className={styles.progressText}>Завдань ще немає</div>
+      )}
+      {overdueRow && (
+        <div className={styles.overdueText}>Прострочено · {fmtDate(p.due_date)}</div>
+      )}
+      <div className={styles.rowActions}>
         <RelationshipButton
           worldId={worldId}
           sourceType="project"
-          sourceId={project.id}
-          name={project.title}
+          sourceId={p.id}
+          name={p.title}
           accent={accent}
         />
         {canEdit && (
           <>
-            <IconButton className={styles.actionBtn} aria-label="Редагувати проєкт" onClick={onEdit}>
+            <IconButton
+              size="small"
+              aria-label="Редагувати проєкт"
+              onClick={handleEdit}
+            >
               <EditOutlinedIcon fontSize="small" />
             </IconButton>
-            <IconButton className={styles.actionBtn} aria-label="Видалити проєкт" onClick={onDelete}>
+            <IconButton
+              size="small"
+              aria-label="Видалити проєкт"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(p)
+              }}
+            >
               <DeleteOutlinedIcon fontSize="small" />
             </IconButton>
           </>
@@ -226,10 +749,102 @@ function ProjectDetails({ project, worldId, locations, accent, canEdit, onClose,
   )
 }
 
+function ProjectItemCard({
+  project,
+  worldId,
+  locations,
+  accent,
+  canEdit,
+  isEditing,
+  form,
+  setForm,
+  saving,
+  onEdit,
+  onSave,
+  onCancelEdit,
+  onDelete,
+  onDiscardEdit,
+}) {
+  return (
+    <ExpandableCard
+      clickOpens
+      showExpandBtn={false}
+      onClose={onDiscardEdit}
+      expandedContent={({ close }) =>
+        isEditing ? (
+          <ProjectEditor
+            worldId={worldId}
+            accent={accent}
+            form={form}
+            setForm={setForm}
+            saving={saving}
+            isNew={false}
+            onSave={onSave}
+            onCancel={onCancelEdit}
+          />
+        ) : (
+          <ProjectDetails
+            project={project}
+            worldId={worldId}
+            locations={locations}
+            accent={accent}
+            canEdit={canEdit}
+            onEdit={() => onEdit(project)}
+            onDelete={() => {
+              onDelete(project)
+              close()
+            }}
+          />
+        )
+      }
+    >
+      <ProjectRow
+        project={project}
+        worldId={worldId}
+        locations={locations}
+        accent={accent}
+        canEdit={canEdit}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    </ExpandableCard>
+  )
+}
+
+function NewProjectCard({ worldId, accent, form, setForm, saving, onSave, onDiscard }) {
+  const draftTitle = cleanTitle(form.title)
+
+  return (
+    <ExpandableCard
+      showExpandBtn={false}
+      onClose={onDiscard}
+      expandedContent={({ close }) => (
+        <ProjectEditor
+          worldId={worldId}
+          accent={accent}
+          form={form}
+          setForm={setForm}
+          saving={saving}
+          isNew
+          onSave={() => onSave(close)}
+          onCancel={close}
+        />
+      )}
+    >
+      <AutoOpen />
+      <div className={styles.projectItem}>
+        <div className={`${styles.projectTitle} ${draftTitle ? '' : styles.draftTitle}`}>
+          {draftTitle || 'Новий проєкт…'}
+        </div>
+      </div>
+    </ExpandableCard>
+  )
+}
+
 export default function ProjectsSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
-  const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [creating, setCreating] = useState(false)
   const [form, setForm] = useState(empty)
   const [statusFilter, setStatusFilter] = useState(null)
   const [search, setSearch] = useState('')
@@ -256,14 +871,11 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
   })
 
   const mutation = useMutation({
-    mutationFn: (payload) =>
-      editing
-        ? api.patch(`/worlds/${worldId}/projects/${editing.id}/`, payload)
+    mutationFn: ({ id, payload }) =>
+      id
+        ? api.patch(`/worlds/${worldId}/projects/${id}/`, payload)
         : api.post(`/worlds/${worldId}/projects/`, payload),
-    onSuccess: () => {
-      qc.invalidateQueries(['projects', String(worldId)])
-      setOpen(false)
-    },
+    onSuccess: () => qc.invalidateQueries(['projects', String(worldId)]),
   })
 
   const undo = useUndo()
@@ -280,18 +892,39 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
     })
 
   const openNew = () => {
-    setEditing(null)
+    setEditingId(null)
     setForm(empty)
-    setOpen(true)
+    setCreating(true)
   }
   const openEdit = (p) => {
-    setEditing(p)
-    setForm({ title: p.title, description: p.description || '' })
-    setOpen(true)
+    setCreating(false)
+    setEditingId(p.id)
+    setForm({ title: p.title, description: p.description || '', due_date: p.due_date || '' })
   }
-  const submit = (e) => {
-    e.preventDefault()
-    mutation.mutate(form)
+  // Скидання при закритті модалки будь-яким способом
+  // (фон, Escape): незбережені зміни відкидаються.
+  const discardEdit = () => setEditingId(null)
+  const discardCreate = () => {
+    setCreating(false)
+    setForm(empty)
+  }
+  // Редагування лишає модалку відкритою — повертаємось до перегляду.
+  const saveEdit = () => {
+    const title = cleanTitle(form.title)
+    if (!title || mutation.isPending) return
+    mutation.mutate(
+      { id: editingId, payload: { ...form, title, due_date: form.due_date || null } },
+      { onSuccess: () => setEditingId(null) },
+    )
+  }
+  // Створення закриває модалку — новий проєкт лишається у списку.
+  const saveCreate = (close) => {
+    const title = cleanTitle(form.title)
+    if (!title || mutation.isPending) return
+    mutation.mutate(
+      { id: null, payload: { ...form, title, due_date: form.due_date || null } },
+      { onSuccess: () => close() },
+    )
   }
 
   return (
@@ -314,26 +947,29 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
 
       {section.full && (
         <>
-          <input
-            type="search"
-            className={sharedStyles.wideSearch}
-            placeholder="Знайти проєкт…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Пошук проєкту"
-          />
+          <div className={sharedStyles.searchWrap}>
+            <SearchIcon className={sharedStyles.searchIcon} aria-hidden="true" />
+            <input
+              type="search"
+              className={sharedStyles.wideSearch}
+              placeholder="Знайти проєкт…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Пошук проєкту"
+            />
+          </div>
           <div className={styles.statusChips} role="group" aria-label="Фільтр за статусом">
-          {Object.entries(statusLabels).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={statusFilter === value}
-              className={`${styles.statusFilterChip} ${statusFilter === value ? styles.statusFilterChipActive : ''}`}
-              onClick={() => setStatusFilter((cur) => (cur === value ? null : value))}
-            >
-              {label}
-            </button>
-          ))}
+            {Object.entries(statusLabels).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={statusFilter === value}
+                className={`${styles.statusFilterChip} ${statusFilter === value ? styles.statusFilterChipActive : ''}`}
+                onClick={() => setStatusFilter((cur) => (cur === value ? null : cur))}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </>
       )}
@@ -343,155 +979,42 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
           section.full ? styles.projectListWide : ''
         }`}
       >
-        {visibleProjects.map((p) => {
-          const pStatus = calcStatus(p.todos_count ?? 0, p.todos_done ?? 0)
-          return (
-            <ExpandableCard
-              key={p.id}
-              clickOpens
-              showExpandBtn={false}
-              expandedContent={({ close }) => (
-                <ProjectDetails
-                  project={p}
-                  worldId={worldId}
-                  locations={locations}
-                  accent={accent}
-                  canEdit={canEdit}
-                  onClose={close}
-                  onEdit={() => openEdit(p)}
-                  onDelete={() => {
-                    deleteProject(p)
-                    close()
-                  }}
-                />
-              )}
-            >
-              <div className={styles.projectItem}>
-                <div className={styles.projectTitle}>
-                  <LocationBadgeText text={p.title} worldId={worldId} locations={locations} />
-                  <span
-                    className={styles.statusChip}
-                    style={{
-                      background: statusColors[pStatus] + '33',
-                      color: statusColors[pStatus],
-                    }}
-                  >
-                    {statusLabels[pStatus]}
-                  </span>
-                </div>
-                {p.description && (
-                  <div className={styles.projectDesc}>
-                    <LocationBadgeText text={p.description} worldId={worldId} locations={locations} small />
-                  </div>
-                )}
-                {(p.todos_count ?? 0) > 0 ? (
-                  <>
-                    <div className={styles.progressBar}>
-                      <div
-                        className={styles.progressFill}
-                        style={{ width: `${p.progress ?? 0}%` }}
-                      />
-                    </div>
-                    <div className={styles.progressText}>
-                      {p.todos_done ?? 0} із {p.todos_count ?? 0} завдань ({p.progress ?? 0}%)
-                    </div>
-                  </>
-                ) : (
-                  <div className={styles.progressText}>Завдань ще немає</div>
-                )}
-                <div className={styles.rowActions}>
-                  <RelationshipButton
-                    worldId={worldId}
-                    sourceType="project"
-                    sourceId={p.id}
-                    name={p.title}
-                    accent={accent}
-                  />
-                  {canEdit && (
-                    <>
-                      <IconButton
-                        size="small"
-                        aria-label="Редагувати проєкт"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          openEdit(p)
-                        }}
-                      >
-                        <EditOutlinedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        aria-label="Видалити проєкт"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          deleteProject(p)
-                        }}
-                      >
-                        <DeleteOutlinedIcon fontSize="small" />
-                      </IconButton>
-                    </>
-                  )}
-                </div>
-              </div>
-            </ExpandableCard>
-          )
-        })}
-        {visibleProjects.length === 0 && (
+        {canEdit && creating && (
+          <NewProjectCard
+            worldId={worldId}
+            accent={accent}
+            form={form}
+            setForm={setForm}
+            saving={mutation.isPending}
+            onSave={saveCreate}
+            onDiscard={discardCreate}
+          />
+        )}
+        {visibleProjects.map((p) => (
+          <ProjectItemCard
+            key={p.id}
+            project={p}
+            worldId={worldId}
+            locations={locations}
+            accent={accent}
+            canEdit={canEdit}
+            isEditing={editingId === p.id}
+            form={form}
+            setForm={setForm}
+            saving={mutation.isPending}
+            onEdit={openEdit}
+            onSave={saveEdit}
+            onCancelEdit={discardEdit}
+            onDelete={deleteProject}
+            onDiscardEdit={discardEdit}
+          />
+        ))}
+        {visibleProjects.length === 0 && !creating && (
           <p className={sharedStyles.emptyMsg}>
             {projects.length === 0 ? 'Проєктів ще немає. Створіть перший.' : 'Нічого не знайдено.'}
           </p>
         )}
       </div>
-
-      <Dialog
-        open={open}
-        onClose={() => !mutation.isPending && setOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        slotProps={{
-          paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
-        }}
-      >
-        <form onSubmit={submit}>
-          <DialogTitle>{editing ? 'Редагувати проєкт' : 'Новий проєкт'}</DialogTitle>
-          <DialogContent>
-            <div className={sharedStyles.formFields}>
-              <LocationRichTextEditor
-                worldId={worldId}
-                label="Назва"
-                value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                required
-                autoFocus
-              />
-              <LocationRichTextEditor
-                worldId={worldId}
-                label="Опис"
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                multiline
-                minRows={2}
-              />
-            </div>
-          </DialogContent>
-          <DialogActions className={sharedStyles.dialogActions}>
-            <Button
-              onClick={() => setOpen(false)}
-              className={sharedStyles.dialogBtnCancel}
-              disabled={mutation.isPending}
-            >
-              Скасувати
-            </Button>
-            <Button
-              type="submit"
-              className={sharedStyles.dialogBtnSubmit}
-              disabled={mutation.isPending}
-            >
-              Зберегти
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
     </div>
   )
 }

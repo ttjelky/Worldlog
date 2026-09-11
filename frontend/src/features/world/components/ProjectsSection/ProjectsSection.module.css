@@ -88,6 +88,10 @@
   .projectListWide {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .editorHint {
+    display: none;
+  }
 }
 
 .projectItem {
@@ -130,6 +134,18 @@
   font-size: 13px;
   color: rgba(255, 255, 255, 0.72);
   margin-top: 2px;
+}
+
+.draftTitle {
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+}
+
+.overdueText {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffb4ab;
+  margin-top: 4px;
 }
 
 .progressBar {
@@ -181,7 +197,7 @@
   height: auto;
   min-height: 100%;
   max-height: none;
-  padding-bottom: 80px;
+  padding-bottom: 24px;
 }
 
 .detailsClose {
@@ -235,6 +251,23 @@
   white-space: pre-wrap;
 }
 
+/* Дедлайн проєкту в шапці модалки */
+.dueChip {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.dueOverdue {
+  background: #b3261e;
+  color: #ffffff;
+}
+
 .detailsProgress {
   display: flex;
   flex-direction: column;
@@ -250,13 +283,27 @@
 }
 
 .detailsFooter {
-  position: fixed;
-  bottom: 24px;
-  right: 36px;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  /* Група дій завжди внизу модалки: при короткому контенті притискається
+     до низу, при довгому — липне до низу вікна й пливе над контентом. */
+  position: sticky;
+  bottom: 0;
   z-index: 2;
+  margin-top: auto;
+  padding-bottom: 4px;
+}
+
+.actionBtns {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 2px 6px;
+  box-shadow: 0 4px 16px rgba(13, 13, 15, 0.25);
 }
 
 .detailsFooter .actionBtn {
@@ -270,6 +317,126 @@
   background: rgba(255, 255, 255, 0.16) !important;
 }
 
+/* ---------- Inline-редактор проєкту (як у нотатках) ---------- */
+
+.editorForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.editorBody {
+  flex: 1;
+}
+
+.dueRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dueLabel {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dueInput {
+  color-scheme: dark;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 16px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 12px 16px;
+  outline: none;
+  transition: background 0.15s ease;
+}
+
+.dueInput:focus {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.dueClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dueClear:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.editorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.editorHint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.editorActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.cancelBtn {
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.saveBtn {
+  border: none;
+  background: #ffffff;
+  color: #1d1a22;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #e9e9e9;
+}
+
+.saveBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* ---------- Завдання ---------- */
 
 .todosSection {
@@ -281,69 +448,254 @@
 .todoAdd {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.todoInput {
+/* M3 Expressive: великі заливки замість бордерів */
+.quickInput {
   flex: 1;
+  min-width: 140px;
+  min-height: 48px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 12px 18px;
+  outline: none;
+  transition: background 0.15s ease;
 }
 
-.todoInput :global(.MuiOutlinedInput-root) {
-  border-radius: 12px !important;
-  background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
-  color: #ffffff !important;
-  font-size: 14px !important;
-  transition: border-color 150ms linear !important;
+.quickInput::placeholder {
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.todoInput :global(.MuiOutlinedInput-notchedOutline) {
-  display: none !important;
+.quickInput:focus {
+  background: rgba(255, 255, 255, 0.18);
 }
 
-.todoInput :global(.MuiOutlinedInput-root:hover) {
-  border-color: rgba(255, 255, 255, 0.6) !important;
+.priorityCycle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
 }
 
-.todoInput :global(.MuiOutlinedInput-root.Mui-focused) {
-  border-color: #ffffff !important;
-  border-width: 2px !important;
-  margin: -1px !important;
+.priorityCycle:hover {
+  background: rgba(255, 255, 255, 0.22);
 }
 
-.todoInput :global(.MuiInputBase-input) {
-  padding: 10px 14px !important;
+.priorityDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.todoInput :global(.MuiInputBase-input::placeholder) {
-  color: rgba(255, 255, 255, 0.45) !important;
-  opacity: 1 !important;
+.quickDue {
+  height: 48px;
+  box-sizing: border-box;
+  color-scheme: dark;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 0 16px;
+  outline: none;
+  transition: background 0.15s ease;
 }
 
-.todoInput :global(.MuiInputLabel-root) {
-  color: rgba(255, 255, 255, 0.6) !important;
-}
-
-.todoInput :global(.MuiInputLabel-root.Mui-focused) {
-  color: #ffffff !important;
+.quickDue:focus {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .todoAddBtn {
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.16) !important;
-  border-radius: 12px !important;
-  width: 40px !important;
-  height: 40px !important;
+  border-radius: 50% !important;
+  width: 48px !important;
+  height: 48px !important;
 }
 
 .todoAddBtn:hover {
   background: rgba(255, 255, 255, 0.26) !important;
 }
 
+/* Панель масових дій і пошуку завдань */
+.todoTools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.toolSearch {
+  flex: 1;
+  min-width: 120px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 16px;
+  outline: none;
+  transition: background 0.15s ease;
+}
+
+.toolSearch::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.toolSearch:focus {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.toolSearchWrap {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 120px;
+}
+
+.toolSearchWrap > .toolSearch {
+  flex: 1;
+  min-width: 0;
+  padding-left: 38px;
+}
+
+.toolBtn {
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 10px 18px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.toolBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.toolBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Кнопка «видалити виконані» — як у todo-картці */
+.filterBtnDeleteDone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: #c0392b;
+  background: #ffffff;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+  animation: deleteDoneIn 0.15s ease-out;
+}
+
+@keyframes deleteDoneIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filterBtnDeleteDone {
+    animation: none;
+  }
+}
+
+.filterBtnDeleteDone:hover {
+  background: #ffe3e0;
+  color: #a93226;
+}
+
+.filterBtnDeleteDone:hover .deleteDoneCheck {
+  background-color: #ffe3e0;
+}
+
+.deleteDoneIcon {
+  position: relative;
+  display: inline-flex;
+  line-height: 0;
+}
+
+.deleteDoneIcon :global(.MuiSvgIcon-root) {
+  font-size: 20px;
+}
+
+.deleteDoneCheck:global(.MuiSvgIcon-root) {
+  position: absolute;
+  right: -3px;
+  bottom: 0;
+  font-size: 13px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  padding: 1px;
+  stroke: currentColor;
+  stroke-width: 2px;
+  transition: background-color 0.15s ease;
+}
+
+.filterBtnDeleteDone:active {
+  transform: scale(0.96);
+}
+
 .todoList {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Повноекранна модалка проєкту: завдання в дві колонки */
+.todoListTwoCol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+
+@media (max-width: 640px) {
+  .todoListTwoCol {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .todoItem {
@@ -360,6 +712,26 @@
 
 .todoItem:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+.todoDragging {
+  opacity: 0.4;
+}
+
+.todoDragOver {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 2px;
+}
+
+.dragHandle {
+  flex-shrink: 0;
+  font-size: 18px !important;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: grab;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
 }
 
 .todoItemDone {
@@ -386,12 +758,46 @@
 }
 
 .todoTitle {
-  flex: 1;
   font-family: inherit;
   font-size: 18px;
   font-weight: 600;
   color: #ffffff;
   min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.todoMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.todoMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.miniChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.miniDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .todoDelete {

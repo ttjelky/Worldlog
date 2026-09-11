@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
-from django.db import IntegrityError
-from django.db.models import Count, Prefetch, Q
+from django.db import IntegrityError, transaction
+from django.db.models import Count, Min, Prefetch, Q
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -229,6 +229,41 @@ class LocationScreenshotViewSet(viewsets.ModelViewSet):
 class TodoViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = TodoItem.objects.all()
     serializer_class = TodoItemSerializer
+
+    def perform_create(self, serializer):
+        world_id = self.kwargs['world_id']
+        if not World.objects.filter(pk=world_id).exists():
+            raise NotFound('World not found.')
+        project = serializer.validated_data.get('project')
+        if project is not None and not serializer.validated_data.get('order'):
+            # Нові завдання проєкту стають нагору (менший order — вище).
+            min_order = (
+                TodoItem.objects.filter(world_id=world_id, project=project)
+                .aggregate(m=Min('order'))['m']
+            )
+            serializer.save(
+                world_id=world_id,
+                order=(min_order - 1) if min_order is not None else 0,
+            )
+        else:
+            serializer.save(world_id=world_id)
+
+    @action(detail=False, methods=['post'], url_path='reorder')
+    def reorder(self, request, world_id=None):
+        """Переставити завдання: {project: id, ids: [...] зверху вниз}."""
+        ids = request.data.get('ids')
+        project_id = request.data.get('project')
+        if not isinstance(ids, list) or not ids:
+            raise ValidationError('Поле ids має бути непорожнім списком.')
+        todos = list(TodoItem.objects.filter(world_id=world_id, id__in=ids))
+        if len(todos) != len(set(ids)):
+            raise ValidationError('Знайдено не всі завдання.')
+        if project_id is not None and any(t.project_id != project_id for t in todos):
+            raise ValidationError('Усі завдання мають належати одному проєкту.')
+        with transaction.atomic():
+            for index, todo_id in enumerate(ids):
+                TodoItem.objects.filter(pk=todo_id).update(order=index)
+        return Response({'ok': True, 'ids': ids})
 
 
 class HistoryEventViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
