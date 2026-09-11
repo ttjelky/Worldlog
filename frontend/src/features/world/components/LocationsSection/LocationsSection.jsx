@@ -24,6 +24,7 @@ import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import RelationshipList from '../shared/RelationshipList'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
+import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import styles from './LocationsSection.module.css'
 
 const categories = [
@@ -159,11 +160,246 @@ function LocationDetails({
   )
 }
 
+const cleanName = (value) => value.replace(/\s*\n+\s*/g, ' ').trim()
+
+const nameTextStyle = {
+  fontSize: 'clamp(24px, 4vw, 36px)',
+  fontWeight: 500,
+  letterSpacing: '-0.03em',
+  lineHeight: 1.15,
+  color: '#ffffff',
+}
+
+const descTextStyle = {
+  fontSize: '15px',
+  lineHeight: 1.55,
+  color: 'rgba(255, 255, 255, 0.85)',
+}
+
+// Inline-редактор нової локації в дусі нотаток/гравців: назва, категорія,
+// координати, опис і фото пишуться прямо в модалці чернетки.
+function LocationEditor({
+  worldId,
+  accent,
+  form,
+  setForm,
+  saving,
+  pendingPhoto,
+  onPickPhoto,
+  onClearPhoto,
+  onSave,
+  onCancel,
+}) {
+  const fileRef = useRef(null)
+  const coordRefs = useRef({})
+  const canSave = cleanName(form.name).length > 0 && !saving
+  const submit = (e) => {
+    e.preventDefault()
+    if (canSave) onSave()
+  }
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      if (canSave) onSave()
+    }
+  }
+  const clearZero = (c) => {
+    if (form[c] === 0 || form[c] === '0') setForm((f) => ({ ...f, [c]: '' }))
+  }
+  const coordKey = (e, i) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    if (i < COORD_KEYS.length - 1) coordRefs.current[COORD_KEYS[i + 1]]?.focus()
+    else if (canSave) onSave()
+  }
+
+  return (
+    <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
+      <form onSubmit={submit} onKeyDown={onKeyDown} className={styles.editorForm}>
+        <div className={styles.detailsHead}>
+          <LocationRichTextEditor
+            bare
+            dark
+            worldId={worldId}
+            label="Назва локації"
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            autoFocus
+            placeholder="Назва"
+            editableStyle={nameTextStyle}
+          />
+        </div>
+
+        <div className={styles.catPickRow} role="group" aria-label="Категорія">
+          {categories.map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={form.category === v}
+              className={`${styles.catChip} ${form.category === v ? styles.catChipActive : ''}`}
+              onClick={() => setForm((f) => ({ ...f, category: v }))}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.editorCoords}>
+          {COORD_KEYS.map((c, i) => (
+            <label key={c} className={styles.coordBox}>
+              <span className={styles.coordLabel}>{c.toUpperCase()}</span>
+              <input
+                ref={(el) => {
+                  coordRefs.current[c] = el
+                }}
+                type="number"
+                className={styles.coordInput}
+                value={form[c]}
+                onChange={(e) => setForm((f) => ({ ...f, [c]: e.target.value }))}
+                onFocus={() => clearZero(c)}
+                onKeyDown={(e) => coordKey(e, i)}
+                aria-label={`Координата ${c.toUpperCase()}`}
+              />
+            </label>
+          ))}
+        </div>
+
+        <div className={styles.editorBody}>
+          <LocationRichTextEditor
+            bare
+            dark
+            worldId={worldId}
+            label="Опис локації"
+            value={form.description}
+            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            multiline
+            minRows={3}
+            placeholder="Опис…"
+            editableStyle={descTextStyle}
+          />
+        </div>
+
+        <div className={styles.photoRow}>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            hidden
+            aria-label="Обрати фото"
+            onChange={onPickPhoto}
+          />
+          {pendingPhoto ? (
+            <div className={styles.attachPreviews}>
+              <div className={styles.attachPreview}>
+                <img src={pendingPhoto.url} alt="" />
+                <IconButton
+                  size="small"
+                  className={styles.attachRemove}
+                  aria-label="Прибрати фото"
+                  onClick={onClearPhoto}
+                >
+                  <CloseIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={styles.photoBtn}
+              onClick={() => fileRef.current?.click()}
+            >
+              <AddPhotoAlternateOutlinedIcon fontSize="small" />
+              Додати фото
+            </button>
+          )}
+        </div>
+
+        <div className={styles.editorFooter}>
+          <span className={styles.editorHint}>Ctrl + Enter — створити</span>
+          <span className={styles.editorActions}>
+            <button type="button" className={styles.cancelBtn} onClick={onCancel}>
+              Скасувати
+            </button>
+            <button type="submit" className={styles.saveBtn} disabled={!canSave}>
+              {saving ? 'Створення…' : 'Створити'}
+            </button>
+          </span>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+// Відкриває власну модалку одразу після монтування —
+// чернетка нової локації масштабується з місця у списку.
+function AutoOpen() {
+  const { open } = useExpandableCard()
+  useEffect(() => {
+    open()
+  }, [open])
+  return null
+}
+
+function NewLocationCard({
+  worldId,
+  accent,
+  form,
+  setForm,
+  saving,
+  pendingPhoto,
+  onPickPhoto,
+  onClearPhoto,
+  onSave,
+  onDiscard,
+}) {
+  const draftName = cleanName(form.name)
+
+  return (
+    <ExpandableCard
+      showExpandBtn={false}
+      onClose={onDiscard}
+      expandedContent={({ close }) => (
+        <LocationEditor
+          worldId={worldId}
+          accent={accent}
+          form={form}
+          setForm={setForm}
+          saving={saving}
+          pendingPhoto={pendingPhoto}
+          onPickPhoto={onPickPhoto}
+          onClearPhoto={onClearPhoto}
+          onSave={() => onSave(close)}
+          onCancel={close}
+        />
+      )}
+    >
+      <AutoOpen />
+      <article className={styles.locTile}>
+        <div className={styles.locThumbArea}>
+          {pendingPhoto ? (
+            <img className={styles.locThumb} src={pendingPhoto.url} alt="" />
+          ) : (
+            <div className={styles.locThumbPlaceholder}>
+              <PhotoCameraOutlinedIcon />
+            </div>
+          )}
+        </div>
+        <div className={styles.locBody}>
+          <div className={`${styles.locName} ${draftName ? '' : styles.draftName}`}>
+            {draftName || 'Нова локація…'}
+          </div>
+        </div>
+      </article>
+    </ExpandableCard>
+  )
+}
+
 export default function LocationsSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [creating, setCreating] = useState(false)
   const [form, setForm] = useState(empty)
   const [pendingPhoto, setPendingPhoto] = useState(null)
   const [pos, setPos] = useState(1)
@@ -438,7 +674,31 @@ export default function LocationsSection({ worldId, accent, userRole }) {
     setEditing(null)
     setForm(empty)
     setPendingPhoto(null)
-    setOpen(true)
+    setCreating(true)
+  }
+  const discardCreate = () => {
+    setCreating(false)
+    setForm(empty)
+    setPendingPhoto(null)
+  }
+  const saveCreate = async (close) => {
+    const name = cleanName(form.name)
+    if (!name || mutation.isPending || uploadPhotos.isPending) return
+    try {
+      const res = await mutation.mutateAsync({
+        name,
+        description: form.description || '',
+        category: form.category,
+        x: Number(form.x) || 0,
+        y: Number(form.y) || 0,
+        z: Number(form.z) || 0,
+      })
+      if (pendingPhoto) {
+        await uploadPhotos.mutateAsync({ locationId: res.data.id, files: [pendingPhoto.file] })
+      }
+      discardCreate()
+      close()
+    } catch {}
   }
   const openEdit = (l) => {
     setEditing(l)
@@ -553,6 +813,20 @@ export default function LocationsSection({ worldId, accent, userRole }) {
             : `${styles.locGrid} ${styles.gridFull} ${section.full ? styles.locGridWide : ''}`
         }`}
       >
+        {canEdit && creating && (
+          <NewLocationCard
+            worldId={worldId}
+            accent={accent}
+            form={form}
+            setForm={setForm}
+            saving={mutation.isPending || uploadPhotos.isPending}
+            pendingPhoto={pendingPhoto}
+            onPickPhoto={addPendingPhoto}
+            onClearPhoto={() => setPendingPhoto(null)}
+            onSave={saveCreate}
+            onDiscard={discardCreate}
+          />
+        )}
         {isCarousel ? (
           <div className={styles.carouselViewport}>
             <div
@@ -613,7 +887,7 @@ export default function LocationsSection({ worldId, accent, userRole }) {
         }}
       >
         <form onSubmit={submit} ref={formRef}>
-          <DialogTitle>{editing ? 'Редагувати локацію' : 'Нова локація'}</DialogTitle>
+          <DialogTitle>Редагувати локацію</DialogTitle>
           <DialogContent>
             <div className={sharedStyles.formFields}>
               <div className={styles.titleRow}>

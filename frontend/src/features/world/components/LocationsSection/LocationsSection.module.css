@@ -546,3 +546,157 @@
   background: rgba(255, 255, 255, 0.5) !important;
   color: var(--accent) !important;
 }
+
+/* ---------- Inline-редактор нової локації (як у нотатках) ---------- */
+
+.editorForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.editorBody {
+  flex: 1;
+}
+
+.draftName {
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+}
+
+.catPickRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.editorCoords {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.coordBox {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.coordLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.coordInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  color-scheme: dark;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 14px;
+  outline: none;
+  transition: background 0.15s ease;
+}
+
+.coordInput:focus {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.photoRow {
+  display: flex;
+  align-items: center;
+}
+
+.photoBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.photoBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.editorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.editorHint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.editorActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.cancelBtn {
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.saveBtn {
+  border: none;
+  background: #ffffff;
+  color: #1d1a22;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #e9e9e9;
+}
+
+.saveBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  .editorHint {
+    display: none;
+  }
+}
