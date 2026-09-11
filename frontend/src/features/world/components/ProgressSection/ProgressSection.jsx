@@ -4,28 +4,19 @@ import sharedStyles from '../shared/section.module.css'
 import { useExpandableCard } from '../shared/ExpandableCard'
 import styles from './ProgressSection.module.css'
 
-function useCount(url, worldId, queryKey, enabled = true) {
-  const { data, isLoading } = useQuery({
-    queryKey: [queryKey, String(worldId)],
-    queryFn: () => api.get(url).then((r) => r.data),
-    enabled,
-  })
-  return { count: Array.isArray(data) ? data.length : 0, loading: isLoading }
-}
+const TILE_COUNT = 9
 
 export default function ProgressSection({ worldId, accent }) {
   const section = useExpandableCard()
-  const { data: world, isLoading: worldLoading } = useQuery({
+  const {
+    data: world,
+    isLoading: worldLoading,
+    isError: worldError,
+  } = useQuery({
     queryKey: ['world', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/`).then((r) => r.data),
   })
-
-  const notes = useCount(`/worlds/${worldId}/notes/`, worldId, 'notes')
-  const projects = useCount(`/worlds/${worldId}/projects/`, worldId, 'projects')
-  const bookmarks = useCount(`/worlds/${worldId}/bookmarks/`, worldId, 'bookmarks')
-  const ideas = useCount(`/worlds/${worldId}/ideas/`, worldId, 'ideas')
-  const wiki = useCount(`/worlds/${worldId}/wiki/`, worldId, 'wiki')
-
+  // Усі лічильники вже є в annotate світу — окремих запитів не треба.
   const players = world?.players_count ?? 0
   const locations = world?.locations_count ?? 0
   const todosDone = world?.todos_done ?? 0
@@ -33,19 +24,18 @@ export default function ProgressSection({ worldId, accent }) {
   const history = world?.history_count ?? 0
   const todosPct = todosTotal ? Math.round((todosDone / todosTotal) * 100) : 0
 
-  const loading =
-    worldLoading || notes.loading || projects.loading || bookmarks.loading || ideas.loading || wiki.loading
+  const loading = worldLoading
 
   const stats = [
     { value: players, label: 'Гравці' },
     { value: locations, label: 'Локації' },
     { value: `${todosDone}/${todosTotal}`, label: 'Завдання', bar: todosPct },
     { value: history, label: 'Події' },
-    { value: notes.count, label: 'Нотатки' },
-    { value: projects.count, label: 'Проєкти' },
-    { value: bookmarks.count, label: 'Закладки' },
-    { value: ideas.count, label: 'Ідеї' },
-    { value: wiki.count, label: 'Wiki-сторінки' },
+    { value: world?.notes_count ?? 0, label: 'Нотатки' },
+    { value: world?.projects_count ?? 0, label: 'Проєкти' },
+    { value: world?.bookmarks_count ?? 0, label: 'Закладки' },
+    { value: world?.ideas_count ?? 0, label: 'Ідеї' },
+    { value: world?.wiki_count ?? 0, label: 'Wiki-сторінки' },
   ]
 
   return (
@@ -57,10 +47,12 @@ export default function ProgressSection({ worldId, accent }) {
       <div className={sharedStyles.body}>
         {loading ? (
           <div className={styles.statsGrid} aria-hidden="true">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: TILE_COUNT }).map((_, i) => (
               <div key={i} className={`${styles.statTile} ${styles.statSkeleton}`} />
             ))}
           </div>
+        ) : worldError ? (
+          <p className={sharedStyles.emptyMsg}>Не вдалося завантажити статистику.</p>
         ) : (
           <div
             className={`${styles.statsGrid} ${section.full ? styles.statsGridWide : ''}`}

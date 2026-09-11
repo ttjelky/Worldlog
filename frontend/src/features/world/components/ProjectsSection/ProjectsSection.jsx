@@ -877,7 +877,10 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
       id
         ? api.patch(`/worlds/${worldId}/projects/${id}/`, payload)
         : api.post(`/worlds/${worldId}/projects/`, payload),
-    onSuccess: () => qc.invalidateQueries(['projects', String(worldId)]),
+    onSuccess: () => {
+      qc.invalidateQueries(['projects', String(worldId)])
+      qc.invalidateQueries(['world', String(worldId)])
+    },
   })
 
   const undo = useUndo()

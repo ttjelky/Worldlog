@@ -631,7 +631,10 @@ export default function LocationsSection({ worldId, accent, userRole }) {
       editing
         ? api.patch(`/worlds/${worldId}/locations/${editing.id}/`, payload)
         : api.post(`/worlds/${worldId}/locations/`, payload),
-    onSuccess: () => qc.invalidateQueries(['locations', String(worldId)]),
+    onSuccess: () => {
+      qc.invalidateQueries(['locations', String(worldId)])
+      qc.invalidateQueries(['world', String(worldId)])
+    },
   })
   const undo = useUndo()
   const deleteLocation = (l) =>

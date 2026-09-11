@@ -238,6 +238,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
       const saved = res?.data
       if (saved && editingPage && selectedPage?.id === editingPage.id) setSelectedPage(saved)
       qc.invalidateQueries(['wiki', String(worldId)])
+      qc.invalidateQueries(['world', String(worldId)])
       setDialogOpen(false)
       setEditingPage(null)
       setForm(empty)

@@ -432,7 +432,10 @@ export default function NotesSection({ worldId, accent, userRole }) {
       id
         ? api.patch(`/worlds/${worldId}/notes/${id}/`, payload)
         : api.post(`/worlds/${worldId}/notes/`, payload),
-    onSuccess: () => qc.invalidateQueries(['notes', String(worldId)]),
+    onSuccess: () => {
+      qc.invalidateQueries(['notes', String(worldId)])
+      qc.invalidateQueries(['world', String(worldId)])
+    },
   })
 
   const undo = useUndo()

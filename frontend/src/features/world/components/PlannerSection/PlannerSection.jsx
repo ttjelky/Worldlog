@@ -134,7 +134,10 @@ export default function PlannerSection({ worldId, accent, userRole }) {
       editing
         ? api.patch(`/worlds/${worldId}/todos/${editing.id}/`, payload)
         : api.post(`/worlds/${worldId}/todos/`, payload),
-    onSuccess: () => qc.invalidateQueries(['todos', String(worldId)]),
+    onSuccess: () => {
+      qc.invalidateQueries(['todos', String(worldId)])
+      qc.invalidateQueries(['world', String(worldId)])
+    },
   })
 
   const toggle = useMutation({
@@ -149,7 +152,10 @@ export default function PlannerSection({ worldId, accent, userRole }) {
       return { prev }
     },
     onError: (_err, _todo, ctx) => qc.setQueryData(['todos', String(worldId)], ctx.prev),
-    onSettled: () => qc.invalidateQueries(['todos', String(worldId)]),
+    onSettled: () => {
+      qc.invalidateQueries(['todos', String(worldId)])
+      qc.invalidateQueries(['world', String(worldId)])
+    },
   })
 
   const undo = useUndo()

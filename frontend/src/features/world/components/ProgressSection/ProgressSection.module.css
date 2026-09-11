@@ -75,3 +75,9 @@
     animation: none;
   }
 }
+
+@media (max-width: 640px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

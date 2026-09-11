@@ -128,6 +128,7 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
         : api.post(`/worlds/${worldId}/bookmarks/`, payload),
     onSuccess: () => {
       qc.invalidateQueries(['bookmarks', String(worldId)])
+      qc.invalidateQueries(['world', String(worldId)])
     },
   })
   const undo = useUndo()
