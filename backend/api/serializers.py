@@ -237,11 +237,35 @@ class LocationSerializer(serializers.ModelSerializer):
 
 class PlayerSerializer(serializers.ModelSerializer):
     avatar = AbsoluteURLImageField(required=False, allow_null=True)
+    avatar_clear = serializers.BooleanField(write_only=True, required=False)
 
     class Meta:
         model = Player
-        fields = ('id', 'world', 'nickname', 'role_note', 'status', 'avatar', 'created_at')
+        fields = (
+            'id',
+            'world',
+            'nickname',
+            'role_note',
+            'status',
+            'avatar',
+            'avatar_clear',
+            'created_at',
+        )
         read_only_fields = ('world', 'created_at')
+
+    def create(self, validated_data):
+        validated_data.pop('avatar_clear', None)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if validated_data.pop('avatar_clear', False):
+            if instance.avatar:
+                instance.avatar.delete(save=False)
+            instance.avatar = None
+        if validated_data.get('avatar') and instance.avatar:
+            # Заміна файлу: старий видаляємо, щоб не лишались сироти.
+            instance.avatar.delete(save=False)
+        return super().update(instance, validated_data)
 
 
 class TodoItemSerializer(serializers.ModelSerializer):

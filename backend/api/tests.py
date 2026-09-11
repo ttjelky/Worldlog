@@ -2,6 +2,9 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
+import shutil
+import tempfile
+from django.core.files.uploadedfile import SimpleUploadedFile
 @override_settings(
     ALLOWED_HOSTS=['testserver'],
     REST_FRAMEWORK={
@@ -856,3 +859,94 @@ class ProjectTodoTests(TestCase):
             {'project': None, 'ids': [lone.pk, mine.pk]}, format='json'
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+GIF_1PX = (
+    b'GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff'
+    b'!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+)
+
+
+@override_settings(
+    ALLOWED_HOSTS=['testserver'],
+    REST_FRAMEWORK={
+        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
+        'DEFAULT_THROTTLE_CLASSES': [],
+        'DEFAULT_THROTTLE_RATES': {},
+    },
+)
+class PlayerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='playeruser', email='player@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.user.worlds.create(name='Світ')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        self._tmp_media = tempfile.mkdtemp()
+        self._media_override = override_settings(MEDIA_ROOT=self._tmp_media)
+        self._media_override.enable()
+
+    def tearDown(self):
+        self._media_override.disable()
+        shutil.rmtree(self._tmp_media, ignore_errors=True)
+
+    def url(self, path=''):
+        return '/api/worlds/{}/players/{}'.format(self.world.pk, path)
+
+    def test_player_status_roundtrip(self):
+        resp = self.client.post(
+            self.url(), {'nickname': 'Грім', 'status': 'dead'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['status'], 'dead')
+        pk = resp.data['id']
+
+        resp = self.client.patch(self.url('{}/'.format(pk)), {'status': 'missing'}, format='json')
+        self.assertEqual(resp.data['status'], 'missing')
+
+        resp = self.client.post(self.url(), {'nickname': 'Зоря'}, format='json')
+        self.assertEqual(resp.data['status'], 'alive')
+
+        resp = self.client.post(
+            self.url(), {'nickname': 'Х', 'status': 'zombie'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_avatar_clear_removes_file(self):
+        avatar = SimpleUploadedFile('hero.gif', GIF_1PX, content_type='image/gif')
+        resp = self.client.post(
+            self.url(), {'nickname': 'Грім', 'avatar': avatar}, format='multipart'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(resp.data['avatar'])
+        pk = resp.data['id']
+
+        from api.models import Player
+        stored = Player.objects.get(pk=pk).avatar.name
+        resp = self.client.patch(
+            self.url('{}/'.format(pk)), {'avatar_clear': 'true'}, format='multipart'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIsNone(resp.data['avatar'])
+        player = Player.objects.get(pk=pk)
+        self.assertFalse(bool(player.avatar))
+        import os
+        self.assertFalse(os.path.exists(os.path.join(self._tmp_media, stored)))
+
+    def test_avatar_replace_removes_old_file(self):
+        first = SimpleUploadedFile('first.gif', GIF_1PX, content_type='image/gif')
+        resp = self.client.post(
+            self.url(), {'nickname': 'Грім', 'avatar': first}, format='multipart'
+        )
+        pk = resp.data['id']
+        from api.models import Player
+        old_name = Player.objects.get(pk=pk).avatar.name
+
+        second = SimpleUploadedFile('second.gif', GIF_1PX, content_type='image/gif')
+        resp = self.client.patch(
+            self.url('{}/'.format(pk)), {'avatar': second}, format='multipart'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        import os
+        self.assertFalse(os.path.exists(os.path.join(self._tmp_media, old_name)))
