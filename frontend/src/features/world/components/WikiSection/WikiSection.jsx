@@ -364,8 +364,10 @@ export default function WikiSection({ worldId, accent, userRole }) {
   }, [pages, section])
 
   const toggleType = (value) =>
-    setActiveTypes((cur) =>
-      cur.includes(value) ? cur.filter((t) => t !== value) : [...cur, value],
+    setActiveTypes(
+      activeTypes.includes(value)
+        ? activeTypes.filter((t) => t !== value)
+        : [...activeTypes, value],
     )
 
   const hasActiveFilters = activeTypes.length > 0 || search.trim() !== ''

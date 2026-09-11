@@ -39,6 +39,21 @@
   text-decoration: line-through;
 }
 
+.todoDragging {
+  opacity: 0.4;
+}
+
+.dragHandle {
+  flex-shrink: 0;
+  font-size: 18px !important;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: grab;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
 .todoItemOverdue {
   border-left: 3px solid rgba(255, 138, 128, 0.8);
 }
@@ -345,6 +360,12 @@
 
 .calSelected:hover {
   background: rgba(255, 255, 255, 0.36);
+}
+
+.calDropOver {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 1px;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .filterBtnDeleteDone {

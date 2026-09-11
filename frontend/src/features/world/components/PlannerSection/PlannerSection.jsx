@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useLayoutEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
@@ -16,6 +16,7 @@ import CheckIcon from '@mui/icons-material/Check'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import api from '../../../../api'
@@ -61,6 +62,15 @@ export default function PlannerSection({ worldId, accent, userRole }) {
   const [filter, setFilter] = useState(null)
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
   const canEdit = !userRole || userRole !== 'viewer'
+  // Перетягування задачі на день календаря змінює її дедлайн.
+  // Календар є лише в модалці — там і вмикаємо DnD.
+  const dndOn = canEdit && section.modal
+  const [dragId, setDragId] = useState(null)
+  const [overDate, setOverDate] = useState(null)
+  const flipSnapshotRef = useRef(null)
+
+  const todosKey = ['todos', String(worldId)]
+  const worldKey = ['world', String(worldId)]
 
   const { data: todos = [] } = useQuery({
     queryKey: ['todos', String(worldId)],
@@ -101,7 +111,7 @@ export default function PlannerSection({ worldId, accent, userRole }) {
   const localToday = toISODate(new Date())
 
   const pickDay = (iso) => {
-    setFilter((cur) => (cur === iso ? null : iso))
+    setFilter(filter === iso ? null : iso)
     if (iso) setMonth(startOfMonth(new Date(`${iso}T12:00:00`)))
   }
 
@@ -148,6 +158,86 @@ export default function PlannerSection({ worldId, accent, userRole }) {
 
   const deleteDone = () => {
     planned.filter((t) => t.is_done).forEach(deleteTodo)
+  }
+
+  const snapshotPlannerRects = () => {
+    const snapshot = {}
+    planned.forEach((t) => {
+      const el = document.getElementById(`planner-slot-${t.id}`)
+      if (el) snapshot[t.id] = el.getBoundingClientRect()
+    })
+    flipSnapshotRef.current = snapshot
+  }
+
+  // FLIP-анімація як у проєкті: після зміни дати рядок плавно
+  // перелітає на нове місце (або зникає з-під фільтра дня).
+  useLayoutEffect(() => {
+    const snapshot = flipSnapshotRef.current
+    if (!snapshot) return
+    flipSnapshotRef.current = null
+    const moves = []
+    Object.keys(snapshot).forEach((key) => {
+      const el = document.getElementById(`planner-slot-${key}`)
+      if (!el) return
+      const before = snapshot[key]
+      const after = el.getBoundingClientRect()
+      const dx = before.left - after.left
+      const dy = before.top - after.top
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return
+      moves.push({ el, dx, dy })
+    })
+    if (moves.length === 0) return
+    moves.forEach(({ el, dx, dy }) => {
+      el.style.willChange = 'transform'
+      el.style.transition = 'none'
+      el.style.transform = `translate(${dx}px, ${dy}px)`
+    })
+    // eslint-disable-next-line no-unused-expressions
+    document.body.offsetHeight
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        moves.forEach(({ el }) => {
+          el.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          el.style.transform = ''
+          const cleanup = () => {
+            el.style.transition = ''
+            el.style.willChange = ''
+            el.removeEventListener('transitionend', cleanup)
+          }
+          el.addEventListener('transitionend', cleanup)
+        })
+      })
+    })
+  }, [todos])
+
+  const reschedule = async (id, iso) => {
+    const t = todos.find((x) => x.id === id)
+    if (!t || t.due_date === iso) return
+    snapshotPlannerRects()
+    const prev = qc.getQueryData(todosKey)
+    qc.setQueryData(todosKey, (old) =>
+      (old ?? []).map((x) => (x.id === id ? { ...x, due_date: iso } : x)),
+    )
+    try {
+      await api.patch(`/worlds/${worldId}/todos/${id}/`, { due_date: iso })
+    } catch {
+      if (prev) qc.setQueryData(todosKey, prev)
+    } finally {
+      qc.invalidateQueries(todosKey)
+      qc.invalidateQueries(worldKey)
+    }
+  }
+
+  const onTaskDragStart = (e, id) => {
+    if (!dndOn) return
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(id))
+    requestAnimationFrame(() => setDragId(id))
+  }
+
+  const clearTaskDrag = () => {
+    setDragId(null)
+    setOverDate(null)
   }
 
   const openNew = () => {
@@ -218,8 +308,31 @@ export default function PlannerSection({ worldId, accent, userRole }) {
               type="button"
               className={`${styles.calDay} ${iso === localToday ? styles.calToday : ''} ${
                 filter === iso ? styles.calSelected : ''
-              } ${count > 0 ? styles.calHasTodos : ''}`}
+              } ${count > 0 ? styles.calHasTodos : ''} ${
+                overDate === iso ? styles.calDropOver : ''
+              }`}
               onClick={() => pickDay(iso)}
+              onDragOver={
+                dndOn
+                  ? (e) => {
+                      e.preventDefault()
+                      e.dataTransfer.dropEffect = 'move'
+                      setOverDate(iso)
+                    }
+                  : undefined
+              }
+              onDragLeave={
+                dndOn ? () => setOverDate((cur) => (cur === iso ? null : cur)) : undefined
+              }
+              onDrop={
+                dndOn
+                  ? (e) => {
+                      e.preventDefault()
+                      if (dragId != null) reschedule(dragId, iso)
+                      clearTaskDrag()
+                    }
+                  : undefined
+              }
               aria-pressed={filter === iso}
               aria-label={`${iso}, завдань: ${count}`}
             >
@@ -294,9 +407,18 @@ export default function PlannerSection({ worldId, accent, userRole }) {
           return (
             <div
               key={t.id}
-              className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''} ${isOverdue ? styles.todoItemOverdue : ''}`}
+              id={`planner-slot-${t.id}`}
+              className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''} ${isOverdue ? styles.todoItemOverdue : ''} ${
+                dragId === t.id ? styles.todoDragging : ''
+              }`}
+              draggable={dndOn}
+              onDragStart={dndOn ? (e) => onTaskDragStart(e, t.id) : undefined}
+              onDragEnd={clearTaskDrag}
               onClick={canEdit ? () => toggle.mutate(t) : undefined}
             >
+              {dndOn && (
+                <DragIndicatorIcon className={styles.dragHandle} aria-hidden="true" />
+              )}
               <Checkbox
                 className={styles.todoCheckbox}
                 checked={t.is_done}

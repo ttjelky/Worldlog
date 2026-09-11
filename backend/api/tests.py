@@ -829,3 +829,30 @@ class ProjectTodoTests(TestCase):
             {'project': self.project.pk, 'ids': [mine.pk, alien.pk]}, format='json'
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unassigned_todos_order_and_reorder(self):
+        first = self.client.post(
+            self.todos_url(), {'title': 'Перше'}, format='json'
+        ).data
+        second = self.client.post(
+            self.todos_url(), {'title': 'Друге'}, format='json'
+        ).data
+        self.assertLess(second['order'], first['order'])
+        resp = self.client.post(
+            self.todos_url('reorder/'),
+            {'project': None, 'ids': [first['id'], second['id']]}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        orders = {
+            t.pk: t.order for t in self.world.todos.filter(project__isnull=True)
+        }
+        self.assertLess(orders[first['id']], orders[second['id']])
+
+    def test_reorder_rejects_mixed_project_todos(self):
+        lone = self.world.todos.create(title='Без проєкту')
+        mine = self.world.todos.create(title='Моє', project=self.project)
+        resp = self.client.post(
+            self.todos_url('reorder/'),
+            {'project': None, 'ids': [lone.pk, mine.pk]}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

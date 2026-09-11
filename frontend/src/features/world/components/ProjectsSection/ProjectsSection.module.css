@@ -29,6 +29,7 @@
   border: none;
   border-radius: 999px;
   padding: 5px 14px;
+  margin-left: 12px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -127,7 +128,7 @@
   border-radius: 999px;
   white-space: nowrap;
   vertical-align: middle;
-  margin-left: 6px;
+  margin-left: 12px;
 }
 
 .projectDesc {

@@ -79,6 +79,26 @@
   text-decoration: line-through;
 }
 
+.todoDragging {
+  opacity: 0.4;
+}
+
+.todoDragOver {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 2px;
+}
+
+.dragHandle {
+  flex-shrink: 0;
+  font-size: 18px !important;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: grab;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
 .todoCheckbox {
   flex-shrink: 0;
 }

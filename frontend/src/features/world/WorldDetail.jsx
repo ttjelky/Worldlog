@@ -958,7 +958,7 @@ export default function WorldDetail({ onBack }) {
             )}
             <Button
               className={`${styles.editBtn} ${editMode ? styles.editBtnActive : ''}`}
-              onClick={() => setEditMode((v) => !v)}
+              onClick={() => setEditMode(!editMode)}
               startIcon={<TuneIcon />}
             >
               {editMode ? 'Готово' : 'Оверлей'}

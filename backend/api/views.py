@@ -235,8 +235,9 @@ class TodoViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         if not World.objects.filter(pk=world_id).exists():
             raise NotFound('World not found.')
         project = serializer.validated_data.get('project')
-        if project is not None and not serializer.validated_data.get('order'):
-            # Нові завдання проєкту стають нагору (менший order — вище).
+        if not serializer.validated_data.get('order'):
+            # Нові завдання стають нагору своєї групи
+            # (проєкт або неприв'язані): менший order — вище.
             min_order = (
                 TodoItem.objects.filter(world_id=world_id, project=project)
                 .aggregate(m=Min('order'))['m']
@@ -250,7 +251,7 @@ class TodoViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='reorder')
     def reorder(self, request, world_id=None):
-        """Переставити завдання: {project: id, ids: [...] зверху вниз}."""
+        """Переставити завдання: {project: id|null, ids: [...] зверху вниз}."""
         ids = request.data.get('ids')
         project_id = request.data.get('project')
         if not isinstance(ids, list) or not ids:
@@ -258,7 +259,10 @@ class TodoViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         todos = list(TodoItem.objects.filter(world_id=world_id, id__in=ids))
         if len(todos) != len(set(ids)):
             raise ValidationError('Знайдено не всі завдання.')
-        if project_id is not None and any(t.project_id != project_id for t in todos):
+        if project_id is None:
+            if any(t.project_id is not None for t in todos):
+                raise ValidationError('Усі завдання мають бути неприв\'язаними.')
+        elif any(t.project_id != project_id for t in todos):
             raise ValidationError('Усі завдання мають належати одному проєкту.')
         with transaction.atomic():
             for index, todo_id in enumerate(ids):

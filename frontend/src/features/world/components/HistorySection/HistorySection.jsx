@@ -497,7 +497,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
         <Button
           size="small"
           variant="outlined"
-          onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+          onClick={() => setSortDir(sortDir === 'asc' ? 'desc' : 'asc')}
           title="Порядок дат"
           aria-label={sortDir === 'asc' ? 'Спочатку давні, натисніть для зміни' : 'Спочатку нові, натисніть для зміни'}
           className={styles.epochFilterButton}
@@ -508,7 +508,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
           size="small"
           variant={importantOnly ? 'contained' : 'outlined'}
           aria-pressed={importantOnly}
-          onClick={() => setImportantOnly((v) => !v)}
+          onClick={() => setImportantOnly(!importantOnly)}
           title="Тільки важливі події"
           startIcon={importantOnly ? <StarIcon /> : <StarBorderIcon />}
           className={`${styles.epochFilterButton} ${
@@ -558,7 +558,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                 type="button"
                 aria-pressed={typeFilter === value}
                 className={`${styles.typeChip} ${typeFilter === value ? styles.typeChipActive : ''}`}
-                onClick={() => setTypeFilter((cur) => (cur === value ? null : value))}
+                onClick={() => setTypeFilter(typeFilter === value ? null : value)}
               >
                 {label}
               </button>

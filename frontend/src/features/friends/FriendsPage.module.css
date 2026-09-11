@@ -111,9 +111,10 @@
 
 .searchField :global(.MuiOutlinedInput-root) {
   border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid rgba(90, 74, 82, 0.2);
+  background: rgba(90, 74, 82, 0.08);
+  border: none;
   color: #1d1a22;
+  transition: background 0.15s ease;
 }
 
 .searchField :global(.MuiOutlinedInput-notchedOutline) {
@@ -121,13 +122,11 @@
 }
 
 .searchField :global(.MuiOutlinedInput-root:hover) {
-  border-color: rgba(90, 74, 82, 0.4) !important;
+  background: rgba(90, 74, 82, 0.12);
 }
 
 .searchField :global(.MuiOutlinedInput-root.Mui-focused) {
-  border-color: #c96f7f !important;
-  border-width: 2px !important;
-  margin: -1px !important;
+  background: rgba(90, 74, 82, 0.12);
 }
 
 .searchIcon {

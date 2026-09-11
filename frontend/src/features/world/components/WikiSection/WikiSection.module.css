@@ -34,10 +34,11 @@
 
 .searchInput :global(.MuiOutlinedInput-root),
 .sortSelect :global(.MuiOutlinedInput-root) {
-  border-radius: 12px !important;
-  background: rgba(255, 255, 255, 0.12) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: none !important;
   color: #ffffff !important;
+  transition: background 0.15s ease !important;
 }
 
 .searchInput :global(.MuiOutlinedInput-notchedOutline),
@@ -47,14 +48,12 @@
 
 .searchInput :global(.MuiOutlinedInput-root:hover),
 .sortSelect :global(.MuiOutlinedInput-root:hover) {
-  border-color: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
 }
 
 .searchInput :global(.MuiOutlinedInput-root.Mui-focused),
 .sortSelect :global(.MuiOutlinedInput-root.Mui-focused) {
-  border-color: #ffffff !important;
-  border-width: 2px !important;
-  margin: -1px !important;
+  background: rgba(255, 255, 255, 0.22) !important;
 }
 
 .searchInput :global(.MuiInputLabel-root),

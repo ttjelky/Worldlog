@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
@@ -14,6 +14,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import api from '../../../../api'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
@@ -48,7 +49,17 @@ export default function TodosSection({ worldId, accent, userRole }) {
   })
   const { data: locations = [] } = useLocations(worldId)
   const todos = allTodos.filter((t) => !t.project)
-  const visibleTodos = priorityFilter ? todos.filter((t) => t.priority === priorityFilter) : todos
+  const sortedTodos = [...todos].sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0) || b.id - a.id,
+  )
+  const visibleTodos = priorityFilter
+    ? sortedTodos.filter((t) => t.priority === priorityFilter)
+    : sortedTodos
+  // Перетягування як у проєкті: FLIP-анімація + збереження порядку.
+  // Вимкнено під фільтром пріоритету, щоб не плутати порядок.
+  const dndEnabled = canEdit && !priorityFilter
+  const [drag, setDrag] = useState(null)
+  const flipSnapshotRef = useRef(null)
   const mutation = useMutation({
     mutationFn: (payload) =>
       editing
@@ -85,6 +96,117 @@ export default function TodosSection({ worldId, accent, userRole }) {
 
   const deleteDone = () => {
     visibleTodos.filter((t) => t.is_done).forEach(deleteTodo)
+  }
+
+  const moveTodo = async (fromId, toId) => {
+    const ids = sortedTodos.map((t) => t.id)
+    const from = ids.indexOf(fromId)
+    if (from === -1) return
+    ids.splice(from, 1)
+    const to = toId == null ? ids.length : ids.indexOf(toId)
+    if (to === -1) return
+    ids.splice(to, 0, fromId)
+    if (ids.join(',') === sortedTodos.map((t) => t.id).join(',')) return
+    const todosKey = ['todos', String(worldId)]
+    const prev = qc.getQueryData(todosKey)
+    qc.setQueryData(todosKey, (old) =>
+      (old ?? []).map((t) => {
+        const i = ids.indexOf(t.id)
+        return i === -1 ? t : { ...t, order: i }
+      }),
+    )
+    try {
+      await api.post(`/worlds/${worldId}/todos/reorder/`, { project: null, ids })
+    } catch {
+      if (prev) qc.setQueryData(todosKey, prev)
+    } finally {
+      qc.invalidateQueries(todosKey)
+      qc.invalidateQueries(['world', String(worldId)])
+    }
+  }
+
+  // FLIP-анімація як в оверлеї: знімок позицій ДО зміни порядку,
+  // після рендеру рядки анімовано «перелітають» на нові місця.
+  const snapshotTodoRects = () => {
+    const snapshot = {}
+    sortedTodos.forEach((t) => {
+      const el = document.getElementById(`todos-slot-${t.id}`)
+      if (el) snapshot[t.id] = el.getBoundingClientRect()
+    })
+    flipSnapshotRef.current = snapshot
+  }
+
+  useLayoutEffect(() => {
+    const snapshot = flipSnapshotRef.current
+    if (!snapshot) return
+    flipSnapshotRef.current = null
+    const moves = []
+    Object.keys(snapshot).forEach((key) => {
+      const el = document.getElementById(`todos-slot-${key}`)
+      if (!el) return
+      const before = snapshot[key]
+      const after = el.getBoundingClientRect()
+      const dx = before.left - after.left
+      const dy = before.top - after.top
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return
+      moves.push({ el, dx, dy })
+    })
+    if (moves.length === 0) return
+    moves.forEach(({ el, dx, dy }) => {
+      el.style.willChange = 'transform'
+      el.style.transition = 'none'
+      el.style.transform = `translate(${dx}px, ${dy}px)`
+    })
+    // eslint-disable-next-line no-unused-expressions
+    document.body.offsetHeight
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        moves.forEach(({ el }) => {
+          el.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          el.style.transform = ''
+          const cleanup = () => {
+            el.style.transition = ''
+            el.style.willChange = ''
+            el.removeEventListener('transitionend', cleanup)
+          }
+          el.addEventListener('transitionend', cleanup)
+        })
+      })
+    })
+  }, [todos])
+
+  const onTodoDragStart = (e, id) => {
+    if (!dndEnabled) return
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(id))
+    requestAnimationFrame(() => setDrag({ id }))
+  }
+
+  const onTodoDragOver = (e, id) => {
+    if (!drag || !dndEnabled) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDrag((d) => (d && d.over !== id ? { ...d, over: id } : d))
+  }
+
+  const onTodoDrop = (e, targetId) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!drag || !dndEnabled) return
+    const sourceId = drag.id
+    setDrag(null)
+    if (sourceId === targetId) return
+    snapshotTodoRects()
+    moveTodo(sourceId, targetId)
+  }
+
+  const onTodoDropEnd = (e) => {
+    e.preventDefault()
+    if (!drag || !dndEnabled) return
+    const sourceId = drag.id
+    setDrag(null)
+    snapshotTodoRects()
+    moveTodo(sourceId, null)
   }
 
   const openNew = () => {
@@ -159,7 +281,7 @@ export default function TodosSection({ worldId, accent, userRole }) {
               type="button"
               aria-pressed={priorityFilter === value}
               className={`${styles.priorityFilterChip} ${priorityFilter === value ? styles.priorityFilterChipActive : ''}`}
-              onClick={() => setPriorityFilter((cur) => (cur === value ? null : value))}
+              onClick={() => setPriorityFilter(priorityFilter === value ? null : value)}
             >
               <span className={styles.priorityDot} style={{ background: color }} />
               {label}
@@ -172,15 +294,29 @@ export default function TodosSection({ worldId, accent, userRole }) {
         className={`${sharedStyles.body} ${styles.todoList} ${
           section.modal ? styles.todoListFull : ''
         } ${section.full ? styles.todoListWide : ''}`}
+        onDragOver={dndEnabled ? (e) => e.preventDefault() : undefined}
+        onDrop={dndEnabled ? onTodoDropEnd : undefined}
       >
         {visibleTodos.map((t) => {
           const [dot, label] = priorities[t.priority] || priorities.medium
           return (
             <div
               key={t.id}
-              className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''}`}
-              onClick={() => toggle.mutate(t)}
+              id={`todos-slot-${t.id}`}
+              className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''} ${
+                drag?.id === t.id ? styles.todoDragging : ''
+              } ${drag?.over === t.id ? styles.todoDragOver : ''}`}
+              draggable={dndEnabled}
+              onDragStart={dndEnabled ? (e) => onTodoDragStart(e, t.id) : undefined}
+              onDragOver={dndEnabled ? (e) => onTodoDragOver(e, t.id) : undefined}
+              onDrop={dndEnabled ? (e) => onTodoDrop(e, t.id) : undefined}
+              onDragEnd={() => setDrag(null)}
+              onClick={canEdit ? () => toggle.mutate(t) : undefined}
+              style={canEdit ? undefined : { cursor: 'default' }}
             >
+              {dndEnabled && (
+                <DragIndicatorIcon className={styles.dragHandle} aria-hidden="true" />
+              )}
               <Checkbox
                 className={styles.todoCheckbox}
                 checked={t.is_done}

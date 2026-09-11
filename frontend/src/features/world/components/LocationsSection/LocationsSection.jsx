@@ -537,7 +537,7 @@ export default function LocationsSection({ worldId, accent, userRole }) {
                 type="button"
                 aria-pressed={catFilter === value}
                 className={`${styles.catChip} ${catFilter === value ? styles.catChipActive : ''}`}
-                onClick={() => setCatFilter((cur) => (cur === value ? null : value))}
+                onClick={() => setCatFilter(catFilter === value ? null : value)}
               >
                 {label}
               </button>

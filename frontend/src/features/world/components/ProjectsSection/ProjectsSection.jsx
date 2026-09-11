@@ -386,7 +386,9 @@ function ProjectDetails({
               aria-label={`Пріоритет нового завдання: ${prioLabel}`}
               onClick={() =>
                 setNewPriority(
-                  (cur) => priorityCycle[(priorityCycle.indexOf(cur) + 1) % priorityCycle.length],
+                  priorityCycle[
+                    (priorityCycle.indexOf(newPriority) + 1) % priorityCycle.length
+                  ],
                 )
               }
             >
@@ -965,7 +967,10 @@ export default function ProjectsSection({ worldId, accent, userRole }) {
                 type="button"
                 aria-pressed={statusFilter === value}
                 className={`${styles.statusFilterChip} ${statusFilter === value ? styles.statusFilterChipActive : ''}`}
-                onClick={() => setStatusFilter((cur) => (cur === value ? null : cur))}
+                // Значення-form замість тогл-апдейтера: тогл через
+                // (cur => ...) губиться в цьому дереві (подвійне застосування
+                // дає нетто-нуль), пряме значення — ні.
+                onClick={() => setStatusFilter(statusFilter === value ? null : value)}
               >
                 {label}
               </button>
