@@ -4,6 +4,12 @@
   gap: 8px;
 }
 
+/* Те саме, що в нотатках/проєктах: гасимо height:100% обгортки,
+   інакше рядки розтягуються і пустота під ними клікабельна */
+.playerList > :global(*) {
+  height: auto !important;
+}
+
 .playerListFull {
   max-height: none;
 }

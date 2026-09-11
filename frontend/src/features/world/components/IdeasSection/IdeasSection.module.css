@@ -4,6 +4,12 @@
   gap: 8px;
 }
 
+/* Обгортка ExpandableCard має height:100% — у колонці рядки
+   розтягувались би на всю висоту (клікабельна пустота під карткою) */
+.ideaList > :global(*) {
+  height: auto !important;
+}
+
 .ideaListFull {
   max-height: none;
 }
@@ -37,26 +43,34 @@
 }
 
 .ideaTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ideaTitleText {
+  flex: 1;
+  min-width: 0;
   font-weight: 600;
   font-size: 18px;
   color: #ffffff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
 }
 
 .ideaDesc {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.72);
-  margin-top: 2px;
+  margin-top: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 /* У повноекранному режимі текст переноситься, а не ріжеться */
-.ideaListWide .ideaTitle,
+.ideaListWide .ideaTitleText,
 .ideaListWide .ideaDesc {
   white-space: normal;
   overflow: visible;
@@ -69,23 +83,194 @@
   align-items: center;
   font-size: 12px;
   font-weight: 600;
-  padding: 4px 12px;
+  padding: 8px 14px;
   border-radius: 999px;
   border: none;
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
   cursor: pointer;
-  margin-top: 8px;
   transition: background 0.15s ease;
 }
 
-.convertBtn:hover {
+.convertBtn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.32);
 }
 
 .convertBtn:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.convertArmed {
+  background: #b3261e;
+}
+
+.convertArmed:hover:not(:disabled) {
+  background: #8f1d17;
+}
+
+.ideaActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.voteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.voteBtn:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.voteActive {
+  background: #ffffff;
+  color: #1d1a22;
+}
+
+.voteActive:hover {
+  background: #e9e9e9;
+}
+
+.voteSmall {
+  padding: 6px 12px;
+}
+
+.rowStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: none;
+  white-space: nowrap;
+}
+
+button.rowStatus {
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+button.rowStatus:hover {
+  filter: brightness(1.18);
+}
+
+.statusDotSm {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusDotLg {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.draftTitle {
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+}
+
+/* Фільтр за статусом і сортування — як в інших картках */
+.statusChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.statusFilterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-radius 0.25s ease-out;
+}
+
+.statusFilterChip:hover {
+  background: rgba(255, 255, 255, 0.26);
+  color: #ffffff;
+}
+
+.statusFilterChipActive {
+  background: #ffffff;
+  border-radius: 26px;
+  color: #333;
+}
+
+.statusFilterChipActive:hover {
+  background: #e9e9e9;
+  color: #1d1a22;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sortRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.sortChip {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sortChip:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.sortChipActive {
+  background: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
 }
 
 .rowActions {
@@ -107,4 +292,188 @@
   .ideaListWide {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .editorHint {
+    display: none;
+  }
+}
+
+/* ---------- Розгорнутий вигляд ідеї ---------- */
+
+.details {
+  gap: 14px;
+}
+
+.details.details {
+  position: relative;
+  height: auto;
+  min-height: 100%;
+  max-height: none;
+  padding-bottom: 24px;
+}
+
+.detailsHead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.detailsTitle {
+  margin: 0;
+  font-weight: 500;
+  font-size: clamp(24px, 4vw, 36px);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #ffffff;
+  overflow-wrap: anywhere;
+}
+
+.detailsStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  white-space: nowrap;
+}
+
+button.detailsStatus {
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+button.detailsStatus:hover {
+  filter: brightness(1.18);
+}
+
+.detailsContent {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: pre-wrap;
+}
+
+.detailsActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detailsFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: auto;
+  padding-bottom: 4px;
+}
+
+.actionBtns {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 2px 6px;
+  box-shadow: 0 4px 16px rgba(13, 13, 15, 0.25);
+}
+
+.detailsFooter .actionBtn {
+  color: rgba(255, 255, 255, 0.85) !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 999px !important;
+}
+
+.detailsFooter .actionBtn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* ---------- Inline-редактор ідеї ---------- */
+
+.editorForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.editorBody {
+  flex: 1;
+}
+
+.statusSeg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.editorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.editorHint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.editorActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.cancelBtn {
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.saveBtn {
+  border: none;
+  background: #ffffff;
+  color: #1d1a22;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #e9e9e9;
+}
+
+.saveBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
