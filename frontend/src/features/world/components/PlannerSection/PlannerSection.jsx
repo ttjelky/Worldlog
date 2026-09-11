@@ -36,15 +36,15 @@ const priorities = {
 }
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
 
-const toDateStr = (d) => d.toISOString().slice(0, 10)
-const todayStr = () => toDateStr(new Date())
+const pad2 = (n) => String(n).padStart(2, '0')
+// Локальна дата YYYY-MM-DD (toISOString дає UTC і бреше біля опівночі).
+const toISODate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+const todayStr = () => toISODate(new Date())
 const tomorrowStr = () => {
   const d = new Date()
   d.setDate(d.getDate() + 1)
-  return toDateStr(d)
+  return toISODate(d)
 }
-const pad2 = (n) => String(n).padStart(2, '0')
-const toISODate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1)
 const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, 1)
 const monthLabel = (d) => {
@@ -53,15 +53,23 @@ const monthLabel = (d) => {
 }
 const empty = () => ({ title: '', description: '', priority: 'medium', due_date: todayStr() })
 
+const fmtDate = (iso, opts) => {
+  if (!iso) return ''
+  const d = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso)
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString('uk-UA', opts ?? { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 export default function PlannerSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState(empty())
+  const [form, setForm] = useState(empty)
   const [filter, setFilter] = useState(null)
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
-  const canEdit = !userRole || userRole !== 'viewer'
+  const canEdit = userRole && userRole !== 'viewer'
   // Перетягування задачі на день календаря змінює її дедлайн.
   // Календар є лише в модалці — там і вмикаємо DnD.
   const dndOn = canEdit && section.modal
@@ -91,9 +99,10 @@ export default function PlannerSection({ worldId, accent, userRole }) {
   }, [todos, filter])
 
   const countsByDate = useMemo(() => {
+    // Лічильники днів — лише відкриті завдання.
     const map = {}
     todos.forEach((t) => {
-      if (t.due_date) map[t.due_date] = (map[t.due_date] || 0) + 1
+      if (t.due_date && !t.is_done) map[t.due_date] = (map[t.due_date] || 0) + 1
     })
     return map
   }, [todos])
@@ -135,7 +144,7 @@ export default function PlannerSection({ worldId, accent, userRole }) {
       await qc.cancelQueries(['todos', String(worldId)])
       const prev = qc.getQueryData(['todos', String(worldId)])
       qc.setQueryData(['todos', String(worldId)], (old) =>
-        old.map((x) => (x.id === todo.id ? { ...x, is_done: !todo.is_done } : x)),
+        (old ?? []).map((x) => (x.id === todo.id ? { ...x, is_done: !todo.is_done } : x)),
       )
       return { prev }
     },
@@ -254,12 +263,15 @@ export default function PlannerSection({ worldId, accent, userRole }) {
 
   const submit = (e) => {
     e.preventDefault()
+    if (mutation.isPending) return
     const payload = { ...form }
     if (editing) delete payload.is_done
-    mutation.mutateAsync(payload).then(() => setOpen(false))
+    mutation.mutate(payload, { onSuccess: () => setOpen(false) })
   }
 
   const done = planned.filter((t) => t.is_done).length
+  const allDated = todos.filter((t) => t.due_date)
+  const doneAll = allDated.filter((t) => t.is_done).length
 
   const renderCalendar = () => (
     <div className={styles.calendar}>
@@ -334,7 +346,7 @@ export default function PlannerSection({ worldId, accent, userRole }) {
                   : undefined
               }
               aria-pressed={filter === iso}
-              aria-label={`${iso}, завдань: ${count}`}
+              aria-label={`${iso}, відкритих завдань: ${count}`}
             >
               <span className={styles.calNum}>{date.getDate()}</span>
               {count > 0 && <span className={styles.calCount}>{count}</span>}
@@ -352,7 +364,7 @@ export default function PlannerSection({ worldId, accent, userRole }) {
     >
       <div className={sharedStyles.sectionHeader}>
         <h3 className={sharedStyles.sectionTitle}>
-          Планер ({done}/{planned.length})
+          Планер ({doneAll}/{allDated.length})
         </h3>
         <div className={styles.headerActions}>
           {done > 0 && canEdit && (
@@ -415,6 +427,20 @@ export default function PlannerSection({ worldId, accent, userRole }) {
               onDragStart={dndOn ? (e) => onTaskDragStart(e, t.id) : undefined}
               onDragEnd={clearTaskDrag}
               onClick={canEdit ? () => toggle.mutate(t) : undefined}
+              style={canEdit ? undefined : { cursor: 'default' }}
+              role={canEdit ? 'checkbox' : undefined}
+              aria-checked={canEdit ? t.is_done : undefined}
+              tabIndex={canEdit ? 0 : undefined}
+              onKeyDown={
+                canEdit
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        toggle.mutate(t)
+                      }
+                    }
+                  : undefined
+              }
             >
               {dndOn && (
                 <DragIndicatorIcon className={styles.dragHandle} aria-hidden="true" />
@@ -441,9 +467,12 @@ export default function PlannerSection({ worldId, accent, userRole }) {
                   <span className={styles.priorityDot} style={{ background: dot }} />
                   {label}
                 </span>
-                <span className={`${styles.dueChip} ${isOverdue ? styles.dueChipOverdue : ''}`}>
+                <span
+                  className={`${styles.dueChip} ${isOverdue ? styles.dueChipOverdue : ''}`}
+                  title={isOverdue ? `Прострочено: ${fmtDate(t.due_date)}` : fmtDate(t.due_date)}
+                >
                   <CalendarTodayIcon sx={{ fontSize: 13 }} />
-                  {t.due_date}
+                  {fmtDate(t.due_date, { day: 'numeric', month: 'short' })}
                 </span>
               </div>
               <div className={styles.rowActions}>
@@ -473,14 +502,26 @@ export default function PlannerSection({ worldId, accent, userRole }) {
             </div>
           )
         })}
-        {planned.length === 0 && (
-          <p className={sharedStyles.emptyMsg}>Плани ще не складені. Додай перше завдання.</p>
-        )}
+        {planned.length === 0 &&
+          (allDated.length > 0 ? (
+            <div className={styles.emptyFiltered}>
+              <p className={sharedStyles.emptyMsg}>На цей день завдань немає.</p>
+              <button
+                type="button"
+                className={styles.emptyReset}
+                onClick={() => setFilter(null)}
+              >
+                Показати всі
+              </button>
+            </div>
+          ) : (
+            <p className={sharedStyles.emptyMsg}>Плани ще не складені. Додай перше завдання.</p>
+          ))}
       </div>
 
       <Dialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => !mutation.isPending && setOpen(false)}
         maxWidth="sm"
         fullWidth
         slotProps={{
@@ -530,10 +571,18 @@ export default function PlannerSection({ worldId, accent, userRole }) {
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>
-            <Button onClick={() => setOpen(false)} className={sharedStyles.dialogBtnCancel}>
+            <Button
+              onClick={() => setOpen(false)}
+              className={sharedStyles.dialogBtnCancel}
+              disabled={mutation.isPending}
+            >
               Скасувати
             </Button>
-            <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
+            <Button
+              type="submit"
+              className={sharedStyles.dialogBtnSubmit}
+              disabled={mutation.isPending}
+            >
               Зберегти
             </Button>
           </DialogActions>

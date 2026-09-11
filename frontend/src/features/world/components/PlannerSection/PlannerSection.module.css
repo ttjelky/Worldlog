@@ -203,6 +203,31 @@
   color: #1d1a22;
 }
 
+.emptyFiltered {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.emptyFiltered p {
+  margin: 0;
+}
+
+.emptyReset {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 4px 8px;
+  margin-left: -8px;
+}
+
 /* ---------- Повноекранний режим: календар і список поруч ---------- */
 
 .plannerFullCard {
