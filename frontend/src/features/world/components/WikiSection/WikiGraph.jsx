@@ -10,6 +10,45 @@ const ZOOM_MIN = 0.25
 const ZOOM_MAX = 4
 const FIT_MAX = 1.1
 
+const layoutKeyFor = (worldId) => `worldlog:graph-layout:${worldId}`
+
+function loadPositions(worldId) {
+  try {
+    const raw = localStorage.getItem(layoutKeyFor(worldId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function savePositions(worldId, simNodes) {
+  try {
+    const map = {}
+    simNodes.forEach((nd) => {
+      if (Number.isFinite(nd.x) && Number.isFinite(nd.y)) {
+        map[String(nd.id)] = { x: Math.round(nd.x), y: Math.round(nd.y) }
+      }
+    })
+    localStorage.setItem(layoutKeyFor(worldId), JSON.stringify(map))
+  } catch {}
+}
+
+function clearPositions(worldId) {
+  try {
+    localStorage.removeItem(layoutKeyFor(worldId))
+  } catch {}
+}
+
+function plural(n, [one, few, many]) {
+  const d10 = n % 10
+  const d100 = n % 100
+  if (d10 === 1 && d100 !== 11) return one
+  if (d10 >= 2 && d10 <= 4 && (d100 < 12 || d100 > 14)) return few
+  return many
+}
+
 function make(name, attrs) {
   const el = document.createElementNS(NS, name)
   for (const [key, value] of Object.entries(attrs || {})) {
@@ -21,7 +60,8 @@ function make(name, attrs) {
 
 // Створює макет і малює граф у шарі viewport. Повертає об'єкт з даними
 // для керування (прив'язка вузлів, ребер, симуляції) та fit-параметрами.
-function buildGraph(svg, canvas, viewport, nodes, edges) {
+// pinned: {id: {x, y}} — збережені користувачем позиції, фіксуються через fx/fy.
+function buildGraph(svg, canvas, viewport, nodes, edges, pinned) {
   while (viewport.firstChild) viewport.removeChild(viewport.firstChild)
 
   const cw = Math.max(canvas.clientWidth, 300)
@@ -38,12 +78,14 @@ function buildGraph(svg, canvas, viewport, nodes, edges) {
     degrees.set(e.target, (degrees.get(e.target) || 0) + 1)
   })
 
-  const simNodes = nodes.map((nd) => ({ ...nd }))
+  const simNodes = nodes.map((nd) => {
+    const saved = pinned?.[String(nd.id)]
+    return saved ? { ...nd, fx: saved.x, fy: saved.y } : { ...nd }
+  })
   const simEdges = edges.map((e) => ({
     source: e.source,
     target: e.target,
     kind: e.kind,
-    label: e.label || '',
   }))
 
   const simulation = forceSimulation(simNodes)
@@ -56,7 +98,10 @@ function buildGraph(svg, canvas, viewport, nodes, edges) {
     .stop()
   simulation.alphaDecay(0.04)
   simulation.velocityDecay(0.4)
-  for (let i = 0; i < 600; i++) simulation.tick()
+  // Великі графи збігаються швидше за меншу кількість тіків,
+  // щоб не блокувати головний потік на секунди.
+  const ticks = n > 120 ? 200 : n > 60 ? 350 : 600
+  for (let i = 0; i < ticks; i++) simulation.tick()
 
   let minX = Infinity
   let minY = Infinity
@@ -184,12 +229,15 @@ function wrapLabel(title, maxW, measurer) {
 function drawNode(simNodes, node, degree, measurer) {
   const isExternal = typeof node.id === 'string' && node.id.includes(':')
   const r = isExternal ? 24 : Math.min(34, 16 + degree * 2)
-  const g = make('g', {
-    class: isExternal ? styles.nodeExternal : styles.node,
-    tabindex: 0,
-    role: 'button',
-    'aria-label': node.title,
-  })
+  // Зовнішні вузли (локації, гравці…) не відкриваються — лише перетягуються,
+  // тому без кнопкової семантики; назва лишається в нативному <title>.
+  const gAttrs = { class: isExternal ? styles.nodeExternal : styles.node }
+  if (!isExternal) {
+    gAttrs.tabindex = 0
+    gAttrs.role = 'button'
+    gAttrs['aria-label'] = node.title
+  }
+  const g = make('g', gAttrs)
 
   const circle = make('circle', {
     r,
@@ -233,6 +281,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
   const interactionsRef = useRef(null)
   const lastSizeRef = useRef({ w: 0, h: 0 })
   const [sizeKey, setSizeKey] = useState(0)
+  const [layoutKey, setLayoutKey] = useState(0)
   const [zoom, setZoom] = useState(1)
 
   const commitView = useCallback((v) => {
@@ -278,7 +327,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
       svg.appendChild(viewportRef.current)
     }
 
-    const built = buildGraph(svg, canvas, viewportRef.current, nodes, edges)
+    const built = buildGraph(svg, canvas, viewportRef.current, nodes, edges, loadPositions(worldId))
     interactionsRef.current = built.interactions
     fitRef.current = () => {
       built.fit(viewRef, apply)
@@ -313,9 +362,11 @@ export default function WikiGraph({ worldId, onOpen, height }) {
       ro.disconnect()
       if (resizeTimer) clearTimeout(resizeTimer)
     }
-  }, [data, apply, sizeKey])
+  }, [data, apply, sizeKey, layoutKey, worldId])
 
   // ——— Масштабування (колесо) ———
+  // data в залежностях: на холодному старті svg ще немає (empty-state),
+  // ефект має перезапуститись, коли дані прийдуть і полотно змонтується.
   useEffect(() => {
     const svg = svgRef.current
     if (!svg) return
@@ -337,9 +388,11 @@ export default function WikiGraph({ worldId, onOpen, height }) {
     }
     svg.addEventListener('wheel', onWheel, { passive: false })
     return () => svg.removeEventListener('wheel', onWheel)
-  }, [apply, commitView])
+  }, [apply, commitView, data])
 
   // ——— Панорамування фону + dragging/клік вузлів ———
+  // data в залежностях з тієї ж причини, що й вище: без цього
+  // обробники не вішаються, якщо дані прийшли після монтування.
   useEffect(() => {
     const svg = svgRef.current
     const canvas = canvasRef.current
@@ -402,6 +455,9 @@ export default function WikiGraph({ worldId, onOpen, height }) {
           // клік по вузлу (wikі-сторінці)
           const id = drag.node.id
           if (typeof id === 'number') onOpenRef.current?.(id)
+        } else if (interactionsRef.current) {
+          // перетягнули — зберігаємо розкладку світу
+          savePositions(worldId, interactionsRef.current.simNodes)
         }
         drag = null
       }
@@ -450,7 +506,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
       window.removeEventListener('pointerup', onUp)
       observer.disconnect()
     }
-  }, [apply])
+  }, [apply, worldId, data])
 
   const zoomIn = () => {
     const v = viewRef.current
@@ -474,6 +530,10 @@ export default function WikiGraph({ worldId, onOpen, height }) {
   }
   const resetView = () => {
     if (fitRef.current) fitRef.current()
+  }
+  const resetLayout = () => {
+    clearPositions(worldId)
+    setLayoutKey((k) => k + 1)
   }
 
   const nodeCount = data?.nodes?.length || 0
@@ -511,6 +571,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
                 className={styles.ctrlBtn}
                 onClick={zoomOut}
                 disabled={zoom <= ZOOM_MIN}
+                title="Зменшити"
                 aria-label="Зменшити"
               >
                 −
@@ -520,13 +581,43 @@ export default function WikiGraph({ worldId, onOpen, height }) {
                 className={styles.ctrlBtn}
                 onClick={zoomIn}
                 disabled={zoom >= ZOOM_MAX}
+                title="Збільшити"
                 aria-label="Збільшити"
               >
                 +
               </button>
             </div>
+            <div className={styles.controlsGroup}>
+              <button
+                type="button"
+                className={styles.ctrlBtn}
+                onClick={resetLayout}
+                title="Скинути розташування"
+                aria-label="Скинути розташування"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
-          <svg ref={svgRef} className={styles.svg} role="img" aria-label="Граф зв'язків світу" />
+          <div className={styles.legend}>
+            <span className={styles.legendItem}>
+              <i className={styles.legendDotWiki} aria-hidden="true" />
+              Сторінка
+            </span>
+            <span className={styles.legendItem}>
+              <i className={styles.legendDotExt} aria-hidden="true" />
+              Елемент світу
+            </span>
+            <span className={styles.legendCount}>
+              {nodeCount} {plural(nodeCount, ['вузол', 'вузли', 'вузлів'])}
+            </span>
+          </div>
+          <svg ref={svgRef} className={styles.svg} role="group" aria-label="Граф зв'язків світу" />
         </div>
       )}
     </div>
