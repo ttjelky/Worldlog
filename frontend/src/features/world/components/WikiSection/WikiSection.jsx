@@ -2,10 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   MenuItem,
   TextField,
@@ -28,7 +24,8 @@ import SecurityIcon from '@mui/icons-material/Security'
 import DescriptionIcon from '@mui/icons-material/Description'
 import api from '../../../../api'
 import sharedStyles from '../shared/section.module.css'
-import { useExpandableCard } from '../shared/ExpandableCard'
+import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
+import LocationRichTextEditor from '../shared/LocationRichTextEditor'
 import RelationshipList from '../shared/RelationshipList'
 import { useUndo } from '../../../../shared/undo/UndoProvider'
 import { OPEN_WIKI_PAGE_EVENT } from '../RelationshipsSection/RelationshipsSection'
@@ -140,10 +137,21 @@ const STATUS_COLORS = {
 const SORT_OPTIONS = [
   { value: 'updated', label: 'Спочатку оновлені' },
   { value: 'alpha', label: 'За назвою' },
-  { value: 'created', label: 'Спочатку створені' },
+  { value: 'created', label: 'Спочатку нові' },
 ]
 
 const SNIPPET_MAX = 300
+
+// Обрізка сніпета: не ріжемо всередині [[посилання]] і посеред слова.
+function snippetOf(text) {
+  if (!text || text.length <= SNIPPET_MAX) return text
+  let cut = text.slice(0, SNIPPET_MAX)
+  const openIdx = cut.lastIndexOf('[[')
+  const closeIdx = cut.lastIndexOf(']]')
+  if (openIdx > closeIdx) cut = cut.slice(0, openIdx)
+  cut = cut.replace(/\s+\S*$/, '')
+  return `${cut.trimEnd()}…`
+}
 
 const WIKI_LINK_RE = /\[\[(?:wiki:)?([^\]|]+)\]\]/g
 
@@ -162,7 +170,7 @@ function extractTitles(text) {
   return out
 }
 
-function renderContent(text, titleIndex, onOpen) {
+function renderContent(text, titleIndex, onOpen, onCreateMissing) {
   if (!text) return null
   const lines = text.split('\n')
   return lines.map((line, i) => {
@@ -174,14 +182,30 @@ function renderContent(text, titleIndex, onOpen) {
           if (m) {
             const title = m[1].trim()
             const target = titleIndex.get(title.toLowerCase())
+            const missing = !target && onCreateMissing
             return (
               <span
                 key={j}
                 className={target ? styles.pageDetailLink : styles.pageDetailLinkBroken}
+                role={missing ? 'button' : undefined}
+                tabIndex={missing ? 0 : undefined}
+                title={missing ? `Створити сторінку «${title}»` : undefined}
                 onClick={(e) => {
                   e.stopPropagation()
                   if (target) onOpen?.(target)
+                  else onCreateMissing?.(title)
                 }}
+                onKeyDown={
+                  missing
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          onCreateMissing?.(title)
+                        }
+                      }
+                    : undefined
+                }
               >
                 {title}
               </span>
@@ -205,13 +229,267 @@ const empty = {
   content: '',
 }
 
+const cleanTitle = (value) => value.replace(/\s*\n+\s*/g, ' ').trim()
+
+const titleTextStyle = {
+  fontSize: 'clamp(24px, 4vw, 36px)',
+  fontWeight: 500,
+  letterSpacing: '-0.03em',
+  lineHeight: 1.15,
+  color: '#ffffff',
+}
+
+const contentTextStyle = {
+  fontSize: '15px',
+  lineHeight: 1.55,
+  color: 'rgba(255, 255, 255, 0.88)',
+}
+
+// Inline-редактор сторінки в дусі нотаток: усе пишеться прямо
+// в модалці — назва, тип-пігулки, емодзі, поля інфобокса, зміст.
+function WikiEditor({ worldId, accent, form, setForm, saving, isNew, duplicate, onSave, onCancel }) {
+  const canSave = cleanTitle(form.title).length > 0 && !saving && !duplicate
+  const submit = (e) => {
+    e.preventDefault()
+    if (canSave) onSave()
+  }
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      if (canSave) onSave()
+    }
+  }
+  const pickType = (nextType) => {
+    setForm((f) => ({
+      ...f,
+      page_type: nextType,
+      emoji:
+        !f.emoji || f.emoji === EMOJI_BY_TYPE[f.page_type]
+          ? EMOJI_BY_TYPE[nextType]
+          : f.emoji,
+    }))
+  }
+  const isCustomEmoji = !EMOJI_PRESETS.includes(form.emoji)
+
+  return (
+    <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
+      <form onSubmit={submit} onKeyDown={onKeyDown} className={styles.editorForm}>
+        <div className={styles.detailsHead}>
+          <div className={styles.titleRow}>
+            <select
+              className={styles.emojiSelect}
+              aria-label="Емодзі"
+              title="Емодзі сторінки"
+              value={isCustomEmoji ? '__custom' : form.emoji}
+              onChange={(e) => {
+                if (e.target.value === '__custom') setForm((f) => ({ ...f, emoji: '' }))
+                else setForm((f) => ({ ...f, emoji: e.target.value }))
+              }}
+            >
+              {EMOJI_PRESETS.map((em) => (
+                <option key={em} value={em}>
+                  {em}
+                </option>
+              ))}
+              <option value="__custom">✎ своє…</option>
+            </select>
+            {isCustomEmoji && (
+              <input
+                type="text"
+                className={styles.emojiCustomInline}
+                aria-label="Своє емодзі"
+                title="Встав своє емодзі"
+                placeholder="🙂"
+                value={form.emoji}
+                onChange={(e) => setForm((f) => ({ ...f, emoji: e.target.value }))}
+              />
+            )}
+            <div className={styles.titleGrow}>
+              <LocationRichTextEditor
+                bare
+                dark
+                worldId={worldId}
+                label="Назва сторінки"
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                autoFocus
+                placeholder="Назва"
+                editableStyle={titleTextStyle}
+              />
+            </div>
+          </div>
+          {duplicate && (
+            <p className={styles.dupWarningInline}>
+              Сторінка з такою назвою вже існує — обери іншу.
+            </p>
+          )}
+        </div>
+
+        <div className={styles.typePickRow} role="group" aria-label="Тип сторінки">
+          {PAGE_TYPES.map(([value, label, Icon]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={form.page_type === value}
+              className={`${styles.filterChip} ${
+                form.page_type === value ? styles.filterChipActive : ''
+              }`}
+              onClick={() => pickType(value)}
+              title={label}
+            >
+              <Icon sx={{ fontSize: 14 }} />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.infoGrid}>
+          {(INFOBOX_SCHEMAS[form.page_type] || []).map((field) => (
+            <label key={field.key} className={styles.infoField}>
+              <span className={styles.infoLabel}>{field.label}</span>
+              {field.options ? (
+                <select
+                  className={styles.infoInput}
+                  value={form.infobox[field.key] || ''}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      infobox: { ...f.infobox, [field.key]: e.target.value },
+                    }))
+                  }
+                  aria-label={field.label}
+                >
+                  <option value="">— обери —</option>
+                  {Object.entries(field.options).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  className={styles.infoInput}
+                  value={form.infobox[field.key] || ''}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      infobox: { ...f.infobox, [field.key]: e.target.value },
+                    }))
+                  }
+                  aria-label={field.label}
+                />
+              )}
+            </label>
+          ))}
+        </div>
+
+        <div className={styles.editorMetaRow}>
+          <input
+            type="text"
+            className={styles.infoInput}
+            aria-label="Теги"
+            placeholder="Теги (через кому)"
+            value={form.tags}
+            onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+          />
+          <input
+            type="text"
+            className={styles.infoInput}
+            aria-label="Дата в ігровому світі"
+            placeholder="Дата в світі (Рік 3, Весна)"
+            value={form.world_date}
+            onChange={(e) => setForm((f) => ({ ...f, world_date: e.target.value }))}
+          />
+        </div>
+
+        <div className={styles.editorBody}>
+          <LocationRichTextEditor
+            bare
+            dark
+            worldId={worldId}
+            label="Зміст сторінки"
+            value={form.content}
+            onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
+            multiline
+            minRows={8}
+            placeholder="Зміст… Посилання на інші сторінки: [[Назва]]"
+            editableStyle={contentTextStyle}
+          />
+        </div>
+
+        <div className={styles.editorFooter}>
+          <span className={styles.editorHint}>Ctrl + Enter — зберегти</span>
+          <span className={styles.editorActions}>
+            <button type="button" className={styles.cancelBtn} onClick={onCancel}>
+              Скасувати
+            </button>
+            <button type="submit" className={styles.saveBtn} disabled={!canSave}>
+              {saving ? 'Збереження…' : isNew ? 'Створити' : 'Зберегти'}
+            </button>
+          </span>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+// Відкриває власну модалку одразу після монтування —
+// чернетка нової сторінки масштабується з місця у списку.
+function AutoOpen() {
+  const { open } = useExpandableCard()
+  useEffect(() => {
+    open()
+  }, [open])
+  return null
+}
+
+function NewPageCard({ worldId, accent, form, setForm, saving, duplicate, onSave, onDiscard }) {
+  const draftTitle = cleanTitle(form.title)
+
+  return (
+    <ExpandableCard
+      showExpandBtn={false}
+      onClose={onDiscard}
+      expandedContent={({ close }) => (
+        <WikiEditor
+          worldId={worldId}
+          accent={accent}
+          form={form}
+          setForm={setForm}
+          saving={saving}
+          isNew
+          duplicate={duplicate}
+          onSave={() => onSave(close)}
+          onCancel={close}
+        />
+      )}
+    >
+      <AutoOpen />
+      <div className={`${styles.pageCard} ${styles.pageCardDraft}`}>
+        <div className={styles.pageCardThumb}>
+          <span className={styles.pageCardEmoji}>
+            {form.emoji || EMOJI_BY_TYPE[form.page_type] || EMOJI_FALLBACK}
+          </span>
+          <span className={styles.pageCardType}>
+            {PAGE_TYPE_LABELS[form.page_type] || form.page_type}
+          </span>
+        </div>
+        <div className={`${styles.pageCardTitle} ${draftTitle ? '' : styles.draftTitle}`}>
+          {draftTitle || 'Нова сторінка…'}
+        </div>
+      </div>
+    </ExpandableCard>
+  )
+}
+
 export default function WikiSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
   const section = useExpandableCard()
 
   const [selectedPage, setSelectedPage] = useState(null)
   const [editingPage, setEditingPage] = useState(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
   const [form, setForm] = useState(empty)
   const [search, setSearch] = useState('')
   const [activeTypes, setActiveTypes] = useState([])
@@ -230,18 +508,17 @@ export default function WikiSection({ worldId, accent, userRole }) {
   })
 
   const mutation = useMutation({
-    mutationFn: (payload) =>
-      editingPage
-        ? api.patch(`/worlds/${worldId}/wiki/${editingPage.id}/`, payload)
+    mutationFn: ({ id, payload }) =>
+      id
+        ? api.patch(`/worlds/${worldId}/wiki/${id}/`, payload)
         : api.post(`/worlds/${worldId}/wiki/`, payload),
     onSuccess: (res) => {
       const saved = res?.data
-      if (saved && editingPage && selectedPage?.id === editingPage.id) setSelectedPage(saved)
+      if (saved) {
+        setSelectedPage((cur) => (cur && cur.id === saved.id ? saved : cur))
+      }
       qc.invalidateQueries(['wiki', String(worldId)])
       qc.invalidateQueries(['world', String(worldId)])
-      setDialogOpen(false)
-      setEditingPage(null)
-      setForm(empty)
     },
   })
 
@@ -313,10 +590,18 @@ export default function WikiSection({ worldId, accent, userRole }) {
   const openNew = () => {
     setEditingPage(null)
     setForm(empty)
-    setDialogOpen(true)
+    setCreating(true)
+  }
+
+  // Створення з битого посилання [[Назва]]: назва вже підставлена.
+  const openNewWithTitle = (title) => {
+    setEditingPage(null)
+    setForm({ ...empty, title })
+    setCreating(true)
   }
 
   const openEdit = (page) => {
+    setCreating(false)
     setEditingPage(page)
     setForm({
       title: page.title,
@@ -327,24 +612,71 @@ export default function WikiSection({ worldId, accent, userRole }) {
       world_date: page.world_date || '',
       content: page.content || '',
     })
-    setDialogOpen(true)
   }
+
+  // Скидання при закритті модалки будь-яким способом
+  // (фон, Escape): незбережені зміни відкидаються.
+  const discardEdit = () => setEditingPage(null)
+  const discardCreate = () => {
+    setCreating(false)
+    setForm(empty)
+  }
+
+  const buildPayload = (f) => {
+    const infobox = Object.fromEntries(
+      Object.entries(f.infobox).filter(([, v]) => String(v || '').trim() !== ''),
+    )
+    return {
+      title: cleanTitle(f.title),
+      page_type: f.page_type,
+      emoji: f.emoji || EMOJI_BY_TYPE[f.page_type] || EMOJI_FALLBACK,
+      infobox,
+      tags: f.tags,
+      world_date: f.world_date,
+      content: f.content,
+    }
+  }
+
+  // Редагування лишає модалку відкритою — повертаємось до перегляду.
+  const saveEdit = () => {
+    if (!cleanTitle(form.title) || mutation.isPending || isDuplicateTitle) return
+    mutation.mutate(
+      { id: editingPage.id, payload: buildPayload(form) },
+      { onSuccess: () => setEditingPage(null) },
+    )
+  }
+  // Створення закриває модалку чернетки — сторінка лишається у списку.
+  const saveCreate = (close) => {
+    if (!cleanTitle(form.title) || mutation.isPending || isDuplicateTitle) return
+    mutation.mutate({ id: null, payload: buildPayload(form) }, { onSuccess: () => close() })
+  }
+
+  // Бекенд тримає unique_together (world, title), а граф зіставляє
+  // назви без регістру — попереджаємо про обидва випадки заздалегідь.
+  const isDuplicateTitle =
+    form.title.trim() !== '' &&
+    pages.some(
+      (p) =>
+        p.title.trim().toLowerCase() === form.title.trim().toLowerCase() &&
+        (!editingPage || p.id !== editingPage.id),
+    )
 
   const submit = (e) => {
     e.preventDefault()
+    if (mutation.isPending || isDuplicateTitle) return
     const infobox = Object.fromEntries(
       Object.entries(form.infobox).filter(([, v]) => String(v || '').trim() !== ''),
     )
     const payload = {
-      title: form.title,
+      title: form.title.trim(),
       page_type: form.page_type,
-      emoji: form.emoji,
+      emoji: form.emoji || EMOJI_BY_TYPE[form.page_type] || EMOJI_FALLBACK,
       infobox,
       tags: form.tags,
       world_date: form.world_date,
       content: form.content,
     }
-    mutation.mutateAsync(payload)
+    mutation.mutate(payload)
   }
 
   const openPage = (page) => {
@@ -492,7 +824,12 @@ export default function WikiSection({ worldId, accent, userRole }) {
 
         {selectedPage.content && (
           <div className={styles.pageDetailContent}>
-            {renderContent(selectedPage.content, titleIndex, openPage)}
+            {renderContent(
+              selectedPage.content,
+              titleIndex,
+              openPage,
+              canEdit ? openNewWithTitle : undefined,
+            )}
           </div>
         )}
 
@@ -538,137 +875,6 @@ export default function WikiSection({ worldId, accent, userRole }) {
     )
   }
 
-  const renderDialog = () => (
-    <Dialog
-      open={dialogOpen}
-      onClose={() => setDialogOpen(false)}
-      maxWidth="sm"
-      fullWidth
-      slotProps={{
-        paper: { className: sharedStyles.dialogPaper, style: { '--accent': accent } },
-      }}
-    >
-      <form onSubmit={submit}>
-        <DialogTitle>{editingPage ? 'Редагувати сторінку' : 'Нова сторінка'}</DialogTitle>
-        <DialogContent>
-          <div className={sharedStyles.formFields}>
-            <TextField
-              label="Назва"
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              required
-              autoFocus
-            />
-            <TextField
-              label="Тип"
-              select
-              value={form.page_type}
-              onChange={(e) => {
-                const nextType = e.target.value
-                setForm((f) => ({
-                  ...f,
-                  page_type: nextType,
-                  emoji:
-                    !f.emoji || f.emoji === EMOJI_BY_TYPE[f.page_type]
-                      ? EMOJI_BY_TYPE[nextType]
-                      : f.emoji,
-                }))
-              }}
-            >
-              {PAGE_TYPES.map(([value, label]) => (
-                <MenuItem key={value} value={value}>
-                  {label}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <div className={styles.emojiRow}>
-              <span className={styles.emojiLabel}>Емодзі</span>
-              <div className={styles.emojiPicker}>
-                {EMOJI_PRESETS.map((em) => (
-                  <button
-                    key={em}
-                    type="button"
-                    className={`${styles.emojiBtn} ${form.emoji === em ? styles.emojiBtnActive : ''}`}
-                    onClick={() => setForm((f) => ({ ...f, emoji: em }))}
-                  >
-                    {em}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {(INFOBOX_SCHEMAS[form.page_type] || []).map(
-              (field) =>
-                field.options ? (
-                  <TextField
-                    key={field.key}
-                    label={field.label}
-                    select
-                    value={form.infobox[field.key] || ''}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        infobox: { ...f.infobox, [field.key]: e.target.value },
-                      }))
-                    }
-                  >
-                    <MenuItem value="">
-                      <em>— обери —</em>
-                    </MenuItem>
-                    {Object.entries(field.options).map(([value, label]) => (
-                      <MenuItem key={value} value={value}>
-                        {label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                ) : (
-                  <TextField
-                    key={field.key}
-                    label={field.label}
-                    value={form.infobox[field.key] || ''}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        infobox: { ...f.infobox, [field.key]: e.target.value },
-                      }))
-                    }
-                  />
-                ),
-            )}
-
-            <TextField
-              label="Теги (через кому)"
-              value={form.tags}
-              onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
-            />
-            <TextField
-              label="Дата в ігровому світі"
-              placeholder="Рік 3, Весна"
-              value={form.world_date}
-              onChange={(e) => setForm((f) => ({ ...f, world_date: e.target.value }))}
-            />
-            <TextField
-              label="Зміст"
-              value={form.content}
-              onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-              multiline
-              minRows={6}
-              placeholder="Посилання на інші сторінки: [[Назва]]"
-            />
-          </div>
-        </DialogContent>
-        <DialogActions className={sharedStyles.dialogActions}>
-          <Button onClick={() => setDialogOpen(false)} className={sharedStyles.dialogBtnCancel}>
-            Скасувати
-          </Button>
-          <Button type="submit" className={sharedStyles.dialogBtnSubmit}>
-            Зберегти
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
-  )
 return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
       <div className={sharedStyles.sectionHeader}>
@@ -686,7 +892,37 @@ return (
         }`}
       >
         {section.modal && selectedPage ? (
-          renderPageDetail()
+          <>
+            {canEdit && creating && (
+              <span hidden aria-hidden="true">
+                <NewPageCard
+                  worldId={worldId}
+                  accent={accent}
+                  form={form}
+                  setForm={setForm}
+                  saving={mutation.isPending}
+                  duplicate={isDuplicateTitle}
+                  onSave={saveCreate}
+                  onDiscard={discardCreate}
+                />
+              </span>
+            )}
+            {editingPage ? (
+              <WikiEditor
+                worldId={worldId}
+                accent={accent}
+                form={form}
+                setForm={setForm}
+                saving={mutation.isPending}
+                isNew={false}
+                duplicate={isDuplicateTitle}
+                onSave={saveEdit}
+                onCancel={discardEdit}
+              />
+            ) : (
+              renderPageDetail()
+            )}
+          </>
         ) : (
           <>
             <div className={styles.toolbar}>
@@ -759,9 +995,34 @@ return (
                   </div>
                 </div>
 
-                <div className={`${styles.pagesGrid} ${section.full ? styles.pagesGridWide : ''}`}>
-                  {visiblePages.map((page) => (
-                    <div key={page.id} className={styles.pageCard} onClick={() => openPage(page)}>
+          <div className={`${styles.pagesGrid} ${section.full ? styles.pagesGridWide : ''}`}>
+            {canEdit && creating && (
+            <NewPageCard
+              worldId={worldId}
+              accent={accent}
+              form={form}
+              setForm={setForm}
+              saving={mutation.isPending}
+              duplicate={isDuplicateTitle}
+              onSave={saveCreate}
+              onDiscard={discardCreate}
+            />
+            )}
+            {visiblePages.map((page) => (
+                    <div
+                      key={page.id}
+                      className={styles.pageCard}
+                      role="link"
+                      tabIndex={0}
+                      aria-label={`Відкрити сторінку «${page.title}»`}
+                      onClick={() => openPage(page)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          openPage(page)
+                        }
+                      }}
+                    >
                       <div className={styles.pageCardThumb}>
                         <span className={styles.pageCardEmoji}>{pageEmoji(page)}</span>
                         <span className={styles.pageCardType}>
@@ -772,9 +1033,10 @@ return (
                       {page.content && (
                         <div className={styles.pageCardSnippet}>
                           {renderContent(
-                            page.content.slice(0, SNIPPET_MAX),
+                            snippetOf(page.content),
                             titleIndex,
                             openPage,
+                            canEdit ? openNewWithTitle : undefined,
                           )}
                         </div>
                       )}
@@ -799,7 +1061,7 @@ return (
                       </div>
                     </div>
                   ))}
-                  {filteredPages.length === 0 && (
+                  {filteredPages.length === 0 && !creating && (
                     <p className={styles.emptyState}>
                       {pages.length === 0
                         ? canEdit
@@ -833,8 +1095,6 @@ return (
           </>
         )}
       </div>
-
-      {renderDialog()}
     </div>
   )
 }

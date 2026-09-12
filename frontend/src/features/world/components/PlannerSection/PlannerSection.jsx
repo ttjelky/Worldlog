@@ -286,7 +286,7 @@ export default function PlannerSection({ worldId, accent, userRole }) {
           type="button"
           className={styles.calNavBtn}
           aria-label="Попередній місяць"
-          onClick={() => setMonth((m) => addMonths(m, -1))}
+            onClick={() => setMonth(addMonths(month, -1))}
         >
           <ChevronLeftIcon fontSize="small" />
         </button>
@@ -295,7 +295,7 @@ export default function PlannerSection({ worldId, accent, userRole }) {
           type="button"
           className={styles.calNavBtn}
           aria-label="Наступний місяць"
-          onClick={() => setMonth((m) => addMonths(m, 1))}
+            onClick={() => setMonth(addMonths(month, 1))}
         >
           <ChevronRightIcon fontSize="small" />
         </button>

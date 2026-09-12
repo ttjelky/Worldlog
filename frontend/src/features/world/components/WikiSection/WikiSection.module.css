@@ -186,6 +186,11 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+.pageCard:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
 .pageCardThumb {
   display: flex;
   align-items: center;
@@ -348,6 +353,19 @@
   text-underline-offset: 2px;
 }
 
+.pageDetailLinkBroken[role='button'] {
+  cursor: pointer;
+}
+
+.pageDetailLinkBroken[role='button']:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.pageDetailLinkBroken[role='button']:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
 .tokenSep {
   color: rgba(255, 255, 255, 0.6);
 }
@@ -464,45 +482,41 @@
   font-weight: 400;
 }
 
-.emojiRow {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.emojiLabel {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.emojiPicker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.emojiBtn {
-  width: 48px;
+.emojiCustomInline {
+  flex-shrink: 0;
+  width: 56px;
   height: 48px;
-  border-radius: 16px;
+  box-sizing: border-box;
   border: none;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
+  text-align: center;
+  outline: none;
+  transition: background 0.15s ease;
 }
 
-.emojiBtn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  transform: translateY(-1px);
+.emojiCustomInline::placeholder {
+  color: rgba(255, 255, 255, 0.35);
 }
 
-.emojiBtnActive {
-  background: rgba(255, 255, 255, 0.95);
+.emojiCustomInline:focus {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.dupWarning {
+  margin: -8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffb4ab;
+}
+
+.dupWarningInline {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffb4ab;
 }
 
 .emptyState {
@@ -550,8 +564,208 @@
   background: rgba(255, 255, 255, 0.24);
 }
 
+/* ---------- Inline-редактор сторінки (як у нотатках) ---------- */
+
+.details.details {
+  position: relative;
+  height: auto;
+  min-height: 100%;
+  max-height: none;
+  padding-bottom: 24px;
+}
+
+.editorForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.editorBody {
+  flex: 1;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.titleGrow {
+  flex: 1;
+  min-width: 0;
+}
+
+.emojiSelect {
+  flex-shrink: 0;
+  height: 48px;
+  max-width: 76px;
+  box-sizing: border-box;
+  color-scheme: dark;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 22px;
+  padding: 0 8px;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.emojiSelect:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.emojiSelect option {
+  color: #1d1a22;
+  font-size: 16px;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.draftTitle {
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+}
+
+.pageCardDraft {
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  background: transparent;
+  cursor: default;
+}
+
+.pageCardDraft:hover {
+  background: transparent;
+}
+
+.typePickRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.infoField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.infoLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.infoInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  color-scheme: dark;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 12px 16px;
+  outline: none;
+  transition: background 0.15s ease;
+}
+
+.infoInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.infoInput:focus {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+select.infoInput option {
+  color: #1d1a22;
+}
+
+.editorMetaRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.editorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.editorHint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.editorActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.cancelBtn {
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.saveBtn {
+  border: none;
+  background: #ffffff;
+  color: #1d1a22;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #e9e9e9;
+}
+
+.saveBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 @media (max-width: 560px) {
   .pagesGrid {
     grid-template-columns: 1fr;
+  }
+
+  .editorHint {
+    display: none;
+  }
+
+  .editorMetaRow {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
