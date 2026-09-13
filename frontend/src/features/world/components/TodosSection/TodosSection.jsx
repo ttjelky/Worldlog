@@ -32,20 +32,13 @@ const priorities = {
   high: ['#FFB199', 'Високий'],
   urgent: ['#FF8A80', 'Терміновий'],
 }
-const empty = { title: '', description: '', priority: 'medium', due_date: '' }
-
-function isOverdue(todo) {
-  if (!todo.due_date || todo.is_done) return false
-  const today = new Date().toISOString().slice(0, 10)
-  return todo.due_date < today
-}
+const empty = { title: '', description: '', priority: 'medium' }
 
 function cleanTodoPayload(form, editing) {
   return {
     title: (form.title || '').trim(),
     description: form.description || '',
     priority: form.priority || 'medium',
-    due_date: form.due_date || null,
     ...(editing ? {} : { is_done: false }),
   }
 }
@@ -251,7 +244,6 @@ export default function TodosSection({ worldId, accent, userRole }) {
       title: t.title || '',
       description: t.description || '',
       priority: t.priority || 'medium',
-      due_date: t.due_date || '',
     })
     setOpen(true)
   }
@@ -348,7 +340,7 @@ export default function TodosSection({ worldId, accent, userRole }) {
               id={`todos-slot-${t.id}`}
               className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''} ${
                 drag?.id === t.id ? styles.todoDragging : ''
-              } ${drag?.over === t.id ? styles.todoDragOver : ''} ${isOverdue(t) ? styles.todoOverdue : ''}`}
+              } ${drag?.over === t.id ? styles.todoDragOver : ''}`}
               draggable={dndEnabled}
               onDragStart={dndEnabled ? (e) => onTodoDragStart(e, t.id) : undefined}
               onDragOver={dndEnabled ? (e) => onTodoDragOver(e, t.id) : undefined}
@@ -392,11 +384,6 @@ export default function TodosSection({ worldId, accent, userRole }) {
                   <span className={styles.priorityDot} style={{ background: dot }} />
                   {label}
                 </span>
-                {t.due_date && (
-                  <span className={styles.dueChip} title={`Дедлайн: ${t.due_date}`}>
-                    📅 {t.due_date}
-                  </span>
-                )}
               <div className={styles.rowActions}>
                 <RelationshipButton
                   worldId={worldId}
@@ -483,13 +470,6 @@ export default function TodosSection({ worldId, accent, userRole }) {
                   </MenuItem>
                 ))}
               </TextField>
-              <TextField
-                label="Дедлайн"
-                type="date"
-                value={form.due_date || ''}
-                onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
-                InputLabelProps={{ shrink: true }}
-              />
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>

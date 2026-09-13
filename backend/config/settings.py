@@ -27,8 +27,11 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# За замовчуванням DEBUG вимкнено — для локалки встановіть DJANGO_DEBUG=true.
-DEBUG = os.environ.get('DJANGO_DEBUG', 'false').lower() == 'true'
+# За замовчуванням True для локальної розробки (Django-конвенція).
+# ВАЖЛИВО: Django роздає /media/ (аватарки, обкладинки, фото) лише з DEBUG=True,
+# тому для локального runserver лишайте default. Прод (render.yaml) явно
+# встановлює DJANGO_DEBUG=false і має використовувати Cloudinary (CLOUDINARY_URL).
+DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
