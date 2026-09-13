@@ -198,7 +198,9 @@
 }
 
 .pageCardEmoji {
-  font-size: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
@@ -278,8 +280,22 @@
 }
 
 .pageDetailEmoji {
-  font-size: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
+}
+
+.typeIconPreview {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 .pageDetailTitle {
@@ -482,29 +498,6 @@
   font-weight: 400;
 }
 
-.emojiCustomInline {
-  flex-shrink: 0;
-  width: 56px;
-  height: 48px;
-  box-sizing: border-box;
-  border: none;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-size: 22px;
-  text-align: center;
-  outline: none;
-  transition: background 0.15s ease;
-}
-
-.emojiCustomInline::placeholder {
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.emojiCustomInline:focus {
-  background: rgba(255, 255, 255, 0.18);
-}
-
 .dupWarning {
   margin: -8px 0 0;
   font-size: 13px;
@@ -594,32 +587,6 @@
 .titleGrow {
   flex: 1;
   min-width: 0;
-}
-
-.emojiSelect {
-  flex-shrink: 0;
-  height: 48px;
-  max-width: 76px;
-  box-sizing: border-box;
-  color-scheme: dark;
-  border: none;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-size: 22px;
-  padding: 0 8px;
-  outline: none;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.emojiSelect:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.emojiSelect option {
-  color: #1d1a22;
-  font-size: 16px;
 }
 
 .infoGrid {

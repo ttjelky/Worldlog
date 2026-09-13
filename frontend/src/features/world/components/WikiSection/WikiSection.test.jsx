@@ -87,8 +87,9 @@ describe('WikiSection', () => {
     })
     expect(screen.getByRole('button', { name: 'Створити' }).disabled).toBe(true)
     expect(api.post).not.toHaveBeenCalled()
-    // Емодзі — компактний дропдаун зліва від назви, а не сітка
-    expect(screen.getByLabelText('Емодзі').tagName).toBe('SELECT')
+    // Іконка типу — зліва від назви, емодзі-пікера більше немає
+    expect(screen.queryByLabelText('Емодзі')).toBeNull()
+    expect(screen.getByRole('group', { name: 'Тип сторінки' })).not.toBeNull()
   })
 
   it('creates a page from a broken link with prefilled title', async () => {

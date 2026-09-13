@@ -46,23 +46,11 @@ const PAGE_TYPES = [
 const PAGE_TYPE_LABELS = Object.fromEntries(PAGE_TYPES.map(([v, l]) => [v, l]))
 const PAGE_TYPE_ICONS = Object.fromEntries(PAGE_TYPES.map(([v, , I]) => [v, I]))
 
-const EMOJI_BY_TYPE = {
-  location: '🏰',
-  character: '🧙',
-  faction: '🛡️',
-  kingdom: '👑',
-  region: '🗺️',
-  item: '⚔️',
-  event: '⚡',
-  war: '💥',
-  custom: '📜',
+// Іконка типу сторінки замість емодзі — єдиний візуальний маркер типу.
+function WikiTypeIcon({ type, fontSize = 20 }) {
+  const Icon = PAGE_TYPE_ICONS[type] || DescriptionIcon
+  return <Icon sx={{ fontSize }} aria-hidden="true" />
 }
-
-const EMOJI_PRESETS = [
-  '📜', '🏰', '🧙', '🛡️', '👑', '🗺️', '⚔️', '⚡', '💥',
-  '🔮', '🐉', '⚓', '🌲', '🏮', '📖', '🗡️', '🪙', '🏹',
-]
-const EMOJI_FALLBACK = '📄'
 
 const DANGER_OPTIONS = { low: 'Низький', medium: 'Середній', high: 'Високий', deadly: 'Смертельний' }
 
@@ -219,7 +207,7 @@ function renderContent(text, titleIndex, onOpen, onCreateMissing) {
 const empty = {
   title: '',
   page_type: 'location',
-  emoji: EMOJI_BY_TYPE.location,
+  emoji: '',
   infobox: {},
   tags: '',
   world_date: '',
@@ -243,7 +231,7 @@ const contentTextStyle = {
 }
 
 // Inline-редактор сторінки в дусі нотаток: усе пишеться прямо
-// в модалці — назва, тип-пігулки, емодзі, поля інфобокса, зміст.
+// в модалці — назва, тип-пігулки, поля інфобокса, зміст.
 function WikiEditor({ worldId, accent, form, setForm, saving, isNew, duplicate, onSave, onCancel }) {
   const canSave = cleanTitle(form.title).length > 0 && !saving && !duplicate
   const submit = (e) => {
@@ -257,50 +245,17 @@ function WikiEditor({ worldId, accent, form, setForm, saving, isNew, duplicate, 
     }
   }
   const pickType = (nextType) => {
-    setForm((f) => ({
-      ...f,
-      page_type: nextType,
-      emoji:
-        !f.emoji || f.emoji === EMOJI_BY_TYPE[f.page_type]
-          ? EMOJI_BY_TYPE[nextType]
-          : f.emoji,
-    }))
+    setForm((f) => ({ ...f, page_type: nextType }))
   }
-  const isCustomEmoji = !EMOJI_PRESETS.includes(form.emoji)
 
   return (
     <div className={`${sharedStyles.card} ${styles.details}`} style={{ '--accent': accent }}>
       <form onSubmit={submit} onKeyDown={onKeyDown} className={styles.editorForm}>
         <div className={styles.detailsHead}>
           <div className={styles.titleRow}>
-            <select
-              className={styles.emojiSelect}
-              aria-label="Емодзі"
-              title="Емодзі сторінки"
-              value={isCustomEmoji ? '__custom' : form.emoji}
-              onChange={(e) => {
-                if (e.target.value === '__custom') setForm((f) => ({ ...f, emoji: '' }))
-                else setForm((f) => ({ ...f, emoji: e.target.value }))
-              }}
-            >
-              {EMOJI_PRESETS.map((em) => (
-                <option key={em} value={em}>
-                  {em}
-                </option>
-              ))}
-              <option value="__custom">✎ своє…</option>
-            </select>
-            {isCustomEmoji && (
-              <input
-                type="text"
-                className={styles.emojiCustomInline}
-                aria-label="Своє емодзі"
-                title="Встав своє емодзі"
-                placeholder="🙂"
-                value={form.emoji}
-                onChange={(e) => setForm((f) => ({ ...f, emoji: e.target.value }))}
-              />
-            )}
+            <span className={styles.typeIconPreview} title={PAGE_TYPE_LABELS[form.page_type]}>
+              <WikiTypeIcon type={form.page_type} fontSize={30} />
+            </span>
             <div className={styles.titleGrow}>
               <LocationRichTextEditor
                 bare
@@ -466,7 +421,7 @@ function NewPageCard({ worldId, accent, form, setForm, saving, duplicate, onSave
       <div className={`${styles.pageCard} ${styles.pageCardDraft}`}>
         <div className={styles.pageCardThumb}>
           <span className={styles.pageCardEmoji}>
-            {form.emoji || EMOJI_BY_TYPE[form.page_type] || EMOJI_FALLBACK}
+            <WikiTypeIcon type={form.page_type} fontSize={34} />
           </span>
           <span className={styles.pageCardType}>
             {PAGE_TYPE_LABELS[form.page_type] || form.page_type}
@@ -605,7 +560,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
     setForm({
       title: page.title,
       page_type: page.page_type,
-      emoji: page.emoji || EMOJI_BY_TYPE[page.page_type] || EMOJI_FALLBACK,
+      emoji: page.emoji || '',
       infobox: page.infobox || {},
       tags: page.tags || '',
       world_date: page.world_date || '',
@@ -628,7 +583,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
     return {
       title: cleanTitle(f.title),
       page_type: f.page_type,
-      emoji: f.emoji || EMOJI_BY_TYPE[f.page_type] || EMOJI_FALLBACK,
+      emoji: f.emoji || '',
       infobox,
       tags: f.tags,
       world_date: f.world_date,
@@ -726,8 +681,6 @@ export default function WikiSection({ worldId, accent, userRole }) {
         )
       })
 
-  const pageEmoji = (p) => p.emoji || EMOJI_BY_TYPE[p.page_type] || EMOJI_FALLBACK
-
   const renderPageDetail = () => {
     const TypeIcon = PAGE_TYPE_ICONS[selectedPage.page_type] || DescriptionIcon
     const inf = selectedPage.infobox || {}
@@ -746,7 +699,9 @@ export default function WikiSection({ worldId, accent, userRole }) {
         </button>
         <div className={styles.pageDetailHeader}>
           <div className={styles.pageDetailHeadline}>
-            <span className={styles.pageDetailEmoji}>{pageEmoji(selectedPage)}</span>
+            <span className={styles.pageDetailEmoji}>
+              <WikiTypeIcon type={selectedPage.page_type} fontSize={46} />
+            </span>
             <div>
               <h3 className={styles.pageDetailTitle}>{selectedPage.title}</h3>
               <div className={styles.pageDetailMeta}>
@@ -834,7 +789,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
                   className={styles.nestedLink}
                   onClick={() => openPage(page)}
                 >
-                  {pageEmoji(page)} {page.title}
+                  <WikiTypeIcon type={page.page_type} fontSize={14} /> {page.title}
                   <span className={styles.nestedLinkLabel}>— {label.toLowerCase()}</span>
                 </button>
               ))}
@@ -853,7 +808,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
                   className={styles.nestedLink}
                   onClick={() => openPage(page)}
                 >
-                  {pageEmoji(page)} {page.title}
+                  <WikiTypeIcon type={page.page_type} fontSize={14} /> {page.title}
                 </button>
               ))}
             </div>
@@ -1016,7 +971,9 @@ return (
                       }}
                     >
                       <div className={styles.pageCardThumb}>
-                        <span className={styles.pageCardEmoji}>{pageEmoji(page)}</span>
+                        <span className={styles.pageCardEmoji}>
+                          <WikiTypeIcon type={page.page_type} fontSize={34} />
+                        </span>
                         <span className={styles.pageCardType}>
                           {PAGE_TYPE_LABELS[page.page_type] || page.page_type}
                         </span>
