@@ -271,12 +271,13 @@ function drawNode(simNodes, node, degree, measurer) {
   return g
 }
 
-export default function WikiGraph({ worldId, onOpen, height }) {
+export default function WikiGraph({ worldId, onOpen, height, readOnly = false }) {
   const svgRef = useRef(null)
   const canvasRef = useRef(null)
   const viewportRef = useRef(null)
   const viewRef = useRef({ k: 1, tx: 0, ty: 0 })
   const onOpenRef = useRef(onOpen)
+  const readOnlyRef = useRef(readOnly)
   const fitRef = useRef(null)
   const interactionsRef = useRef(null)
   const lastSizeRef = useRef({ w: 0, h: 0 })
@@ -300,7 +301,11 @@ export default function WikiGraph({ worldId, onOpen, height }) {
     onOpenRef.current = onOpen
   })
 
-  const { data, isLoading } = useQuery({
+  useEffect(() => {
+    readOnlyRef.current = readOnly
+  }, [readOnly])
+
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['wiki', String(worldId), 'graph'],
     queryFn: () => api.get(`/worlds/${worldId}/wiki/graph/`).then((r) => r.data),
   })
@@ -311,8 +316,9 @@ export default function WikiGraph({ worldId, onOpen, height }) {
     if (!svg || !canvas || !data) return
 
     const nodes = data.nodes || []
+    const nodeIdSet = new Set(nodes.map((nn) => nn.id))
     const edges = (data.edges || []).filter(
-      (e) => nodes.some((nn) => nn.id === e.source) && nodes.some((nn) => nn.id === e.target),
+      (e) => nodeIdSet.has(e.source) && nodeIdSet.has(e.target),
     )
     if (nodes.length === 0) return
 
@@ -417,6 +423,11 @@ export default function WikiGraph({ worldId, onOpen, height }) {
       e.preventDefault()
       e.stopPropagation()
       if (e.button !== 0) return
+      // У read-only вузли не тягаємо — лише клік для відкриття.
+      if (readOnlyRef.current) {
+        drag = { g, node, startX: e.clientX, startY: e.clientY, moved: true, noSave: true }
+        return
+      }
       drag = {
         g,
         node,
@@ -437,6 +448,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
         return
       }
       if (drag) {
+        if (drag.noSave) return
         const dx = e.clientX - drag.startX
         const dy = e.clientY - drag.startY
         if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true
@@ -451,8 +463,12 @@ export default function WikiGraph({ worldId, onOpen, height }) {
 
     const onUp = () => {
       if (drag) {
-        if (!drag.moved) {
+        if (!drag.moved && !drag.noSave) {
           // клік по вузлу (wikі-сторінці)
+          const id = drag.node.id
+          if (typeof id === 'number') onOpenRef.current?.(id)
+        } else if (drag.noSave) {
+          // read-only: клік теж відкриває сторінку
           const id = drag.node.id
           if (typeof id === 'number') onOpenRef.current?.(id)
         } else if (interactionsRef.current) {
@@ -532,6 +548,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
     if (fitRef.current) fitRef.current()
   }
   const resetLayout = () => {
+    if (readOnly) return
     clearPositions(worldId)
     setLayoutKey((k) => k + 1)
   }
@@ -540,7 +557,11 @@ export default function WikiGraph({ worldId, onOpen, height }) {
 
   return (
     <div className={styles.graphWrap}>
-      {nodeCount === 0 ? (
+      {isError ? (
+        <p className={styles.empty}>
+          Не вдалося завантажити граф. Перевірте зʼєднання та спробуйте оновити сторінку.
+        </p>
+      ) : nodeCount === 0 ? (
         <p className={styles.empty}>
           {isLoading
             ? 'Завантаження графа…'
@@ -587,6 +608,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
                 +
               </button>
             </div>
+            {!readOnly && (
             <div className={styles.controlsGroup}>
               <button
                 type="button"
@@ -603,6 +625,7 @@ export default function WikiGraph({ worldId, onOpen, height }) {
                 </svg>
               </button>
             </div>
+            )}
           </div>
           <div className={styles.legend}>
             <span className={styles.legendItem}>

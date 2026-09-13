@@ -4,6 +4,18 @@ import OpenInFullIcon from '@mui/icons-material/OpenInFull'
 import FullscreenIcon from '@mui/icons-material/Fullscreen'
 import styles from './ExpandableCard.module.css'
 
+// Лічильник відкритих модалок: закриття вкладеної не має розблоковувати
+// скрол, поки зовнішня ще відкрита.
+let openModalCount = 0
+function lockBody() {
+  openModalCount += 1
+  document.body.style.overflow = 'hidden'
+}
+function unlockBody() {
+  openModalCount = Math.max(0, openModalCount - 1)
+  if (openModalCount === 0) document.body.style.overflow = ''
+}
+
 // Дозволяє вкладеному контенту знати стан розгортання та відкрити модалку
 export const ExpandableCardContext = createContext({
   expanded: false,
@@ -83,11 +95,11 @@ export default function ExpandableCard({
     if (fullTimer.current) clearTimeout(fullTimer.current)
     clearCloseTimer()
     setExpanded(true)
-    document.body.style.overflow = 'hidden'
+    lockBody()
   }, [clearCloseTimer])
 
   const close = useCallback(() => {
-    document.body.style.overflow = ''
+    unlockBody()
     if (instant) {
       clearCloseTimer()
       if (fullTimer.current) clearTimeout(fullTimer.current)
@@ -130,6 +142,16 @@ export default function ExpandableCard({
     () => () => {
       if (fullTimer.current) clearTimeout(fullTimer.current)
       if (closeTimer.current) clearTimeout(closeTimer.current)
+    },
+    [],
+  )
+
+  // Анмаунт з відкритою модалкою (навігація) — повертаємо скрол.
+  const expandedRef = useRef(false)
+  expandedRef.current = expanded
+  useEffect(
+    () => () => {
+      if (expandedRef.current) unlockBody()
     },
     [],
   )
@@ -200,7 +222,7 @@ export default function ExpandableCard({
       setClosing(false)
       setFading(false)
       setRect(null)
-      prevFocusRef.current?.focus()
+      if (prevFocusRef.current?.isConnected) prevFocusRef.current.focus?.()
     }
   }
 
@@ -235,7 +257,6 @@ export default function ExpandableCard({
                 open()
               }}
               aria-label="Розгорнути картку"
-              tabIndex={-1}
             >
               <OpenInFullIcon fontSize="small" />
             </button>
@@ -250,12 +271,13 @@ export default function ExpandableCard({
             <div
               className={`${styles.backdrop} ${closing ? styles.backdropClosing : ''}`}
               onClick={onBackdropClick}
-              role="dialog"
-              aria-modal="true"
             >
               <div
                 ref={modalRef}
                 tabIndex={-1}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Розгорнута картка світу"
                 className={`${styles.modal} ${wide ? styles.modalWide : ''} ${
                   extraWide ? styles.modalExtraWide : ''
                 } ${modalClassName} ${

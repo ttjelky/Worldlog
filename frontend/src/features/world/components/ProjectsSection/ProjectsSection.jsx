@@ -151,11 +151,12 @@ function ProjectDetails({
         (old ?? []).map((x) => (x.id === id ? { ...x, is_done: next } : x)),
       )
       qc.setQueryData(projectsKey, (old) =>
-        (old ?? []).map((p) =>
-          p.id === project.id
-            ? { ...p, todos_done: Math.max(0, (p.todos_done ?? 0) + (next ? 1 : -1)) }
-            : p,
-        ),
+        (old ?? []).map((p) => {
+          if (p.id !== project.id) return p
+          const total = p.todos_count ?? 0
+          const done = Math.max(0, (p.todos_done ?? 0) + (next ? 1 : -1))
+          return { ...p, todos_done: done, progress: total ? Math.round((done / total) * 100) : 0 }
+        }),
       )
       return { prevTodos, prevProjects }
     },

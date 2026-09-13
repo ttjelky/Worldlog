@@ -64,7 +64,11 @@ function ToastItem({ toast, onDismiss, onClick }) {
       </div>
       <div className={styles.content}>
         <p className={styles.title}>{typeMeta.title}</p>
-        <p className={styles.message}>{typeMeta.text(fromName)}</p>
+        <p className={styles.message}>
+          {notification.notification_type?.startsWith('world_access')
+            ? notification.message || fromName
+            : typeMeta.text(fromName)}
+        </p>
       </div>
       <button
         className={styles.closeBtn}

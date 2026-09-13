@@ -88,10 +88,15 @@ function mergeWithDefaults(saved) {
     return {
       ...def,
       ...savedCard,
+      id: def.id,
       hidden: savedCard?.hidden ?? false,
     }
   })
-  return { cards: merged, flexes: saved.flexes || {} }
+  return {
+    cards: merged,
+    flexes: saved.flexes || {},
+    rowConfigs: saved.rowConfigs || null,
+  }
 }
 
 function loadLayout(worldId) {
@@ -196,14 +201,7 @@ function CoverImageCard({ world, worldId, accent, userRole }) {
   })
 
   const deleteCover = useMutation({
-    mutationFn: () =>
-      api.patch(
-        `/worlds/${worldId}/`,
-        { cover_image: '' },
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        },
-      ),
+    mutationFn: () => api.patch(`/worlds/${worldId}/`, { cover_image: null }),
     onSuccess: () => qc.invalidateQueries(['world', String(worldId)]),
     onError: () => notify('Не вдалося видалити обкладинку'),
   })
@@ -224,7 +222,7 @@ function CoverImageCard({ world, worldId, accent, userRole }) {
   }
 
   const handleDelete = () => {
-    if (window.confirm('Видалити обкладинку світу?')) deleteCover.mutate()
+    deleteCover.mutate()
   }
 
   const canEdit = userRole && userRole !== 'viewer'
@@ -315,7 +313,7 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
   })
 
   useEffect(() => {
-    if (world) {
+    if (open && world) {
       setForm({
         name: world.name || '',
         description: world.description || '',
@@ -324,7 +322,7 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
         is_public: world.is_public || false,
       })
     }
-  }, [world])
+  }, [open])
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -386,16 +384,22 @@ function WorldEditDialog({ open, onClose, world, worldId }) {
               onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
               InputLabelProps={{ shrink: true }}
             />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={!!form.is_public}
+                onChange={(e) => setForm((f) => ({ ...f, is_public: e.target.checked }))}
+              />
+              Публічний світ (видно в пошуку)
+            </label>
           </div>
         </DialogContent>
         <DialogActions className={sharedStyles.dialogActions}>
           <Button
             onClick={() => {
-              if (window.confirm('Ви впевнені, що хочете видалити цей світ?')) {
-                onClose()
-                deleteWorld({ id: worldId, name: world?.name })
-                navigate('/app')
-              }
+              onClose()
+              deleteWorld({ id: worldId, name: world?.name })
+              navigate('/app')
             }}
             startIcon={<DeleteOutlinedIcon />}
             className={sharedStyles.dialogBtnCancel}
@@ -537,7 +541,7 @@ function buildCardContent({ world, worldId, red, green, cover, userRole }) {
     ),
     relationships: () => (
       <ExpandableCard extraWide>
-        <RelationshipsSection worldId={worldId} accent={green} />
+        <RelationshipsSection worldId={worldId} accent={green} userRole={userRole} />
       </ExpandableCard>
     ),
   }
@@ -569,7 +573,20 @@ export default function WorldDetail({ onBack }) {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [themeDialogOpen, setThemeDialogOpen] = useState(false)
   const [cardsMenuOpen, setCardsMenuOpen] = useState(false)
+  const [layout, setLayout] = useState(() => {
+    const saved = loadLayout(worldId)
+    const merged = mergeWithDefaults(saved)
+    return (
+      merged || {
+        cards: DEFAULT_CARDS.map((c) => ({ ...c, hidden: false })),
+        flexes: {},
+        rowConfigs: null,
+      }
+    )
+  })
   const [rowConfigs, setRowConfigs] = useState(() => {
+    const saved = loadLayout(worldId)
+    if (saved?.rowConfigs) return saved.rowConfigs
     const configs = {}
     DEFAULT_CARDS.forEach((card) => {
       if (!configs[card.row]) {
@@ -578,26 +595,17 @@ export default function WorldDetail({ onBack }) {
     })
     return configs
   })
-  const [layout, setLayout] = useState(() => {
-    const saved = loadLayout(worldId)
-    return (
-      mergeWithDefaults(saved) || {
-        cards: DEFAULT_CARDS.map((c) => ({ ...c, hidden: false })),
-        flexes: {},
-      }
-    )
-  })
   const [drag, setDrag] = useState(null)
   const [resize, setResize] = useState(null)
   const flipSnapshotRef = useRef(null)
 
   const rearrangeRow = useCallback(
     (rowIndex, newCount) => {
+      const newConfigs = { ...rowConfigs, [rowIndex]: newCount }
+      setRowConfigs(newConfigs)
       setLayout((prev) => {
         const allVisibleCards = prev.cards.filter((c) => !c.hidden)
         const hiddenCards = prev.cards.filter((c) => c.hidden)
-
-        const newConfigs = { ...rowConfigs, [rowIndex]: newCount }
 
         const row0Cards = allVisibleCards.filter((c) => c.row === 0)
         const restCards = allVisibleCards.filter((c) => c.row > 0)
@@ -606,14 +614,16 @@ export default function WorldDetail({ onBack }) {
 
         let cardIndex = 0
         for (let row = 1; cardIndex < restCards.length; row++) {
-          const count = newConfigs[row] || 2
+          // Цільовий ряд отримує новий лічильник, решта — збережені конфіги.
+          const count = row === rowIndex ? newCount : newConfigs[row] || 2
           for (let i = 0; i < count && cardIndex < restCards.length; i++) {
             result.push({ ...restCards[cardIndex], row })
             cardIndex++
           }
         }
 
-        return { ...prev, cards: [...result, ...hiddenCards] }
+        // Скидаємо px-ширини — вони від старої розкладки.
+        return { ...prev, cards: [...result, ...hiddenCards], flexes: {}, rowConfigs: newConfigs }
       })
     },
     [rowConfigs],
@@ -621,7 +631,6 @@ export default function WorldDetail({ onBack }) {
 
   const handleRowConfigChange = useCallback(
     (rowIndex, newCount) => {
-      setRowConfigs((prev) => ({ ...prev, [rowIndex]: newCount }))
       rearrangeRow(rowIndex, newCount)
     },
     [rearrangeRow],
@@ -630,9 +639,25 @@ export default function WorldDetail({ onBack }) {
   const saveTimerRef = useRef(null)
   useEffect(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => saveLayout(worldId, layout), 300)
+    saveTimerRef.current = setTimeout(
+      () => saveLayout(worldId, { ...layout, rowConfigs }),
+      300,
+    )
     return () => clearTimeout(saveTimerRef.current)
-  }, [layout, worldId])
+  }, [layout, rowConfigs, worldId])
+
+  // На вузькому екрані px-ширини ламають верстку — чистимо їх.
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)')
+    const onChange = (e) => {
+      if (e.matches) {
+        setLayout((prev) => (Object.keys(prev.flexes || {}).length ? { ...prev, flexes: {} } : prev))
+      }
+    }
+    if (mq.matches) onChange(mq)
+    mq.addEventListener?.('change', onChange)
+    return () => mq.removeEventListener?.('change', onChange)
+  }, [])
 
   const { cards, flexes } = layout
   const getRowCards = useCallback((row) => cards.filter((c) => c.row === row && !c.hidden), [cards])
@@ -677,9 +702,11 @@ export default function WorldDetail({ onBack }) {
       const tgtIdx = prev.cards.findIndex((c) => c.id === targetId)
       if (srcIdx === -1 || tgtIdx === -1) return prev
 
+      // Міняємо цілі об'єкти місцями — hidden/row їдуть разом із карткою.
       const nextCards = prev.cards.map((c) => ({ ...c }))
-      nextCards[srcIdx].id = targetId
-      nextCards[tgtIdx].id = sourceId
+      const tmp = nextCards[srcIdx]
+      nextCards[srcIdx] = nextCards[tgtIdx]
+      nextCards[tgtIdx] = tmp
 
       const nextFlexes = { ...prev.flexes }
       const srcFlex = prev.flexes[sourceId]
@@ -795,7 +822,18 @@ export default function WorldDetail({ onBack }) {
   }, [resize])
 
   const resetLayout = () => {
-    setLayout({ cards: DEFAULT_CARDS, flexes: {} })
+    const configs = {}
+    DEFAULT_CARDS.forEach((card) => {
+      if (!configs[card.row]) {
+        configs[card.row] = DEFAULT_CARDS.filter((c) => c.row === card.row).length
+      }
+    })
+    setRowConfigs(configs)
+    setLayout({
+      cards: DEFAULT_CARDS.map((c) => ({ ...c, hidden: false })),
+      flexes: {},
+      rowConfigs: configs,
+    })
     localStorage.removeItem(`world-layout-${worldId}`)
   }
 

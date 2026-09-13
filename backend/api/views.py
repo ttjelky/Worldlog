@@ -18,6 +18,7 @@ from .models import (
     Friendship,
     HistoryEvent,
     Idea,
+    IdeaVote,
     Location,
     LocationScreenshot,
     Membership,
@@ -63,6 +64,7 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'auth'
 
 
 class LogoutView(APIView):
@@ -77,7 +79,9 @@ class LogoutView(APIView):
                 token = RefreshToken(refresh_token)
                 token.blacklist()
         except Exception:
-            pass
+            import logging
+
+            logging.getLogger(__name__).exception('Logout blacklist failed')
         return Response(status=status.HTTP_205_RESET_CONTENT)
 
 
@@ -159,7 +163,9 @@ class WorldViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return world_list_queryset(self.request.user).filter(
-            Q(owner=self.request.user) | Q(memberships__user=self.request.user)
+            Q(owner=self.request.user)
+            | Q(memberships__user=self.request.user,
+                memberships__status=Membership.Status.ACTIVE)
         ).distinct()
 
     def perform_create(self, serializer):
@@ -195,7 +201,7 @@ class PlayerViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 
 
 class LocationViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
-    queryset = Location.objects.all()
+    queryset = Location.objects.prefetch_related('screenshots').all()
     serializer_class = LocationSerializer
 
 
@@ -220,10 +226,18 @@ class LocationScreenshotViewSet(viewsets.ModelViewSet):
         # Дозволяємо галерею: кожне завантаження додає фото, не видаляючи старі.
         # Ліміт 8 фото на локацію, щоб не роздувати сховище.
         location_id = self.kwargs['location_id']
-        if LocationScreenshot.objects.filter(location_id=location_id).count() >= 8:
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError('Максимум 8 фото на локацію.')
-        serializer.save(location_id=location_id)
+        with transaction.atomic():
+            # Блокуємо рядки локації, щоб race двох паралельних аплоадів не дав 9+.
+            Location.objects.select_for_update().filter(pk=location_id).first()
+            if LocationScreenshot.objects.filter(location_id=location_id).count() >= 8:
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError('Максимум 8 фото на локацію.')
+            serializer.save(location_id=location_id)
+
+    def perform_destroy(self, instance):
+        if instance.image:
+            instance.image.delete(save=False)
+        instance.delete()
 
 
 class TodoViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
@@ -256,9 +270,12 @@ class TodoViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         project_id = request.data.get('project')
         if not isinstance(ids, list) or not ids:
             raise ValidationError('Поле ids має бути непорожнім списком.')
-        todos = list(TodoItem.objects.filter(world_id=world_id, id__in=ids))
-        if len(todos) != len(set(ids)):
-            raise ValidationError('Знайдено не всі завдання.')
+        with transaction.atomic():
+            todos = list(
+                TodoItem.objects.select_for_update().filter(world_id=world_id, id__in=ids)
+            )
+            if len(todos) != len(set(ids)):
+                raise ValidationError('Знайдено не всі завдання в цьому світі.')
         if project_id is None:
             if any(t.project_id is not None for t in todos):
                 raise ValidationError('Усі завдання мають бути неприв\'язаними.')
@@ -281,17 +298,26 @@ class HistoryEventViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         epoch = (data.get('epoch')
                  or Epoch.objects.filter(world_id=world_id, end_date__isnull=True).first()
                  or Epoch.objects.filter(world_id=world_id).order_by('-created_at').first())
+        # Епоха завжди в межах світу з URL — ігноруємо чужу з body.
+        if epoch is not None and str(epoch.world_id) != str(world_id):
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'epoch': 'Розділ належить іншому світу.'})
         data['world_id'] = world_id
         if epoch:
             data['epoch'] = epoch
         serializer.save(**data)
 
     def perform_update(self, serializer):
+        world_id = self.kwargs.get('world_id')
+        epoch = serializer.validated_data.get('epoch')
+        if epoch is not None and world_id is not None and str(epoch.world_id) != str(world_id):
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'epoch': 'Розділ належить іншому світу.'})
         serializer.save()
 
 
 class EpochViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
-    queryset = Epoch.objects.prefetch_related('events').all()
+    queryset = Epoch.objects.annotate(events_count=Count('events')).all()
     serializer_class = EpochSerializer
 
     @action(detail=True, methods=['post'])
@@ -350,17 +376,40 @@ class MembershipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         world = World.objects.filter(pk=world_id).first()
         if world is None:
             raise NotFound('World not found.')
-        user = serializer.validated_data['user']
+        # user передається як FK id; серіалайзер тримає його в validated_data,
+        # бо поле writable через PrimaryKeyRelatedField за замовчуванням.
+        # Дістаємо юзера надійно (підтримка і об'єкта, і id).
+        user_value = serializer.validated_data.get('user')
+        from django.contrib.auth.models import User as AuthUser
+        user = user_value if hasattr(user_value, 'id') else AuthUser.objects.filter(pk=user_value).first()
+        if user is None:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'user': 'Користувача не знайдено.'})
         if world.owner_id == user.id:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied('Власник вже є учасником світу.')
+        role = serializer.validated_data.get('role', Membership.Role.VIEWER)
+        if role == Membership.Role.OWNER:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'role': 'Неможливо призначити роль owner.'})
+        # Редактор може запрошувати лише viewer/editor (owner перевіряється пермішеном update).
+        if world.owner_id != self.request.user.id and role not in (
+            Membership.Role.VIEWER, Membership.Role.EDITOR,
+        ):
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'role': 'Недопустима роль.'})
         membership, created = Membership.objects.get_or_create(
             world_id=world_id, user=user,
-            defaults={'role': serializer.validated_data.get('role', Membership.Role.VIEWER)},
+            defaults={'role': role, 'status': Membership.Status.ACTIVE},
         )
         if not created:
             from rest_framework.exceptions import ValidationError
             raise ValidationError('Цей користувач вже є учасником цього світу.')
+        # Якщо get_or_create знайшов PENDING-запрошення — активуємо його.
+        if membership.status != Membership.Status.ACTIVE:
+            membership.status = Membership.Status.ACTIVE
+            membership.role = role
+            membership.save(update_fields=['status', 'role'])
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -374,6 +423,16 @@ class MembershipViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied('Тільки власник або сам учасник може видалити доступ.')
         return super().destroy(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        # Забороняємо зміну user/world через update; роль owner — заборонена.
+        if 'user' in serializer.validated_data and serializer.validated_data['user'] != serializer.instance.user:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'user': 'Неможливо змінити користувача членства.'})
+        if serializer.validated_data.get('role') == Membership.Role.OWNER:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'role': 'Неможливо призначити роль owner.'})
+        serializer.save()
 
 
 class NoteViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
@@ -403,12 +462,21 @@ class BookmarkViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsOwnerOrMember()]
         return super().get_permissions()
 
+    def get_throttles(self):
+        if self.action == 'check':
+            from rest_framework.throttling import ScopedRateThrottle
+
+            self.throttle_scope = 'linkcheck'
+            return [ScopedRateThrottle()]
+        return super().get_throttles()
+
     @action(detail=False, methods=['post'], url_path='check')
     def check(self, request, world_id=None):
-        """Перевірити доступність посилань: HEAD (з fallback на GET), таймаут 6с.
+        """Перевірити доступність посилань: HEAD (з fallback на GET), таймаут 5с.
 
-        Body: {"ids": [...]} — без ids перевіряє всі. Ліміт 50 за раз.
+        Body: {"ids": [...]} — без ids перевіряє всі. Ліміт 20 за раз.
         Повертає {id: {"ok": bool, "status": int}}.
+        Тільки http/https, приватні IP та metadata-ендпоінти заблоковані.
         """
         ids = request.data.get('ids') or []
         qs = self.get_queryset()
@@ -418,20 +486,68 @@ class BookmarkViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
             except (TypeError, ValueError):
                 ids = []
             qs = qs.filter(pk__in=ids)
-        targets = list(qs[:50])
+        targets = list(qs[:20])
         # Мережеві запити — паралельно, інакше пачка битих посилань
         # з таймаутами клала б запит на хвилини
-        with ThreadPoolExecutor(max_workers=8) as pool:
+        with ThreadPoolExecutor(max_workers=4) as pool:
             checked = list(pool.map(self._check_url, [b.url for b in targets]))
         return Response({b.pk: res for b, res in zip(targets, checked)})
 
     @staticmethod
+    def _is_url_allowed(url):
+        import ipaddress
+        import socket
+        from urllib.parse import urlparse
+
+        try:
+            parsed = urlparse(url)
+        except ValueError:
+            return False
+        if parsed.scheme not in ('http', 'https'):
+            return False
+        if not parsed.hostname:
+            return False
+        # Блокуємо credentials в URL та нестандартні порти metadata.
+        if parsed.username or parsed.password:
+            return False
+        try:
+            infos = socket.getaddrinfo(parsed.hostname, None, type=socket.SOCK_STREAM)
+        except (socket.gaierror, UnicodeError):
+            return False
+        for info in infos:
+            ip_str = info[4][0]
+            try:
+                ip = ipaddress.ip_address(ip_str)
+            except ValueError:
+                continue
+            if (
+                ip.is_private
+                or ip.is_loopback
+                or ip.is_link_local
+                or ip.is_multicast
+                or ip.is_reserved
+                or ip.is_unspecified
+            ):
+                return False
+        return True
+
+    @staticmethod
     def _check_url(url):
+        from urllib.parse import urlparse
+
+        # Базова валідація схеми до резолву (SSRF-захист).
+        try:
+            if urlparse(url).scheme not in ('http', 'https'):
+                return {'ok': False, 'status': 0}
+        except ValueError:
+            return {'ok': False, 'status': 0}
+        if not BookmarkViewSet._is_url_allowed(url):
+            return {'ok': False, 'status': 0}
         headers = {'User-Agent': 'WorldLog/1.0 link-check', 'Range': 'bytes=0-0'}
         for method in ('HEAD', 'GET'):
             try:
                 req = urllib.request.Request(url, method=method, headers=headers)
-                with urllib.request.urlopen(req, timeout=6) as resp:
+                with urllib.request.urlopen(req, timeout=5) as resp:
                     code = resp.getcode()
                     if 200 <= code < 400:
                         return {'ok': True, 'status': code}
@@ -449,19 +565,39 @@ class IdeaViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = Idea.objects.all()
     serializer_class = IdeaSerializer
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_authenticated:
+            return qs.prefetch_related(
+                Prefetch('idea_votes', queryset=IdeaVote.objects.filter(user=user), to_attr='my_votes')
+            )
+        return qs
+
     @action(detail=True, methods=['post'])
     def vote(self, request, world_id=None, pk=None):
-        """Голосування за ідею — доступне всім учасникам (і глядачам)."""
+        """Голосування за ідею — один голос одного юзера (захист від накрутки)."""
         idea = self.get_object()
-        # Захист від накрутки в межах однієї сесії — фронт шле once, бек просто +1
-        idea.votes = (idea.votes or 0) + 1
+        _, created = IdeaVote.objects.get_or_create(idea=idea, user=request.user)
+        if not created:
+            return Response(
+                {'detail': 'Ви вже голосували за цю ідею.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        idea.votes = IdeaVote.objects.filter(idea=idea).count()
         idea.save(update_fields=['votes'])
         return Response(IdeaSerializer(idea, context={'request': request}).data)
 
     @action(detail=True, methods=['post'])
     def unvote(self, request, world_id=None, pk=None):
         idea = self.get_object()
-        idea.votes = max(0, (idea.votes or 0) - 1)
+        deleted, _ = IdeaVote.objects.filter(idea=idea, user=request.user).delete()
+        if not deleted:
+            return Response(
+                {'detail': 'Ви не голосували за цю ідею.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        idea.votes = IdeaVote.objects.filter(idea=idea).count()
         idea.save(update_fields=['votes'])
         return Response(IdeaSerializer(idea, context={'request': request}).data)
 
@@ -583,14 +719,14 @@ class FriendshipViewSet(viewsets.ViewSet):
         user = request.user
         friendships = Friendship.objects.filter(
             Q(user_a=user) | Q(user_b=user)
-        ).select_related('user_a', 'user_b')
+        ).select_related('user_a', 'user_b', 'user_a__profile', 'user_b__profile', 'sender')
 
         status_filter = request.query_params.get('status')
         if status_filter:
             friendships = friendships.filter(status=status_filter)
 
         serializer = FriendshipSerializer(
-            friendships, many=True, context={'request': user}
+            friendships, many=True, context={'request': request.user, 'request_obj': request}
         )
         return Response(serializer.data)
 
@@ -622,6 +758,7 @@ class FriendshipViewSet(viewsets.ViewSet):
 
 class SendFriendRequestView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'friend'
 
     def post(self, request):
         user = request.user
@@ -665,20 +802,29 @@ class SendFriendRequestView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             if existing.status == Friendship.Status.PENDING:
-                if existing.user_a_id == user.id:
+                sender_id = existing.sender_id or existing.user_a_id
+                if sender_id == user.id:
                     return Response(
                         {'detail': 'Friend request already sent.'},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+                # Зустрічна заявка — приймаємо одразу + нотифікація автору першої.
                 existing.status = Friendship.Status.ACCEPTED
                 existing.save()
-                serializer = FriendshipSerializer(existing, context={'request': user})
+                Notification.objects.create(
+                    user_id=sender_id,
+                    notification_type=Notification.Type.FRIEND_ACCEPTED,
+                    from_user=user,
+                    message=f'{user.username} прийняв ваш запит у друзі',
+                )
+                serializer = FriendshipSerializer(existing, context={'request': user, 'request_obj': request})
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
         try:
             friendship = Friendship.objects.create(
                 user_a_id=user_a_id,
                 user_b_id=user_b_id,
+                sender=user,
                 status=Friendship.Status.PENDING,
             )
         except IntegrityError:
@@ -694,12 +840,13 @@ class SendFriendRequestView(APIView):
             message=f'{user.username} хоче додати вас у друзі',
         )
 
-        serializer = FriendshipSerializer(friendship, context={'request': user})
+        serializer = FriendshipSerializer(friendship, context={'request': user, 'request_obj': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class AcceptFriendRequestView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'friend'
 
     def post(self, request, pk):
         user = request.user
@@ -711,7 +858,14 @@ class AcceptFriendRequestView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if friendship.user_b_id != user.id:
+        if user.id not in (friendship.user_a_id, friendship.user_b_id):
+            return Response(
+                {'detail': 'Not your friendship.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        sender_id = friendship.sender_id or friendship.user_a_id
+        if sender_id == user.id:
             return Response(
                 {'detail': 'You can only accept requests sent to you.'},
                 status=status.HTTP_403_FORBIDDEN,
@@ -727,18 +881,19 @@ class AcceptFriendRequestView(APIView):
         friendship.save()
 
         Notification.objects.create(
-            user=friendship.user_a,
+            user_id=(friendship.sender_id or friendship.user_a_id),
             notification_type=Notification.Type.FRIEND_ACCEPTED,
             from_user=user,
             message=f'{user.username} прийняв ваш запит у друзі',
         )
 
-        serializer = FriendshipSerializer(friendship, context={'request': user})
+        serializer = FriendshipSerializer(friendship, context={'request': user, 'request_obj': request})
         return Response(serializer.data)
 
 
 class RejectFriendRequestView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'friend'
 
     def post(self, request, pk):
         user = request.user
@@ -750,7 +905,14 @@ class RejectFriendRequestView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if friendship.user_b_id != user.id:
+        if user.id not in (friendship.user_a_id, friendship.user_b_id):
+            return Response(
+                {'detail': 'Not your friendship.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        sender_id = friendship.sender_id or friendship.user_a_id
+        if sender_id == user.id:
             return Response(
                 {'detail': 'You can only reject requests sent to you.'},
                 status=status.HTTP_403_FORBIDDEN,
@@ -768,6 +930,7 @@ class RejectFriendRequestView(APIView):
 
 class CancelFriendRequestView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'friend'
 
     def post(self, request, pk):
         user = request.user
@@ -779,7 +942,14 @@ class CancelFriendRequestView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if friendship.user_a_id != user.id:
+        if user.id not in (friendship.user_a_id, friendship.user_b_id):
+            return Response(
+                {'detail': 'Not your friendship.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        sender_id = friendship.sender_id or friendship.user_a_id
+        if sender_id != user.id:
             return Response(
                 {'detail': 'You can only cancel requests you sent.'},
                 status=status.HTTP_403_FORBIDDEN,
@@ -797,6 +967,7 @@ class CancelFriendRequestView(APIView):
 
 class UserSearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'friend'
 
     def get(self, request):
         query = request.query_params.get('q', '').strip()
@@ -822,7 +993,7 @@ class UserSearchView(APIView):
             data = UserPublicSerializer(u, context={'request': request}).data
             f = friendship_map.get(u.id)
             if f:
-                data['friendship'] = FriendshipSerializer(f, context={'request': request.user}).data
+                data['friendship'] = FriendshipSerializer(f, context={'request': request.user, 'request_obj': request}).data
             else:
                 data['friendship'] = None
             results.append(data)
@@ -865,8 +1036,12 @@ class NotificationListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        notifications = Notification.objects.filter(user=request.user)[:50]
-        serializer = NotificationSerializer(notifications, many=True)
+        notifications = (
+            Notification.objects.filter(user=request.user)
+            .select_related('from_user', 'from_user__profile', 'access_request', 'access_request__world')
+            .order_by('-created_at')[:50]
+        )
+        serializer = NotificationSerializer(notifications, many=True, context={'request': request})
         return Response(serializer.data)
 
 
@@ -896,6 +1071,7 @@ class NotificationReadAllView(APIView):
 
 class ParticipantSearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'friend'
 
     def get(self, request, world_id):
         query = request.query_params.get('q', '').strip()
@@ -908,6 +1084,15 @@ class ParticipantSearchView(APIView):
             return Response(
                 {'detail': 'World not found.'},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Тільки учасники світу можуть шукати кандидатів в цей світ.
+        if world.owner_id != request.user.id and not world.memberships.filter(
+            user=request.user, status=Membership.Status.ACTIVE
+        ).exists():
+            return Response(
+                {'detail': 'Доступ заборонено.'},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         existing_user_ids = set(
@@ -949,7 +1134,8 @@ class WorldSearchView(APIView):
         ).exclude(
             owner=request.user
         ).exclude(
-            memberships__user=request.user
+            memberships__user=request.user,
+            memberships__status=Membership.Status.ACTIVE,
         )
         if len(query) < 2:
             # Без запиту — стрічка останніх публічних світів для хаба пошуку
@@ -993,10 +1179,22 @@ class WorldAccessRequestViewSet(viewsets.ModelViewSet):
             world=world, requester=user, status=WorldAccessRequest.Status.PENDING
         ).exists():
             raise ValidationError('Access request already pending.')
-        # Повторний запит після відхилення: старий термінальний видаляємо
+        # Повторний запит після відхилення: старий термінальний видаляємо.
         WorldAccessRequest.objects.filter(
             world=world, requester=user, status=WorldAccessRequest.Status.REJECTED
         ).delete()
+        # Якщо лишився ACCEPTED, але membership зник (юзер вийшов) —
+        # видаляємо старий термінальний, щоб дозволити новий запит.
+        stale = WorldAccessRequest.objects.filter(
+            world=world, requester=user, status=WorldAccessRequest.Status.ACCEPTED
+        ).first()
+        if stale is not None:
+            if not Membership.objects.filter(
+                world=world, user=user, status=Membership.Status.ACTIVE
+            ).exists():
+                stale.delete()
+            else:
+                raise ValidationError('Access request already exists.')
         try:
             instance = serializer.save(requester=user, world=world)
         except IntegrityError:
@@ -1029,11 +1227,15 @@ class AcceptWorldAccessRequestView(APIView):
         access_request.status = WorldAccessRequest.Status.ACCEPTED
         access_request.save()
 
-        Membership.objects.get_or_create(
+        membership, _ = Membership.objects.get_or_create(
             world=world,
             user=access_request.requester,
             defaults={'role': Membership.Role.VIEWER, 'status': Membership.Status.ACTIVE},
         )
+        # Якщо інвайт створив PENDING-membership — активуємо його при accept.
+        if membership.status != Membership.Status.ACTIVE:
+            membership.status = Membership.Status.ACTIVE
+            membership.save(update_fields=['status'])
 
         Notification.objects.create(
             user=access_request.requester,

@@ -174,10 +174,10 @@ export default function Navbar({ activePage, onNavigate, logoSrc = '/worldlog-lo
           </MenuItem>
           <MenuItem onClick={() => setAnchorEl(null)}>Налаштування</MenuItem>
           <MenuItem
-            onClick={() => {
+            onClick={async () => {
               setAnchorEl(null)
+              await logout()
               navigate('/')
-              logout()
             }}
           >
             Вийти

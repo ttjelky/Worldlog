@@ -113,7 +113,7 @@ function LocationDetails({
           hidden
           onChange={(e) => handleUpload(e.target.files?.[0])}
         />
-        {activeShot ? (
+        {canEdit && (activeShot ? (
           <>
             <Button
               variant="contained"
@@ -143,7 +143,7 @@ function LocationDetails({
           >
             {isUploading || uploading ? 'Завантаження…' : 'Додати фото'}
           </Button>
-        )}
+        ))}
         <div className={styles.locSpacer} />
         {canEdit && (
           <>

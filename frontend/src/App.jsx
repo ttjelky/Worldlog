@@ -29,9 +29,19 @@ function PrivateRoute({ children }) {
   const location = useLocation()
   const { hydrating } = useAuth()
 
-  if (hydrating) return null
+  if (hydrating) return <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 2000 }} />
   if (!auth.isAuthenticated()) {
     return <Navigate to="/" state={{ from: location }} replace />
+  }
+  return children
+}
+
+function PublicRoute({ children }) {
+  const { hydrating } = useAuth()
+
+  if (hydrating) return <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 2000 }} />
+  if (auth.isAuthenticated()) {
+    return <Navigate to="/app" replace />
   }
   return children
 }
@@ -55,7 +65,7 @@ export default function App() {
     if (auth.isAuthenticated()) navigate('/app')
     else navigate('/register')
   }
-  const back = () => navigate('/app')
+  const back = () => navigate(-1)
 
   return <AppRoutes start={start} back={back} />
 }
@@ -67,8 +77,8 @@ function AppRoutes({ start, back }) {
       <Suspense fallback={<RouteFallback />}>
       <Routes>
         <Route path="/" element={<Landing onStart={start} />} />
-        <Route path="/login" element={<Auth />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<PublicRoute><Auth /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route
           path="/app"
           element={

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Button,
@@ -17,6 +17,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import api from '../../../../api'
 import UserAvatar from '../../../../shared/components/UserAvatar/UserAvatar'
+import { useUndo } from '../../../../shared/undo/UndoProvider'
+import { useFeedback } from '../../../../shared/feedback/FeedbackProvider'
 import sharedStyles from '../shared/section.module.css'
 import styles from './ParticipantsSection.module.css'
 
@@ -39,6 +41,8 @@ const ROLE_CHIP_CLASS = {
 
 export function WorldAccessList({ worldId, userRole, world, accent }) {
   const qc = useQueryClient()
+  const { deleteItem } = useUndo()
+  const { notify } = useFeedback()
   const isOwner = userRole === 'owner'
   const isEditor = userRole === 'editor' || isOwner
 
@@ -46,7 +50,7 @@ export function WorldAccessList({ worldId, userRole, world, accent }) {
   const [editTarget, setEditTarget] = useState(null)
   const [removeTarget, setRemoveTarget] = useState(null)
 
-  const { data: participants = [] } = useQuery({
+  const { data: participants = [], isLoading } = useQuery({
     queryKey: ['memberships', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/memberships/`).then((r) => r.data),
   })
@@ -59,10 +63,16 @@ export function WorldAccessList({ worldId, userRole, world, accent }) {
   })
   const pendingRequests = accessRequests.filter((r) => r.status === 'pending')
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => api.delete(`/worlds/${worldId}/memberships/${id}/`),
-    onSuccess: () => qc.invalidateQueries(['memberships', String(worldId)]),
-  })
+  const handleRemove = (participant) => {
+    setRemoveTarget(null)
+    deleteItem({
+      id: participant.id,
+      url: `/worlds/${worldId}/memberships/${participant.id}/`,
+      queryKeys: [['memberships', String(worldId)]],
+      message: `Учасника «${participant.username}» видалено`,
+      nouns: ['учасник', 'учасники', 'учасників'],
+    })
+  }
 
   const reviewAccess = (id, action) =>
     api.post(`/world-access-requests/${id}/${action}/`).then(() => {
@@ -70,8 +80,14 @@ export function WorldAccessList({ worldId, userRole, world, accent }) {
       qc.invalidateQueries(['memberships', String(worldId)])
       qc.invalidateQueries(['notifications'])
     })
-  const acceptAccessReq = useMutation({ mutationFn: (id) => reviewAccess(id, 'accept') })
-  const rejectAccessReq = useMutation({ mutationFn: (id) => reviewAccess(id, 'reject') })
+  const acceptAccessReq = useMutation({
+    mutationFn: (id) => reviewAccess(id, 'accept'),
+    onError: () => notify('Не вдалося прийняти запит'),
+  })
+  const rejectAccessReq = useMutation({
+    mutationFn: (id) => reviewAccess(id, 'reject'),
+    onError: () => notify('Не вдалося відхилити запит'),
+  })
   const reviewBusy = acceptAccessReq.isPending || rejectAccessReq.isPending
 
   return (
@@ -97,6 +113,7 @@ export function WorldAccessList({ worldId, userRole, world, accent }) {
             <div className={`${styles.roleChip} ${styles.roleOwner}`}>Власник</div>
           </div>
         </div>
+        {isLoading && <p className={styles.searchHint}>Завантаження учасників…</p>}
         {participants.map((p) => (
           <div key={p.id} className={styles.row}>
             <UserAvatar username={p.username} avatarUrl={p.avatar_url} size="sm" />
@@ -108,10 +125,10 @@ export function WorldAccessList({ worldId, userRole, world, accent }) {
             </div>
             {isOwner && (
               <div className={styles.actions}>
-                <IconButton size="small" onClick={() => setEditTarget(p)}>
+                <IconButton size="small" aria-label={`Змінити роль ${p.username}`} onClick={() => setEditTarget(p)}>
                   <EditOutlinedIcon fontSize="small" />
                 </IconButton>
-                <IconButton size="small" onClick={() => setRemoveTarget(p)}>
+                <IconButton size="small" aria-label={`Видалити ${p.username}`} onClick={() => setRemoveTarget(p)}>
                   <DeleteOutlinedIcon fontSize="small" />
                 </IconButton>
               </div>
@@ -180,7 +197,7 @@ export function WorldAccessList({ worldId, userRole, world, accent }) {
         participant={removeTarget}
         worldId={worldId}
         accent={accent}
-        onDelete={(id) => deleteMutation.mutateAsync(id).then(() => setRemoveTarget(null))}
+        onDelete={() => handleRemove(removeTarget)}
       />
     </div>
   )
@@ -188,15 +205,22 @@ export function WorldAccessList({ worldId, userRole, world, accent }) {
 
 function AddParticipantDialog({ open, onClose, worldId, accent }) {
   const qc = useQueryClient()
+  const { notify } = useFeedback()
   const [search, setSearch] = useState('')
+  const [debounced, setDebounced] = useState('')
   const [role, setRole] = useState('viewer')
   const [selected, setSelected] = useState(null)
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search.trim()), 300)
+    return () => clearTimeout(t)
+  }, [search])
+
   const { data: results = [], isFetching } = useQuery({
-    queryKey: ['participant-search', String(worldId), search],
+    queryKey: ['participant-search', String(worldId), debounced],
     queryFn: () =>
-      api.get(`/worlds/${worldId}/participants/search/`, { params: { q: search } }).then((r) => r.data),
-    enabled: search.length >= 2,
+      api.get(`/worlds/${worldId}/participants/search/`, { params: { q: debounced } }).then((r) => r.data),
+    enabled: debounced.length >= 2,
     staleTime: 5000,
   })
 
@@ -205,10 +229,12 @@ function AddParticipantDialog({ open, onClose, worldId, accent }) {
     onSuccess: () => {
       qc.invalidateQueries(['memberships', String(worldId)])
       setSearch('')
+      setDebounced('')
       setRole('viewer')
       setSelected(null)
       onClose()
     },
+    onError: (e) => notify(e.response?.data?.detail || e.response?.data?.non_field_errors?.[0] || 'Не вдалося додати учасника'),
   })
 
   const handleSelect = (user) => {
@@ -219,7 +245,7 @@ function AddParticipantDialog({ open, onClose, worldId, accent }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!selected) return
-    inviteMutation.mutate({ user: selected.id, role, status: 'active' })
+    inviteMutation.mutate({ user: selected.id, role })
   }
 
   return (
@@ -304,7 +330,12 @@ function AddParticipantDialog({ open, onClose, worldId, accent }) {
 
 function EditRoleDialog({ open, onClose, participant, worldId, accent }) {
   const qc = useQueryClient()
+  const { notify } = useFeedback()
   const [role, setRole] = useState(participant?.role || 'viewer')
+
+  useEffect(() => {
+    setRole(participant?.role || 'viewer')
+  }, [participant])
 
   const updateMutation = useMutation({
     mutationFn: (payload) => api.patch(`/worlds/${worldId}/memberships/${participant.id}/`, payload),
@@ -312,6 +343,7 @@ function EditRoleDialog({ open, onClose, participant, worldId, accent }) {
       qc.invalidateQueries(['memberships', String(worldId)])
       onClose()
     },
+    onError: () => notify('Не вдалося змінити роль'),
   })
 
   if (!participant) return null

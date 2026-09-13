@@ -25,7 +25,14 @@ import { useUndo } from '../../../../shared/undo/UndoProvider'
 import { useFeedback } from '../../../../shared/feedback/FeedbackProvider'
 import styles from './BookmarksSection.module.css'
 
-const empty = { title: '', url: '' }
+const empty = { title: '', url: '', description: '' }
+
+function normalizeUrl(url) {
+  const t = (url || '').trim()
+  if (!t) return t
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(t)) return t
+  return `https://${t}`
+}
 
 function domainOf(url) {
   try {
@@ -61,6 +68,7 @@ function Favicon({ domain }) {
       width={16}
       height={16}
       loading="lazy"
+      referrerPolicy="no-referrer"
       onError={() => setStage((s) => s + 1)}
     />
   )
@@ -152,13 +160,19 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
   }
   const openEdit = (b) => {
     setEditing(b)
-    setForm({ title: b.title || '', url: b.url || '' })
+    setForm({ title: b.title || '', url: b.url || '', description: b.description || '' })
     setOpen(true)
   }
   const submit = (e) => {
     e.preventDefault()
     const wasEditing = editing
-    mutation.mutateAsync({ title: form.title, url: form.url }).then((res) => {
+    const payload = {
+      title: (form.title || '').trim(),
+      url: normalizeUrl(form.url),
+      description: form.description || '',
+    }
+    if (!payload.title || !payload.url) return
+    mutation.mutateAsync(payload).then((res) => {
       setOpen(false)
       if (wasEditing) {
         // URL міг змінитись — старий статус недійсний, ефект нижче доперевірить
@@ -174,9 +188,18 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
   }
 
   const togglePin = (b) => {
+    const next = !b.is_pinned
+    // Optimistic: миттєво в кеші, ролбек при помилці.
+    const key = ['bookmarks', String(worldId)]
+    const prev = qc.getQueryData(key)
+    qc.setQueryData(key, (old) => (old ?? []).map((x) => (x.id === b.id ? { ...x, is_pinned: next } : x)))
     api
-      .patch(`/worlds/${worldId}/bookmarks/${b.id}/`, { is_pinned: !b.is_pinned })
-      .then(() => qc.invalidateQueries(['bookmarks', String(worldId)]))
+      .patch(`/worlds/${worldId}/bookmarks/${b.id}/`, { is_pinned: next })
+      .then(() => qc.invalidateQueries(key))
+      .catch(() => {
+        if (prev) qc.setQueryData(key, prev)
+        notify('Не вдалося закріпити закладку')
+      })
   }
 
   const broken = bookmarks.filter((b) => checkResults[b.id] && !checkResults[b.id].ok)
@@ -331,6 +354,7 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
                   {isBroken && <span className={styles.brokenBadge}>Не працює</span>}
                 </div>
                 <div className={styles.bookmarkUrl}>{b.url}</div>
+                {b.description && <div className={styles.bookmarkDesc}>{b.description}</div>}
               </div>
               <div className={styles.rowActions}>
                 <RelationshipButton
@@ -415,6 +439,15 @@ export default function BookmarksSection({ worldId, accent, userRole }) {
                 onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                 required
                 type="url"
+                placeholder="https://example.com"
+                helperText="Можна без https:// — додамо автоматично"
+              />
+              <TextField
+                label="Опис"
+                value={form.description || ''}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                multiline
+                minRows={2}
               />
             </div>
           </DialogContent>

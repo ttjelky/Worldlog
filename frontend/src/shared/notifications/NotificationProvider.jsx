@@ -18,8 +18,9 @@ export function NotificationProvider({ children }) {
     queryKey: ['notifications'],
     queryFn: () => api.get('/notifications/').then((r) => r.data),
     enabled: !!user,
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
+    refetchInterval: 15000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   })
 
   useEffect(() => {
@@ -29,9 +30,10 @@ export function NotificationProvider({ children }) {
       (n) => !n.is_read && !seenIdsRef.current.has(n.id),
     )
 
+    // Позначаємо seen одразу, щоб не стріляти запізнілим тостом на наступному полі.
+    newOnes.forEach((n) => seenIdsRef.current.add(n.id))
     if (newOnes.length > 0 && prevUnreadRef.current > 0) {
       newOnes.forEach((n) => {
-        seenIdsRef.current.add(n.id)
         addToast(n)
       })
     }

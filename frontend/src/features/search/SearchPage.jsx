@@ -19,11 +19,26 @@ export default function SearchPage() {
   const qc = useQueryClient()
   const { user: currentUser } = useAuth()
   const [searchParams] = useSearchParams()
-  const [activePage, setActivePage] = useState('search')
   const { notify } = useFeedback()
   // Локальні виклики фідбеку йдуть у спільний тост
   const setSnackbar = ({ message }) => notify(message)
-  const [sentAccess, setSentAccess] = useState([])
+  // Запити доступу переживають reload — інакше кнопка знову активна.
+  const [sentAccess, setSentAccess] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('wl-sent-access') || '[]')
+    } catch {
+      return []
+    }
+  })
+  const markSentAccess = (id) => {
+    setSentAccess((prev) => {
+      const next = Array.from(new Set([...prev, id]))
+      try {
+        localStorage.setItem('wl-sent-access', JSON.stringify(next))
+      } catch {}
+      return next
+    })
+  }
 
   // Запит живе в навбарі (?q=), сторінка його лише читає
   const query = (searchParams.get('q') || '').trim()
@@ -72,10 +87,15 @@ export default function SearchPage() {
   const requestAccess = useMutation({
     mutationFn: (worldId) => api.post(`/worlds/${worldId}/access-requests/`),
     onSuccess: (_, worldId) => {
-      setSentAccess((cur) => (cur.includes(worldId) ? cur : [...cur, worldId]))
+      markSentAccess(worldId)
       setSnackbar({ open: true, message: 'Запит на доступ надіслано' })
     },
     onError: (err) => {
+      // Бекенд 400 "already pending" — вважаємо запит надісланим, щоб не спамити.
+      const msg = err.response?.data?.detail || err.response?.data?.[0] || ''
+      if (typeof msg === 'string' && msg.toLowerCase().includes('pending')) {
+        markSentAccess(err.config?.url?.match(/worlds\/(\d+)/)?.[1] ? Number(err.config.url.match(/worlds\/(\d+)/)[1]) : null)
+      }
       setSnackbar({
         open: true,
         message: err.response?.data?.detail || 'Не вдалося надіслати запит',
@@ -129,7 +149,7 @@ export default function SearchPage() {
 
   const hubFriends = friendships.filter((f) => f.status === 'accepted')
   const hubRequests = friendships.filter(
-    (f) => f.status === 'pending' && f.user_a !== currentUser?.id,
+    (f) => f.status === 'pending' && currentUser && (f.sender ?? f.user_a) !== currentUser.id,
   )
 
   const isLoadingResults = worldsLoading || usersLoading
@@ -143,7 +163,9 @@ export default function SearchPage() {
     if (!f) return { kind: 'add' }
     if (f.status === 'accepted') return { kind: 'friends' }
     if (f.status === 'pending') {
-      return f.user_a === currentUser?.id ? { kind: 'cancel', id: f.id } : { kind: 'await' }
+      return (f.sender ?? f.user_a) === currentUser?.id
+        ? { kind: 'cancel', id: f.id }
+        : { kind: 'accept', id: f.id }
     }
     return { kind: 'none' }
   }
@@ -151,7 +173,7 @@ export default function SearchPage() {
   return (
     <div className={styles.appShell}>
       <Navbar
-        activePage={activePage}
+        activePage="search"
         logoSrc="/worldlog-logo.png"
         onNavigate={(id) => goSection(id, navigate)}
       />
@@ -219,6 +241,7 @@ export default function SearchPage() {
                       busy={friendBusy}
                       onAdd={() => sendRequest.mutate(u.id)}
                       onCancel={(id) => cancelRequest.mutate(id)}
+                      onAccept={(id) => acceptRequest.mutate(id)}
                       onNavigate={navigate}
                     />
                   ))}
@@ -356,7 +379,7 @@ function plural(n, [one, few, many]) {
   return many
 }
 
-function UserRow({ user, action, busy, onAdd, onCancel, onNavigate }) {
+function UserRow({ user, action, busy, onAdd, onCancel, onAccept, onNavigate }) {
   return (
     <div className={styles.userRow}>
       <button
@@ -383,7 +406,12 @@ function UserRow({ user, action, busy, onAdd, onCancel, onNavigate }) {
         </button>
       )}
       {action.kind === 'friends' && <span className={styles.stateBadge}>У друзях</span>}
-      {action.kind === 'await' && <span className={styles.stateBadge}>Очікує</span>}
+      {action.kind === 'accept' && (
+        <button type="button" className={styles.addBtn} onClick={() => onAccept(action.id)} disabled={busy}>
+          Прийняти
+        </button>
+      )}
+      {action.kind === 'open' && null}
     </div>
   )
 }
@@ -393,17 +421,8 @@ function WorldSearchResult({ world, index = 0, showAccess = true, accessSent, on
   const variant = index % 2 === 0 ? styles.cardSky : styles.cardSlate
 
   return (
-    <div
+    <article
       className={`${styles.worldCard} ${variant}`}
-      onClick={() => onNavigate(`/app/worlds/${world.id}`)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onNavigate(`/app/worlds/${world.id}`)
-        }
-      }}
     >
       {world.cover_image_url && (
         <div className={styles.cardCoverWrap} aria-hidden="true">
@@ -416,7 +435,14 @@ function WorldSearchResult({ world, index = 0, showAccess = true, accessSent, on
           {world.is_public ? 'Публічний' : 'Приватний'}
         </span>
       </div>
-      <h3 className={styles.cardTitle}>{world.name}</h3>
+      <button
+        type="button"
+        className={styles.cardTitleBtn}
+        onClick={() => onNavigate(`/app/worlds/${world.id}`)}
+        aria-label={`Відкрити світ «${world.name}»`}
+      >
+        <h3 className={styles.cardTitle}>{world.name}</h3>
+      </button>
       <div className={styles.cardFooter}>
         <div className={styles.cardOwner}>
           <UserAvatar
@@ -437,10 +463,7 @@ function WorldSearchResult({ world, index = 0, showAccess = true, accessSent, on
             <button
               type="button"
               className={styles.accessPill}
-              onClick={(e) => {
-                e.stopPropagation()
-                onRequestAccess(world.id)
-              }}
+              onClick={() => onRequestAccess(world.id)}
               disabled={loading}
             >
               Запросити доступ
@@ -448,6 +471,6 @@ function WorldSearchResult({ world, index = 0, showAccess = true, accessSent, on
           )
         )}
       </div>
-    </div>
+    </article>
   )
 }

@@ -13,8 +13,9 @@ export function openWikiPage(id) {
   window.dispatchEvent(new CustomEvent(OPEN_WIKI_PAGE_EVENT, { detail: id }))
 }
 
-export default function RelationshipsSection({ worldId, accent }) {
+export default function RelationshipsSection({ worldId, accent, userRole }) {
   const section = useExpandableCard()
+  const readOnly = !userRole || userRole === 'viewer'
 
   return (
     <div className={sharedStyles.card} style={{ '--accent': accent }}>
@@ -28,6 +29,7 @@ export default function RelationshipsSection({ worldId, accent }) {
             worldId={worldId}
             onOpen={openWikiPage}
             height={section.full ? 640 : section.modal ? 560 : 340}
+            readOnly={readOnly}
           />
         </Suspense>
       </div>

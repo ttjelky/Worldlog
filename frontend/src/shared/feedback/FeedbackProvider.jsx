@@ -12,17 +12,32 @@ export const useFeedback = () => useContext(FeedbackContext)
  */
 export default function FeedbackProvider({ children }) {
   const [snack, setSnack] = useState({ open: false, message: '', stamp: 0 })
+  const queueRef = useRef([])
   const timer = useRef(null)
 
-  const notify = useCallback((message) => {
-    if (timer.current) clearTimeout(timer.current)
-    // Мікропауза, щоб однакове повідомлення підряд перемалювалось
-    timer.current = setTimeout(() => {
-      setSnack({ open: true, message, stamp: Date.now() })
-    }, 30)
+  const showNext = useCallback(() => {
+    const next = queueRef.current.shift()
+    if (!next) return
+    setSnack({ open: true, message: next, stamp: Date.now() })
   }, [])
 
-  const close = useCallback(() => setSnack((s) => ({ ...s, open: false })), [])
+  const notify = useCallback((message) => {
+    if (!message) return
+    queueRef.current.push(message)
+    // Якщо тост вже відкритий — дочекаємось закриття, інакше показуємо одразу.
+    setSnack((s) => {
+      if (s.open) return s
+      const next = queueRef.current.shift()
+      return next ? { open: true, message: next, stamp: Date.now() } : s
+    })
+  }, [])
+
+  const close = useCallback(() => {
+    setSnack((s) => ({ ...s, open: false }))
+    if (timer.current) clearTimeout(timer.current)
+    // Невелика пауза між тостами, щоб однакові підряд перемалювались.
+    timer.current = setTimeout(showNext, 150)
+  }, [showNext])
 
   return (
     <FeedbackContext.Provider value={{ notify }}>

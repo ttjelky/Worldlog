@@ -21,15 +21,20 @@ export default function FriendsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const qc = useQueryClient()
   const { user: currentUser } = useAuth()
-  const [activePage, setActivePage] = useState('friends')
   const [tab, setTab] = useState(searchParams.get('tab') === 'requests' ? 1 : 0)
   const { notify } = useFeedback()
   const [userSearch, setUserSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(userSearch.trim()), 300)
+    return () => clearTimeout(t)
+  }, [userSearch])
 
   const { data: searchUsers = [] } = useQuery({
-    queryKey: ['userSearch', userSearch],
-    queryFn: () => api.get('/users/search/', { params: { q: userSearch } }).then((r) => r.data),
-    enabled: userSearch.length >= 2,
+    queryKey: ['userSearch', debouncedSearch],
+    queryFn: () => api.get('/users/search/', { params: { q: debouncedSearch } }).then((r) => r.data),
+    enabled: debouncedSearch.length >= 2,
     staleTime: 5000,
   })
 
@@ -63,9 +68,15 @@ export default function FriendsPage() {
   useEffect(() => {
     if (searchParams.get('tab') === 'requests') {
       setTab(1)
-      setSearchParams({}, { replace: true })
+      // Зберігаємо решту query-параметрів, чистимо лише tab.
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('tab')
+        return next
+      }, { replace: true })
     }
-  }, [searchParams, setSearchParams])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const {
     data: friendships = [],
@@ -109,11 +120,13 @@ export default function FriendsPage() {
   })
 
   const friends = friendships.filter((f) => f.status === 'accepted')
+  // Напрямок заявки визначає поле sender (з fallback на user_a для старих даних).
+  const isSentByMe = (f) => (f.sender ?? f.user_a) === currentUser?.id
   const receivedRequests = friendships.filter(
-    (f) => f.status === 'pending' && f.user_a !== currentUser?.id,
+    (f) => f.status === 'pending' && currentUser && !isSentByMe(f),
   )
   const sentRequests = friendships.filter(
-    (f) => f.status === 'pending' && f.user_a === currentUser?.id,
+    (f) => f.status === 'pending' && currentUser && isSentByMe(f),
   )
 
   // Стан кнопки в результатах пошуку за наявною дружбою
@@ -122,9 +135,9 @@ export default function FriendsPage() {
     if (!f) return { kind: 'add' }
     if (f.status === 'accepted') return { kind: 'friends' }
     if (f.status === 'pending') {
-      return f.user_a === currentUser?.id
+      return (f.sender ?? f.user_a) === currentUser?.id
         ? { kind: 'cancel', id: f.id }
-        : { kind: 'await' }
+        : { kind: 'accept', id: f.id }
     }
     return { kind: 'none' }
   }
@@ -134,7 +147,7 @@ export default function FriendsPage() {
   return (
     <div className={styles.appShell}>
       <Navbar
-        activePage={activePage}
+        activePage="friends"
         logoSrc="/worldlog-logo.png"
         onNavigate={(id) => goSection(id, navigate)}
       />
@@ -192,12 +205,14 @@ export default function FriendsPage() {
                 }}
                 className={styles.searchField}
               />
-              {userSearch.length === 1 && (
+              {userSearch.trim().length === 1 && (
                 <p className={styles.searchHint}>Введи мінімум 2 символи</p>
               )}
-              {userSearch.length >= 2 && (
+              {debouncedSearch.length >= 2 && (
                 <div className={styles.searchResults}>
-                  {searchUsers.length === 0 ? (
+                  {userSearch.trim() !== debouncedSearch ? (
+                    <p className={styles.searchHint}>Пошук…</p>
+                  ) : searchUsers.length === 0 ? (
                     <p className={styles.searchHint}>Нічого не знайдено</p>
                   ) : (
                     searchUsers.map((u) => {
@@ -231,8 +246,15 @@ export default function FriendsPage() {
                           {action.kind === 'friends' && (
                             <span className={styles.stateBadge}>У друзях</span>
                           )}
-                          {action.kind === 'await' && (
-                            <span className={styles.stateBadge}>Очікує</span>
+                          {action.kind === 'accept' && (
+                            <button
+                              type="button"
+                              className={styles.addBtn}
+                              onClick={() => acceptRequest.mutate(action.id)}
+                              disabled={searchBusy || acceptRequest.isPending}
+                            >
+                              Прийняти
+                            </button>
                           )}
                         </div>
                       )

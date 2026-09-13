@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import api, { auth } from './api'
 
 const AuthContext = createContext(null)
@@ -6,6 +7,7 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [hydrating, setHydrating] = useState(true)
+  const qc = useQueryClient()
 
   useEffect(() => {
     if (!auth.isAuthenticated()) {
@@ -71,7 +73,9 @@ export function AuthProvider({ children }) {
     }
     auth.clearAuth()
     setUser(null)
-  }, [])
+    // Чистимо кеш, щоб наступний юзер на цьому браузері не бачив чужі дані.
+    qc.clear()
+  }, [qc])
 
   const updateUser = useCallback((newData) => {
     setUser((prev) => (prev ? { ...prev, ...newData } : null))

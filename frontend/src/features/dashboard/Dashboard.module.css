@@ -743,3 +743,11 @@
     animation: none !important;
   }
 }
+.errorBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  color: #7a2e2e;
+}
+

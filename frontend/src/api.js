@@ -28,7 +28,9 @@ function clearAuth() {
 function getTokenPayload(token) {
   if (!token) return null
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
+    const payload = JSON.parse(atob(padded))
     return payload
   } catch {
     return null
@@ -76,7 +78,7 @@ async function refreshTokens() {
 }
 
 api.interceptors.request.use(async (config) => {
-  if (config.url.includes('/auth/token')) {
+  if (config.url?.includes('/auth/token')) {
     return config
   }
 
@@ -102,7 +104,7 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
 
-    if (error.response?.status !== 401 || original._retry || original.url.includes('/auth/token')) {
+    if (error.response?.status !== 401 || original._retry || original.url?.includes('/auth/token')) {
       return Promise.reject(error)
     }
 

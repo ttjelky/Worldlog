@@ -187,25 +187,22 @@ function renderContent(text, titleIndex, onOpen, onCreateMissing) {
               <span
                 key={j}
                 className={target ? styles.pageDetailLink : styles.pageDetailLinkBroken}
-                role={missing ? 'button' : undefined}
-                tabIndex={missing ? 0 : undefined}
-                title={missing ? `Створити сторінку «${title}»` : undefined}
+                role="button"
+                tabIndex={0}
+                title={missing ? `Створити сторінку «${title}»` : `Відкрити «${title}»`}
                 onClick={(e) => {
                   e.stopPropagation()
                   if (target) onOpen?.(target)
                   else onCreateMissing?.(title)
                 }}
-                onKeyDown={
-                  missing
-                    ? (e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          onCreateMissing?.(title)
-                        }
-                      }
-                    : undefined
-                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (target) onOpen?.(target)
+                    else onCreateMissing?.(title)
+                  }
+                }}
               >
                 {title}
               </span>
@@ -518,6 +515,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
         setSelectedPage((cur) => (cur && cur.id === saved.id ? saved : cur))
       }
       qc.invalidateQueries(['wiki', String(worldId)])
+      qc.invalidateQueries(['wiki', String(worldId), 'graph'])
       qc.invalidateQueries(['world', String(worldId)])
     },
   })
@@ -529,6 +527,7 @@ export default function WikiSection({ worldId, accent, userRole }) {
       url: `/worlds/${worldId}/wiki/${p.id}/`,
       queryKeys: [
         ['wiki', String(worldId)],
+        ['wiki', String(worldId), 'graph'],
         ['world', String(worldId)],
       ],
       message: `Сторінку «${p.title}» видалено`,
@@ -661,24 +660,6 @@ export default function WikiSection({ worldId, accent, userRole }) {
         (!editingPage || p.id !== editingPage.id),
     )
 
-  const submit = (e) => {
-    e.preventDefault()
-    if (mutation.isPending || isDuplicateTitle) return
-    const infobox = Object.fromEntries(
-      Object.entries(form.infobox).filter(([, v]) => String(v || '').trim() !== ''),
-    )
-    const payload = {
-      title: form.title.trim(),
-      page_type: form.page_type,
-      emoji: form.emoji || EMOJI_BY_TYPE[form.page_type] || EMOJI_FALLBACK,
-      infobox,
-      tags: form.tags,
-      world_date: form.world_date,
-      content: form.content,
-    }
-    mutation.mutate(payload)
-  }
-
   const openPage = (page) => {
     setSelectedPage(page)
     if (!section.modal) section.open()
@@ -722,9 +703,18 @@ export default function WikiSection({ worldId, accent, userRole }) {
             {target ? (
               <span
                 className={styles.pageDetailLink}
+                role="button"
+                tabIndex={0}
                 onClick={(e) => {
                   e.stopPropagation()
                   openPage(target)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    openPage(target)
+                  }
                 }}
               >
                 {t}
@@ -925,6 +915,7 @@ return (
           </>
         ) : (
           <>
+            {(section.modal || section.full) && (
             <div className={styles.toolbar}>
                   <div className={styles.toolbarRow}>
                     <TextField
@@ -994,6 +985,7 @@ return (
                     )}
                   </div>
                 </div>
+            )}
 
           <div className={`${styles.pagesGrid} ${section.full ? styles.pagesGridWide : ''}`}>
             {canEdit && creating && (

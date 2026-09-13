@@ -284,6 +284,19 @@ class Idea(models.Model):
         return self.title
 
 
+class IdeaVote(models.Model):
+    """Один голос одного юзера за одну ідею — захист від накрутки."""
+
+    idea = models.ForeignKey(Idea, on_delete=models.CASCADE, related_name='idea_votes')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='idea_votes'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('idea', 'user')
+
+
 class WikiPage(models.Model):
     class PageType(models.TextChoices):
         LOCATION = 'location', 'Location'
@@ -359,6 +372,12 @@ class Friendship(models.Model):
     )
     user_b = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friendships_as_b'
+    )
+    # Хто надіслав заявку. user_a/user_b — відсортована пара для унікальності,
+    # напрямок зберігається лише тут.
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_friendships',
+        null=True, blank=True,
     )
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.PENDING

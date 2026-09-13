@@ -420,7 +420,7 @@ export default function PlannerSection({ worldId, accent, userRole }) {
         }`}
       >
         {planned.map((t) => {
-          const [dot, label] = priorities[t.priority]
+          const [dot, label] = priorities[t.priority] || priorities.medium
           const isOverdue = overdue(t)
           return (
             <div

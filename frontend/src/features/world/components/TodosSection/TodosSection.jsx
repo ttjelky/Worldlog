@@ -32,7 +32,23 @@ const priorities = {
   high: ['#FFB199', 'Високий'],
   urgent: ['#FF8A80', 'Терміновий'],
 }
-const empty = { title: '', description: '', priority: 'medium' }
+const empty = { title: '', description: '', priority: 'medium', due_date: '' }
+
+function isOverdue(todo) {
+  if (!todo.due_date || todo.is_done) return false
+  const today = new Date().toISOString().slice(0, 10)
+  return todo.due_date < today
+}
+
+function cleanTodoPayload(form, editing) {
+  return {
+    title: (form.title || '').trim(),
+    description: form.description || '',
+    priority: form.priority || 'medium',
+    due_date: form.due_date || null,
+    ...(editing ? {} : { is_done: false }),
+  }
+}
 
 export default function TodosSection({ worldId, accent, userRole }) {
   const qc = useQueryClient()
@@ -41,9 +57,10 @@ export default function TodosSection({ worldId, accent, userRole }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
   const [priorityFilter, setPriorityFilter] = useState(null)
+  const [search, setSearch] = useState('')
   const canEdit = userRole && userRole !== 'viewer'
 
-  const { data: allTodos = [] } = useQuery({
+  const { data: allTodos = [], isLoading } = useQuery({
     queryKey: ['todos', String(worldId)],
     queryFn: () => api.get(`/worlds/${worldId}/todos/`).then((r) => r.data),
   })
@@ -52,9 +69,17 @@ export default function TodosSection({ worldId, accent, userRole }) {
   const sortedTodos = [...todos].sort(
     (a, b) => (a.order ?? 0) - (b.order ?? 0) || b.id - a.id,
   )
-  const visibleTodos = priorityFilter
-    ? sortedTodos.filter((t) => t.priority === priorityFilter)
+  const q = search.trim().toLowerCase()
+  const searched = q
+    ? sortedTodos.filter(
+        (t) =>
+          (t.title || '').toLowerCase().includes(q) ||
+          (t.description || '').toLowerCase().includes(q),
+      )
     : sortedTodos
+  const visibleTodos = priorityFilter
+    ? searched.filter((t) => t.priority === priorityFilter)
+    : searched
   // Перетягування як у проєкті: FLIP-анімація + збереження порядку.
   // Вимкнено під фільтром пріоритету, щоб не плутати порядок.
   const dndEnabled = canEdit && !priorityFilter
@@ -222,14 +247,18 @@ export default function TodosSection({ worldId, accent, userRole }) {
   }
   const openEdit = (t) => {
     setEditing(t)
-    setForm({ ...t })
+    setForm({
+      title: t.title || '',
+      description: t.description || '',
+      priority: t.priority || 'medium',
+      due_date: t.due_date || '',
+    })
     setOpen(true)
   }
   const submit = (e) => {
     e.preventDefault()
-    const payload = { ...form }
-    if (editing) delete payload.is_done
-    mutation.mutateAsync(payload).then(() => setOpen(false))
+    if (!(form.title || '').trim()) return
+    mutation.mutateAsync(cleanTodoPayload(form, editing)).then(() => setOpen(false))
   }
   const done = todos.filter((t) => t.is_done).length
   const percent = todos.length ? Math.round((done / todos.length) * 100) : 0
@@ -279,8 +308,16 @@ export default function TodosSection({ worldId, accent, userRole }) {
         </div>
       )}
 
-      {section.full && (
+      {(section.full || section.modal) && (
         <div className={styles.priorityFilters} role="group" aria-label="Фільтр за пріоритетом">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Пошук завдань…"
+            aria-label="Пошук завдань"
+            className={styles.searchInput}
+          />
           {Object.entries(priorities).map(([value, [color, label]]) => (
             <button
               key={value}
@@ -311,13 +348,17 @@ export default function TodosSection({ worldId, accent, userRole }) {
               id={`todos-slot-${t.id}`}
               className={`${styles.todoItem} ${t.is_done ? styles.todoItemDone : ''} ${
                 drag?.id === t.id ? styles.todoDragging : ''
-              } ${drag?.over === t.id ? styles.todoDragOver : ''}`}
+              } ${drag?.over === t.id ? styles.todoDragOver : ''} ${isOverdue(t) ? styles.todoOverdue : ''}`}
               draggable={dndEnabled}
               onDragStart={dndEnabled ? (e) => onTodoDragStart(e, t.id) : undefined}
               onDragOver={dndEnabled ? (e) => onTodoDragOver(e, t.id) : undefined}
               onDrop={dndEnabled ? (e) => onTodoDrop(e, t.id) : undefined}
               onDragEnd={() => setDrag(null)}
               onClick={canEdit ? () => toggle.mutate(t) : undefined}
+              onKeyDown={canEdit ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle.mutate(t) } } : undefined}
+              role={canEdit ? 'checkbox' : undefined}
+              aria-checked={canEdit ? !!t.is_done : undefined}
+              tabIndex={canEdit ? 0 : undefined}
               style={canEdit ? undefined : { cursor: 'default' }}
             >
               {dndEnabled && (
@@ -351,6 +392,11 @@ export default function TodosSection({ worldId, accent, userRole }) {
                   <span className={styles.priorityDot} style={{ background: dot }} />
                   {label}
                 </span>
+                {t.due_date && (
+                  <span className={styles.dueChip} title={`Дедлайн: ${t.due_date}`}>
+                    📅 {t.due_date}
+                  </span>
+                )}
               <div className={styles.rowActions}>
                 <RelationshipButton
                   worldId={worldId}
@@ -385,11 +431,13 @@ export default function TodosSection({ worldId, accent, userRole }) {
             </div>
           )
         })}
-        {visibleTodos.length === 0 && (
+        {isLoading ? (
+          <p className={sharedStyles.emptyMsg}>Завантаження завдань…</p>
+        ) : visibleTodos.length === 0 && (
           <p className={sharedStyles.emptyMsg}>
             {todos.length === 0
               ? 'Плани ще не складені. Додай перше завдання.'
-              : 'Немає завдань з таким пріоритетом.'}
+              : 'Нічого не знайдено. Спробуй інший пошук або пріоритет.'}
           </p>
         )}
       </div>
@@ -435,6 +483,13 @@ export default function TodosSection({ worldId, accent, userRole }) {
                   </MenuItem>
                 ))}
               </TextField>
+              <TextField
+                label="Дедлайн"
+                type="date"
+                value={form.due_date || ''}
+                onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+              />
             </div>
           </DialogContent>
           <DialogActions className={sharedStyles.dialogActions}>

@@ -478,7 +478,9 @@ export default function IdeasSection({ worldId, accent, userRole }) {
   const confirmTimer = useRef(null)
   useEffect(() => () => clearTimeout(confirmTimer.current), [])
 
-  // Голоси once-per-session: бекенд рахує суму, фронт памʼятає свої.
+  // Голоси: джерело істини — бекенд (voted_by_me, оновлюється оптимістично
+  // в спільному кеші, тому обидві копії секції показують один стан).
+  // localStorage — лише fallback, коли сервер поле не повернув.
   const voteKey = `voted-ideas-${worldId}`
   const [votedIds, setVotedIds] = useState(() => {
     try {
@@ -508,7 +510,13 @@ export default function IdeasSection({ worldId, accent, userRole }) {
       return true
     })
     .sort((a, b) =>
-      sortMode === 'top' ? (b.votes ?? 0) - (a.votes ?? 0) || b.id - a.id : 0,
+      sortMode === 'top'
+        ? (b.votes ?? 0) - (a.votes ?? 0) || b.id - a.id
+        : // 'Нові': бекенд вже віддає newest-first (Meta ordering -created_at),
+          // клієнт порядок не чіпає — лише детермінований тайбрейк при рівних датах.
+          a.created_at && b.created_at
+          ? new Date(b.created_at) - new Date(a.created_at) || b.id - a.id
+          : 0,
     )
 
   const mutation = useMutation({
@@ -531,7 +539,9 @@ export default function IdeasSection({ worldId, accent, userRole }) {
       const delta = dir === 'vote' ? 1 : -1
       qc.setQueryData(key, (old) =>
         (old ?? []).map((x) =>
-          x.id === id ? { ...x, votes: Math.max(0, (x.votes ?? 0) + delta) } : x,
+          x.id === id
+            ? { ...x, votes: Math.max(0, (x.votes ?? 0) + delta), voted_by_me: dir === 'vote' }
+            : x,
         ),
       )
       return { prev }
@@ -548,7 +558,8 @@ export default function IdeasSection({ worldId, accent, userRole }) {
 
   const toggleVote = (idea) => {
     if (voteMutation.isPending) return
-    const has = votedIds.includes(idea.id)
+    // Бекенд — джерело істини, localStorage — лише оптимістичний кеш.
+    const has = idea.voted_by_me ?? votedIds.includes(idea.id)
     setVotedIds(has ? votedIds.filter((x) => x !== idea.id) : [...votedIds, idea.id])
     voteMutation.mutate({ id: idea.id, dir: has ? 'unvote' : 'vote' })
   }
@@ -775,7 +786,7 @@ export default function IdeasSection({ worldId, accent, userRole }) {
             form={form}
             setForm={setForm}
             saving={mutation.isPending}
-            voted={votedIds.includes(t.id)}
+            voted={t.voted_by_me ?? votedIds.includes(t.id)}
             onToggleVote={toggleVote}
             convertArmed={confirmConvertId === t.id}
             convertBusy={convertingId === t.id}

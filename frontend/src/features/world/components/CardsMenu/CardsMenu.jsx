@@ -1,23 +1,37 @@
 import { Dialog, DialogContent, IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import AddIcon from '@mui/icons-material/Add'
-import PlayersSection from '../PlayersSection/PlayersSection'
-import LocationsSection from '../LocationsSection/LocationsSection'
-import TodosSection from '../TodosSection/TodosSection'
-import HistorySection from '../HistorySection/HistorySection'
-import NotesSection from '../NotesSection/NotesSection'
-import ProjectsSection from '../ProjectsSection/ProjectsSection'
-import PlannerSection from '../PlannerSection/PlannerSection'
-import BookmarksSection from '../BookmarksSection/BookmarksSection'
-import IdeasSection from '../IdeasSection/IdeasSection'
-import ProgressSection from '../ProgressSection/ProgressSection'
-import WikiSection from '../WikiSection/WikiSection'
-import RelationshipsSection from '../RelationshipsSection/RelationshipsSection'
 import styles from './CardsMenu.module.css'
 
 const DEFAULT_RED = '#A63C39'
 const DEFAULT_GREEN = '#247A57'
-const PREVIEW_WORLD_ID = '0'
+
+// Статичні SVG-мокапи замість живих секцій: відкриття меню більше
+// не стріляє ~12 запитами на /worlds/0/... і не монтує useQuery.
+function CardPreview({ id }) {
+  return (
+    <svg viewBox="0 0 200 110" width="100%" height="100%" aria-hidden="true" role="presentation">
+      <rect x="8" y="10" width="120" height="12" rx="6" fill="currentColor" opacity="0.85" />
+      <rect x="8" y="30" width="184" height="8" rx="4" fill="currentColor" opacity="0.25" />
+      <rect x="8" y="44" width="150" height="8" rx="4" fill="currentColor" opacity="0.25" />
+      <rect x="8" y="58" width="170" height="8" rx="4" fill="currentColor" opacity="0.18" />
+      {id === 'relationships' ? (
+        <>
+          <circle cx="60" cy="88" r="10" fill="currentColor" opacity="0.5" />
+          <circle cx="100" cy="88" r="10" fill="currentColor" opacity="0.35" />
+          <circle cx="140" cy="88" r="10" fill="currentColor" opacity="0.5" />
+          <line x1="70" y1="88" x2="90" y2="88" stroke="currentColor" strokeWidth="2" opacity="0.4" />
+          <line x1="110" y1="88" x2="130" y2="88" stroke="currentColor" strokeWidth="2" opacity="0.4" />
+        </>
+      ) : (
+        <>
+          <rect x="8" y="78" width="88" height="22" rx="11" fill="currentColor" opacity="0.35" />
+          <rect x="104" y="78" width="88" height="22" rx="11" fill="currentColor" opacity="0.2" />
+        </>
+      )}
+    </svg>
+  )
+}
 
 function buildCardDefs(accents) {
   const green = accents?.green || DEFAULT_GREEN
@@ -29,84 +43,72 @@ function buildCardDefs(accents) {
       name: 'Гравці',
       desc: 'Список гравців світу з аватарами та ролями',
       accent: green,
-      render: (accent) => <PlayersSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'locations',
       name: 'Локації',
       desc: 'Зберігай локації світу з координатами, фото та описом',
       accent: red,
-      render: (accent) => <LocationsSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'todos',
       name: 'Todo-лист',
       desc: 'Завдання та плани з пріоритетами та статусом виконання',
       accent: green,
-      render: (accent) => <TodosSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'history',
       name: 'Історія',
       desc: 'Хроніка подій світу у вигляді таймлайну',
       accent: red,
-      render: (accent) => <HistorySection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'wiki',
       name: 'World Wiki',
       desc: 'Повноцінна вікі-система для персонажів, фракцій та лора',
       accent: green,
-      render: (accent) => <WikiSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'notes',
       name: 'Нотатки',
       desc: 'Прості нотатки та ідеї з тегами',
       accent: green,
-      render: (accent) => <NotesSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'projects',
       name: 'Проєкти',
       desc: 'Великі цілі з автоматичним прогресом на основі задач',
       accent: red,
-      render: (accent) => <ProjectsSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'planner',
       name: 'Планер',
       desc: 'Планування майбутніх подій за датами',
       accent: green,
-      render: (accent) => <PlannerSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'bookmarks',
       name: 'Закладки',
       desc: 'Збереження корисних посилань та референсів',
       accent: red,
-      render: (accent) => <BookmarksSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'ideas',
       name: 'Ідеї',
       desc: 'Місце для ідей з можливістю перетворити на проєкт',
       accent: green,
-      render: (accent) => <IdeasSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'progress',
       name: 'Прогрес',
       desc: 'Статистика твого WorldLog: кількість локацій, Wiki-сторінок, задач тощо',
       accent: green,
-      render: (accent) => <ProgressSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
     {
       id: 'relationships',
       name: "Зв'язки",
       desc: 'Граф звʼязків між сторінками вікі та елементами світу',
       accent: green,
-      render: (accent) => <RelationshipsSection worldId={PREVIEW_WORLD_ID} accent={accent} />,
     },
   ]
 }
@@ -149,11 +151,9 @@ export default function CardsMenu({ open, onClose, layout, onToggle, accentRed, 
               return (
                 <div key={def.id} className={styles.cell + (!hidden ? ' ' + styles.cellAdded : '')}>
                   <div className={styles.preview} style={{ '--accent': def.accent || accentRed }}>
-                    {def.render ? (
-                      <div className={styles.previewInner}>{def.render(def.accent)}</div>
-                    ) : (
-                      def.preview
-                    )}
+                    <div className={styles.previewInner}>
+                      <CardPreview id={def.id} />
+                    </div>
                   </div>
                   <div className={styles.cellInfo}>
                     <div className={styles.cellDesc}>{def.desc}</div>

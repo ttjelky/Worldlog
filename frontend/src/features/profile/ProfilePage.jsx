@@ -156,47 +156,43 @@ export default function ProfilePage() {
 
   const saveProfile = useMutation({
     mutationFn: async () => {
-      const data = {}
+      // Один PATCH одним FormData: поля + аватар разом, щоб не було
+      // розсинхрону "поля збереглись, аватар — ні".
+      const fd = new FormData()
       const initial = initialFormRef.current
-      if (editForm.username !== initial.username) data.username = editForm.username
-      if (editForm.display_name !== initial.display_name) data.display_name = editForm.display_name
-      if (editForm.bio !== initial.bio) data.bio = editForm.bio
-
-      const hasProfileChanges = Object.keys(data).length > 0
-      const hasAvatar = avatarFile !== null
-
-      if (hasProfileChanges) {
-        const res = await api.patch('/me/profile/', data)
-        return { userData: res.data, hasAvatar }
-      }
-      return { userData: null, hasAvatar }
+      if (editForm.username !== initial.username) fd.append('username', editForm.username)
+      if (editForm.display_name !== initial.display_name) fd.append('display_name', editForm.display_name)
+      if (editForm.bio !== initial.bio) fd.append('bio', editForm.bio)
+      if (avatarFile) fd.append('avatar', avatarFile)
+      // FormData порожнім не шлемо — нічого не змінилось.
+      if ([...fd.keys()].length === 0) return { userData: null, noop: true }
+      const res = await api.patch('/me/profile/', fd)
+      return { userData: res.data }
     },
-    onSuccess: async ({ userData, hasAvatar }) => {
-      let avatarFailed = false
+    onSuccess: async ({ userData, noop }) => {
+      if (noop) {
+        exitEditMode()
+        return
+      }
       if (userData) {
+        const prevUsername = initialFormRef.current.username
         updateUser({
           username: userData.username,
           display_name: userData.display_name || '',
           bio: userData.bio || '',
+          avatar_url: userData.avatar_url || null,
         })
-      }
-      if (hasAvatar && avatarFile) {
-        try {
-          const fd = new FormData()
-          fd.append('avatar', avatarFile)
-          const res = await api.patch('/me/profile/', fd)
-          updateUser({ avatar_url: res.data.avatar_url || null })
-        } catch {
-          avatarFailed = true
+        // Після зміни username роут старіє — ведемо на новий.
+        if (userData.username && userData.username !== prevUsername && !username) {
+          navigate('/app/profile', { replace: true })
+        } else if (userData.username && username && userData.username !== username) {
+          navigate(`/app/profile/${userData.username}`, { replace: true })
         }
       }
       qc.invalidateQueries(['me'])
       qc.invalidateQueries(['userProfile', username])
       exitEditMode()
-      setSnackbar({
-        open: true,
-        message: avatarFailed ? 'Профіль оновлено, але аватар не завантажено' : 'Профіль оновлено',
-      })
+      setSnackbar({ open: true, message: 'Профіль оновлено' })
     },
     onError: (err) => {
       if (err.response?.data) {

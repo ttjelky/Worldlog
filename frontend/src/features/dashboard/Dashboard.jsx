@@ -18,6 +18,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../api'
 import Navbar from '../../shared/components/Navbar/Navbar'
 import { goSection } from '../../shared/utils/navigation'
+import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import WorldCard, { getCompletionPercent } from '../../shared/components/WorldCard/WorldCard'
 import styles from './Dashboard.module.css'
 
@@ -311,18 +312,25 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [open, setOpen] = useState(false)
+  const { notify } = useFeedback()
   const [activePage, setActivePage] = useState(
     searchParams.get('tab') === 'overview' ? 'overview' : 'home',
   )
 
-  const { data: worlds = [], isLoading } = useQuery({
+  const { data: worlds = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['worlds'],
     queryFn: () => api.get('/worlds/').then((r) => r.data),
   })
   const createWorld = useMutation({
     mutationFn: (data) =>
       api.post('/worlds/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
-    onSuccess: () => qc.invalidateQueries(['worlds']),
+    onSuccess: () => {
+      qc.invalidateQueries(['worlds'])
+      notify('Світ створено')
+    },
+    onError: (err) => {
+      notify(err.response?.data?.detail || 'Не вдалося створити світ')
+    },
   })
 
   const openCreate = () => {
@@ -385,6 +393,15 @@ export default function Dashboard() {
             </div>
 
             {isLoading && <LinearProgress />}
+
+            {isError && (
+              <div className={styles.errorBlock}>
+                <p>Не вдалося завантажити світи.</p>
+                <Button variant="outlined" size="small" onClick={() => refetch()}>
+                  Спробувати ще
+                </Button>
+              </div>
+            )}
 
             <div className={styles.grid}>
               {worlds.map((w, i) => (

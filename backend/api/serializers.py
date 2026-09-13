@@ -42,6 +42,21 @@ RELATION_MODEL_MAP = {
     'idea': Idea,
 }
 
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
+ALLOWED_IMAGE_TYPES = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
+
+
+def validate_image_file(value):
+    if value is None:
+        return value
+    size = getattr(value, 'size', None)
+    if size is not None and size > MAX_IMAGE_BYTES:
+        raise serializers.ValidationError('Файл завеликий (максимум 5 МБ).')
+    content_type = getattr(value, 'content_type', None)
+    if content_type and content_type not in ALLOWED_IMAGE_TYPES:
+        raise serializers.ValidationError('Дозволені формати: JPG, PNG, WEBP, GIF.')
+    return value
+
 
 class CustomTokenObtainSerializer(TokenObtainPairSerializer):
     email = serializers.EmailField()
@@ -57,9 +72,10 @@ class CustomTokenObtainSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         email = attrs.pop('email', '').strip().lower()
-        try:
-            user = User.objects.get(email__iexact=email)
-        except User.DoesNotExist:
+        # filter().first() замість get(): email не unique на рівні БД
+        # у старих інсталяцій, дублікат не має давати 500.
+        user = User.objects.filter(email__iexact=email).order_by('id').first()
+        if user is None:
             raise AuthenticationFailed(
                 'Невірна електронна пошта або пароль'
             )
@@ -209,7 +225,7 @@ class AbsoluteURLImageField(serializers.ImageField):
 
 
 class LocationScreenshotSerializer(serializers.ModelSerializer):
-    image = AbsoluteURLImageField()
+    image = AbsoluteURLImageField(validators=[validate_image_file])
 
     class Meta:
         model = LocationScreenshot
@@ -234,9 +250,20 @@ class LocationSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('world',)
 
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        # Координати Minecraft: ±30_000_000.
+        for field in ('x', 'y', 'z'):
+            if field in attrs and attrs[field] is not None:
+                if abs(attrs[field]) > 30_000_000:
+                    raise serializers.ValidationError(
+                        {field: 'Координата поза межами світу (±30 000 000).'}
+                    )
+        return attrs
+
 
 class PlayerSerializer(serializers.ModelSerializer):
-    avatar = AbsoluteURLImageField(required=False, allow_null=True)
+    avatar = AbsoluteURLImageField(required=False, allow_null=True, validators=[validate_image_file])
     avatar_clear = serializers.BooleanField(write_only=True, required=False)
 
     class Meta:
@@ -285,11 +312,25 @@ class TodoItemSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('world', 'created_at')
 
+    def validate_project(self, value):
+        if value is None:
+            return value
+        request = self.context.get('request')
+        world_id = None
+        if request and getattr(request, 'resolver_match', None):
+            world_id = request.resolver_match.kwargs.get('world_id')
+        if world_id is not None and str(value.world_id) != str(world_id):
+            raise serializers.ValidationError(
+                'Проєкт належить іншому світу.'
+            )
+        return value
+
 
 class HistoryEventSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
     coordinates = serializers.SerializerMethodField()
     participants_list = serializers.SerializerMethodField()
+    image = serializers.ImageField(write_only=True, allow_null=True, required=False, validators=[validate_image_file])
 
     class Meta:
         model = HistoryEvent
@@ -319,11 +360,16 @@ class HistoryEventSerializer(serializers.ModelSerializer):
             'participants_list',
         )
         extra_kwargs = {
-            'image': {'write_only': True, 'allow_null': True},
             'participants': {'required': False, 'allow_blank': True},
         }
 
     epoch_name = serializers.SerializerMethodField()
+
+    def update(self, instance, validated_data):
+        # Заміна фото: старий файл видаляємо, щоб не лишались сироти.
+        if 'image' in validated_data and validated_data['image'] and instance.image:
+            instance.image.delete(save=False)
+        return super().update(instance, validated_data)
 
     def get_epoch_name(self, obj):
         return obj.epoch.name if obj.epoch else None
@@ -429,6 +475,14 @@ class WorldSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(url) if request else url
         return None
 
+    def validate_cover_image(self, value):
+        return validate_image_file(value)
+
+    def update(self, instance, validated_data):
+        if 'cover_image' in validated_data and validated_data['cover_image'] and instance.cover_image:
+            instance.cover_image.delete(save=False)
+        return super().update(instance, validated_data)
+
     def get_owner_avatar_url(self, obj):
         try:
             if obj.owner.profile.avatar:
@@ -461,7 +515,16 @@ class MembershipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Membership
         fields = ('id', 'world', 'world_name', 'user', 'username', 'role', 'status', 'avatar_url')
-        read_only_fields = ('world', 'user')
+        read_only_fields = ('world', 'status')
+
+    def validate_role(self, value):
+        # Створення owner-membership через API заборонене: власник
+        # визначається полем world.owner, а не рядком membership.
+        if value == Membership.Role.OWNER:
+            raise serializers.ValidationError(
+                'Неможливо призначити роль owner через запрошення.'
+            )
+        return value
 
     def get_avatar_url(self, obj):
         try:
@@ -507,12 +570,41 @@ class BookmarkSerializer(serializers.ModelSerializer):
         fields = ('id', 'world', 'title', 'url', 'description', 'tags', 'is_pinned', 'created_at')
         read_only_fields = ('world',)
 
+    def validate_url(self, value):
+        from urllib.parse import urlparse
+
+        url = (value or '').strip()
+        if not url:
+            raise serializers.ValidationError('URL не може бути порожнім.')
+        # Автодоповнення схеми для зручності вставки "example.com".
+        if '://' not in url:
+            url = 'https://' + url
+        parsed = urlparse(url)
+        if parsed.scheme not in ('http', 'https') or not parsed.hostname:
+            raise serializers.ValidationError('Дозволені лише http(s) URL.')
+        return url
+
 
 class IdeaSerializer(serializers.ModelSerializer):
+    voted_by_me = serializers.SerializerMethodField()
+
     class Meta:
         model = Idea
-        fields = ('id', 'world', 'title', 'content', 'status', 'votes', 'created_at')
-        read_only_fields = ('world',)
+        fields = ('id', 'world', 'title', 'content', 'status', 'votes', 'voted_by_me', 'created_at')
+        read_only_fields = ('world', 'votes', 'voted_by_me')
+
+    def get_voted_by_me(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) if request else None
+        if not user or not getattr(user, 'is_authenticated', False):
+            return False
+        # Уникаємо N+1 на списку: якщо annotate/prefetch є — використаємо.
+        prefetched = getattr(obj, 'my_votes', None)
+        if prefetched is not None:
+            return len(prefetched) > 0
+        from .models import IdeaVote
+
+        return IdeaVote.objects.filter(idea_id=obj.pk, user=user).exists()
 
 
 class WikiPageSerializer(serializers.ModelSerializer):
@@ -533,6 +625,24 @@ class WikiPageSerializer(serializers.ModelSerializer):
             'updated_at',
         )
         read_only_fields = ('world',)
+
+    def validate_title(self, value):
+        title = (value or '').strip()
+        if not title:
+            raise serializers.ValidationError('Назва не може бути порожньою.')
+        request = self.context.get('request')
+        world_id = None
+        if request and getattr(request, 'resolver_match', None):
+            world_id = request.resolver_match.kwargs.get('world_id')
+        if world_id is None and self.instance:
+            world_id = self.instance.world_id
+        if world_id is not None:
+            qs = WikiPage.objects.filter(world_id=world_id, title__iexact=title)
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError('Сторінка з такою назвою вже існує.')
+        return title
 
 
 class RelationshipSerializer(serializers.ModelSerializer):
@@ -561,8 +671,9 @@ class RelationshipSerializer(serializers.ModelSerializer):
         if not model:
             return None
         try:
-            return str(model.objects.get(pk=entity_id))
-        except model.DoesNotExist:
+            obj = model.objects.filter(pk=entity_id).first()
+            return str(obj) if obj is not None else None
+        except (ValueError, TypeError):
             return None
 
     def get_source_name(self, obj):
@@ -677,7 +788,8 @@ class ProfileUpdateSerializer(serializers.Serializer):
     username = serializers.CharField(required=False, max_length=150)
     display_name = serializers.CharField(required=False, max_length=100, allow_blank=True)
     bio = serializers.CharField(required=False, max_length=500, allow_blank=True)
-    avatar = serializers.ImageField(required=False)
+    avatar = serializers.ImageField(required=False, validators=[validate_image_file])
+    avatar_clear = serializers.BooleanField(required=False)
 
     def validate_username(self, value):
         value = value.strip().lower()
@@ -707,7 +819,13 @@ class ProfileUpdateSerializer(serializers.Serializer):
             profile.display_name = validated_data['display_name']
         if 'bio' in validated_data:
             profile.bio = validated_data['bio']
+        if validated_data.pop('avatar_clear', False):
+            if profile.avatar:
+                profile.avatar.delete(save=False)
+            profile.avatar = None
         if 'avatar' in validated_data:
+            if profile.avatar:
+                profile.avatar.delete(save=False)
             profile.avatar = validated_data['avatar']
         profile.save()
 
@@ -763,11 +881,20 @@ class FriendshipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Friendship
-        fields = ('id', 'user_a', 'user_b', 'status', 'status_display', 'other_user', 'created_at', 'updated_at')
+        fields = ('id', 'user_a', 'user_b', 'sender', 'status', 'status_display', 'other_user', 'created_at', 'updated_at')
+        read_only_fields = ('sender',)
 
     def get_other_user(self, obj):
         request_user = self.context.get('request')
-        if not request_user:
+        # Контекст може бути як request, так і user (історично передавали user).
+        actual_user = getattr(request_user, 'user', None) or request_user
+        if actual_user is None or not hasattr(actual_user, 'id'):
             return None
-        other = obj.get_other_user(request_user)
-        return UserPublicSerializer(other).data
+        try:
+            other = obj.get_other_user(actual_user)
+        except ValueError:
+            return None
+        request_obj = request_user if hasattr(request_user, 'build_absolute_uri') else self.context.get('request_obj')
+        # Прокидаємо request для абсолютних URL аватарок, якщо він доступний.
+        ctx = {'request': request_obj} if request_obj else {}
+        return UserPublicSerializer(other, context=ctx).data
