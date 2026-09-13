@@ -78,6 +78,31 @@ class WorldPermissionsTests(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_owner_can_patch_world(self):
+        # Регресія: власник мусить редагувати свій світ (не 403).
+        self.auth(self.owner)
+        resp = self.client.patch(
+            f'/api/worlds/{self.world.pk}/', {'name': 'Нова назва'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['name'], 'Нова назва')
+
+    def test_owner_can_delete_world(self):
+        self.auth(self.owner)
+        resp = self.client.delete(f'/api/worlds/{self.world.pk}/')
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_stranger_cannot_list_todos(self):
+        # Витік списків закрито: чужий отримує 403, а не дані.
+        self.auth(self.stranger)
+        resp = self.client.get(self.todos_url())
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_viewer_can_list_todos(self):
+        self.auth(self.viewer)
+        resp = self.client.get(self.todos_url())
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
     def test_access_request_flow(self):
         # Створення + сповіщення власнику з прив'язкою заявки
         self.auth(self.stranger)

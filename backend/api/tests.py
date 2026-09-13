@@ -4,15 +4,15 @@ from rest_framework import status
 from rest_framework.test import APIClient
 import shutil
 import tempfile
+from unittest.mock import patch
 from django.core.files.uploadedfile import SimpleUploadedFile
-@override_settings(
-    ALLOWED_HOSTS=['testserver'],
-    REST_FRAMEWORK={
-        **__import__('django.conf', fromlist=['settings']).settings.REST_FRAMEWORK,
-        'DEFAULT_THROTTLE_CLASSES': [],
-        'DEFAULT_THROTTLE_RATES': {},
-    },
-)
+from .views import RegisterView
+# NOTE: DRF біндить throttle_classes при імпорті в'ю, тому override_settings
+# з DEFAULT_THROTTLE_CLASSES=[] тротлінг у тестах НЕ вимикає. Для в'ю з
+# throttle_scope (напр. RegisterView: 'auth' 10/хв) тротлимо явно через patch,
+# інакше тести, що разом роблять >10 запитів, отримують 429.
+@override_settings(ALLOWED_HOSTS=['testserver'])
+@patch.object(RegisterView, 'throttle_classes', [])
 class AuthRegistrationTests(TestCase):
     def setUp(self):
         self.client = APIClient()

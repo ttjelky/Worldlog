@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 import re
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 
 from .models import (
     Bookmark,
@@ -287,6 +288,16 @@ class TodoViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         return Response({'ok': True, 'ids': ids})
 
 
+def _auto_game_day(world, event_date, explicit):
+    """Ігровий день події від start_date світу. Явне значення не чіпаємо."""
+    if explicit is not None:
+        return explicit
+    if world is None or not world.start_date or not event_date:
+        return None
+    delta = (event_date - world.start_date).days + 1
+    return delta if delta >= 1 else None
+
+
 class HistoryEventViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
     queryset = HistoryEvent.objects.select_related('epoch').all()
     serializer_class = HistoryEventSerializer
@@ -294,6 +305,9 @@ class HistoryEventViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         world_id = self.kwargs['world_id']
+        world = World.objects.filter(pk=world_id).first()
+        if world is None:
+            raise NotFound('World not found.')
         data = serializer.validated_data
         epoch = (data.get('epoch')
                  or Epoch.objects.filter(world_id=world_id, end_date__isnull=True).first()
@@ -303,6 +317,9 @@ class HistoryEventViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'epoch': 'Розділ належить іншому світу.'})
         data['world_id'] = world_id
+        data['game_day'] = _auto_game_day(
+            world, data.get('date') or date.today(), data.get('game_day'),
+        )
         if epoch:
             data['epoch'] = epoch
         serializer.save(**data)
@@ -313,11 +330,18 @@ class HistoryEventViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
         if epoch is not None and world_id is not None and str(epoch.world_id) != str(world_id):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'epoch': 'Розділ належить іншому світу.'})
-        serializer.save()
+        kwargs = {}
+        # Дату змінили без явного game_day — перераховуємо від старту світу.
+        if 'date' in serializer.validated_data and 'game_day' not in serializer.validated_data:
+            world = World.objects.filter(pk=world_id).first()
+            kwargs['game_day'] = _auto_game_day(world, serializer.validated_data['date'], None)
+        serializer.save(**kwargs)
 
 
 class EpochViewSet(RelatedViewSetMixin, viewsets.ModelViewSet):
-    queryset = Epoch.objects.annotate(events_count=Count('events')).all()
+    # НЕ анотувати events_count: у моделі це @property, annotate з тим самим
+    # ім'ям падає з "property has no setter". Списки епох короткі — property ок.
+    queryset = Epoch.objects.prefetch_related('events').all()
     serializer_class = EpochSerializer
 
     @action(detail=True, methods=['post'])

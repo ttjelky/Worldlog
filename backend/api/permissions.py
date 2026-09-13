@@ -48,8 +48,9 @@ class IsOwnerOrMember(BasePermission):
             return True
         world = _get_world_from_view(view)
         if world is None:
-            # Світ не існує — забороняємо (в'ю поверне 404/403, але не витік).
-            return False
+            # Світу з таким id нема — queryset і так буде порожнім,
+            # а create поверне 404. Витоку тут бути не може.
+            return True
         if world.owner_id == request.user.id:
             return True
         return world.memberships.filter(
@@ -67,23 +68,13 @@ class IsWorldOwner(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        if request.method in SAFE_METHODS:
-            # Читання поза контекстом світу дозволене лише якщо в'ю
-            # сама фільтрує queryset (напр. список своїх світів).
-            # Для вкладених в'ю зі world_id перевіряємо членство одразу,
-            # бо has_object_permission на list не викликається.
-            world_id = getattr(view, 'kwargs', {}).get('world_id')
-            if not world_id:
-                return True
-            world = _get_world_from_view(view)
-            if world is None:
-                return False
-            return get_user_role(request.user, world) is not None
         world = _get_world_from_view(view)
         if world is None:
-            # Unsafe без контексту світу — забороняємо за замовчуванням,
-            # конкретна в'ю має дати явний дозвіл.
-            return False
+            # Без контексту світу (напр. WorldViewSet працює через `pk`) —
+            # рішення за has_object_permission / queryset в'ю.
+            return True
+        if request.method in SAFE_METHODS:
+            return get_user_role(request.user, world) is not None
         return world.owner_id == request.user.id
 
 
@@ -98,17 +89,12 @@ class IsWorldEditorOrAbove(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        if request.method in SAFE_METHODS:
-            world_id = getattr(view, 'kwargs', {}).get('world_id')
-            if not world_id:
-                return True
-            world = _get_world_from_view(view)
-            if world is None:
-                return False
-            return get_user_role(request.user, world) is not None
         world = _get_world_from_view(view)
         if world is None:
-            return False
+            # Без контексту світу — рішення за has_object_permission.
+            return True
+        if request.method in SAFE_METHODS:
+            return get_user_role(request.user, world) is not None
         role = get_user_role(request.user, world)
         return role in (Membership.Role.OWNER, Membership.Role.EDITOR)
 
@@ -124,10 +110,7 @@ class IsWorldViewerOrAbove(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        world_id = getattr(view, 'kwargs', {}).get('world_id')
-        if not world_id:
-            return True
         world = _get_world_from_view(view)
         if world is None:
-            return False
+            return True
         return get_user_role(request.user, world) is not None
