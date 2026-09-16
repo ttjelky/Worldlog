@@ -2,7 +2,7 @@
   display: flex;
   align-items: flex-start;
   gap: 32px;
-  padding: 40px 36px;
+  padding: 32px 28px;
   background: #ffffff;
   border-radius: 20px;
   margin-bottom: 20px;
@@ -21,12 +21,6 @@
 
 .avatar {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.avatar:hover {
-  transform: scale(1.04);
-  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.35);
 }
 
 .avatarImg {
@@ -35,12 +29,6 @@
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.avatarImg:hover {
-  transform: scale(1.04);
-  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.35);
 }
 
 .avatarFileInput {
@@ -178,7 +166,7 @@
 
 .coverWrap {
   position: relative;
-  margin: -40px -36px 24px;
+  margin: -32px -28px 20px;
   border-radius: 20px 20px 0 0;
   overflow: hidden;
   min-height: 140px;
@@ -267,6 +255,11 @@
   border-radius: 50%;
 }
 
+.avatarViewBtn:focus-visible {
+  outline: 2px solid #2E2B27;
+  outline-offset: 2px;
+}
+
 .lightboxContent {
   display: flex;
   justify-content: center;
@@ -324,6 +317,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 24px;
+  min-height: 44px;
   border-radius: 999px;
   font-size: 15px;
   font-weight: 600;
@@ -331,7 +325,7 @@
   background: transparent;
   border: 1.5px solid rgba(46, 43, 39, 0.3);
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .editBtn:hover {
@@ -350,6 +344,7 @@
   align-items: center;
   gap: 6px;
   padding: 10px 20px;
+  min-height: 44px;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
@@ -357,7 +352,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .cancelBtn:hover {
@@ -375,6 +370,7 @@
   align-items: center;
   gap: 6px;
   padding: 10px 24px;
+  min-height: 44px;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
@@ -382,7 +378,7 @@
   background: #2E2B27;
   border: none;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: background 0.15s ease;
 }
 
 .saveBtn:hover {
@@ -392,7 +388,6 @@
 .saveBtn:disabled {
   background: rgba(46, 43, 39, 0.3);
   cursor: not-allowed;
-  transform: none;
 }
 
 .saveSpinner {
@@ -404,7 +399,7 @@
     flex-direction: column;
     align-items: stretch;
     text-align: center;
-    padding: 32px 24px;
+    padding: 28px 20px;
   }
 
   .avatarWrap {
@@ -426,7 +421,7 @@
   }
 
   .coverWrap {
-    margin: -32px -24px 20px;
+    margin: -28px -20px 16px;
   }
 
   .displayName {
@@ -442,18 +437,5 @@
   .saveBtn {
     width: 100%;
     justify-content: center;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .avatar:hover,
-  .avatarImg:hover,
-  .editBtn:hover {
-    transform: none;
-  }
-
-  .editActions .cancelBtn:hover,
-  .editActions .saveBtn:hover {
-    transform: none;
   }
 }

@@ -20,6 +20,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import api from '../../../../api'
+import { STOCK_LOCATION_IMAGES } from '../../../../shared/stockImages'
 import sharedStyles from '../shared/section.module.css'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import RelationshipList from '../shared/RelationshipList'
@@ -47,6 +48,15 @@ const empty = { name: '', description: '', x: 0, y: 0, z: 0, category: 'other' }
 const COORD_KEYS = ['x', 'y', 'z']
 const CAROUSEL_PER_PAGE = 2
 const CAROUSEL_INTERVAL = 10000
+
+// Сток-плейсхолдер скріншота за категорією (legacy village/temple мапимо на town/build)
+const locationStockKey = (cat) => {
+  if (cat === 'village') return 'town'
+  if (cat === 'temple') return 'build'
+  return cat || 'other'
+}
+const locationStock = (cat) =>
+  STOCK_LOCATION_IMAGES[locationStockKey(cat)] || STOCK_LOCATION_IMAGES.other
 
 function LocationDetails({
   worldId,
@@ -95,10 +105,13 @@ function LocationDetails({
       {activeShot ? (
         <img className={styles.detailsMainImg} src={activeShot.image} alt={location.name} />
       ) : (
-        <div className={styles.detailsPlaceholder}>
-          <PhotoCameraOutlinedIcon />
-          <span>Ще немає фото</span>
-        </div>
+        <img
+          className={styles.detailsMainImg}
+          src={locationStock(location.category)}
+          alt={location.name}
+          loading="lazy"
+          decoding="async"
+        />
       )}
 
       {location.description && <p className={styles.detailsDesc}>{location.description}</p>}
@@ -578,9 +591,13 @@ export default function LocationsSection({ worldId, accent, userRole }) {
                 {l.screenshots?.[0] ? (
                   <img className={styles.locThumb} src={l.screenshots[0].image} alt={l.name} loading="lazy" decoding="async" />
                 ) : (
-            <div className={styles.locThumbPlaceholder}>
-              <PhotoCameraOutlinedIcon />
-            </div>
+                  <img
+                    className={styles.locThumb}
+                    src={locationStock(l.category)}
+                    alt={l.name}
+                    loading="lazy"
+                    decoding="async"
+                  />
           )}
         </div>
         <div className={styles.locBody}>

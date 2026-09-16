@@ -11,6 +11,7 @@ import Navbar from '../../shared/components/Navbar/Navbar'
 import { goSection } from '../../shared/utils/navigation'
 import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import UserAvatar from '../../shared/components/UserAvatar/UserAvatar'
+import { stockCoverFor } from '../../shared/stockImages'
 import SearchSkeleton from './components/SearchSkeleton'
 import styles from './SearchPage.module.css'
 
@@ -155,6 +156,11 @@ export default function SearchPage() {
   const isLoadingResults = worldsLoading || usersLoading
   const hasResults = worldResults.length > 0 || userResults.length > 0
   const hubLoading = worldsHubLoading || friendsHubLoading || publicLoading
+  const hubEmpty =
+    myWorlds.length === 0 &&
+    publicWorlds.length === 0 &&
+    hubFriends.length === 0 &&
+    hubRequests.length === 0
   const friendBusy =
     sendRequest.isPending || cancelRequest.isPending || acceptRequest.isPending || rejectRequest.isPending
 
@@ -255,6 +261,14 @@ export default function SearchPage() {
 
             {!hubLoading && (
               <>
+                {hubEmpty ? (
+                  <div className={styles.emptyState}>
+                    <SearchIcon className={styles.emptyIcon} />
+                    <h3 className={styles.emptyTitle}>Поки порожньо</h3>
+                    <p className={styles.emptyText}>Створіть світ або додайте друзів</p>
+                  </div>
+                ) : (
+                  <>
                 {myWorlds.length > 0 && (
                   <section className={styles.hubSection} aria-label="Мої світи">
                     <h2 className={styles.hubTitle}>
@@ -274,11 +288,11 @@ export default function SearchPage() {
                   </section>
                 )}
 
-                <section className={styles.hubSection} aria-label="Публічні світи">
-                  <h2 className={styles.hubTitle}>
-                    Публічні світи <span className={styles.hubCount}>{publicWorlds.length}</span>
-                  </h2>
-                  {publicWorlds.length > 0 ? (
+                {publicWorlds.length > 0 && (
+                  <section className={styles.hubSection} aria-label="Публічні світи">
+                    <h2 className={styles.hubTitle}>
+                      Публічні світи <span className={styles.hubCount}>{publicWorlds.length}</span>
+                    </h2>
                     <div className={styles.resultsList}>
                       {publicWorlds.map((world, i) => (
                         <WorldSearchResult
@@ -292,16 +306,14 @@ export default function SearchPage() {
                         />
                       ))}
                     </div>
-                  ) : (
-                    <p className={styles.sectionEmpty}>Поки немає публічних світів.</p>
-                  )}
-                </section>
+                  </section>
+                )}
 
-                <section className={styles.hubSection} aria-label="Мої друзі">
-                  <h2 className={styles.hubTitle}>
-                    Друзі <span className={styles.hubCount}>{hubFriends.length}</span>
-                  </h2>
-                  {hubFriends.length > 0 ? (
+                {hubFriends.length > 0 && (
+                  <section className={styles.hubSection} aria-label="Мої друзі">
+                    <h2 className={styles.hubTitle}>
+                      Друзі <span className={styles.hubCount}>{hubFriends.length}</span>
+                    </h2>
                     <div className={styles.userList}>
                       {hubFriends.map((f) =>
                         f.other_user ? (
@@ -314,10 +326,8 @@ export default function SearchPage() {
                         ) : null,
                       )}
                     </div>
-                  ) : (
-                    <p className={styles.sectionEmpty}>У тебе ще немає друзів.</p>
-                  )}
-                </section>
+                  </section>
+                )}
 
                 {hubRequests.length > 0 && (
                   <section className={styles.hubSection} aria-label="Запити в друзі">
@@ -363,6 +373,8 @@ export default function SearchPage() {
                     )}
                   </div>
                 </section>
+                )}
+                  </>
                 )}
               </>
             )}
@@ -419,14 +431,15 @@ function UserRow({ user, action, busy, onAdd, onCancel, onAccept, onNavigate }) 
 function WorldSearchResult({ world, index = 0, showAccess = true, accessSent, onRequestAccess, loading, onNavigate }) {
   const percent = world.todos_count ? Math.round((world.todos_done / world.todos_count) * 100) : 0
   const variant = index % 2 === 0 ? styles.cardSky : styles.cardSlate
+  const coverSrc = world.cover_image_url || stockCoverFor(world.id)
 
   return (
     <article
       className={`${styles.worldCard} ${variant}`}
     >
-      {world.cover_image_url && (
+      {coverSrc && (
         <div className={styles.cardCoverWrap} aria-hidden="true">
-          <img src={world.cover_image_url} alt="" className={styles.cardCover} loading="lazy" decoding="async" />
+          <img src={coverSrc} alt="" className={styles.cardCover} loading="lazy" decoding="async" />
         </div>
       )}
       <div className={styles.cardTop}>

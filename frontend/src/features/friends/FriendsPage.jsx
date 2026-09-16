@@ -154,11 +154,6 @@ export default function FriendsPage() {
 
       <div className={styles.page}>
         <div className={styles.topBlock}>
-          <section className={styles.hero}>
-            <p className={styles.heroGreeting}>Ваші зв'язки</p>
-            <h1 className={styles.heroTitle}>Друзі</h1>
-          </section>
-
           <div className={styles.tabsWrap}>
             <div className={styles.tabs} role="tablist" aria-label="Розділи друзів">
               <button

@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { stockAvatarFor } from '../../stockImages'
 import styles from './UserAvatar.module.css'
 
 const SIZE_MAP = {
@@ -25,16 +26,25 @@ export default function UserAvatar({
   displayName,
   size = 'md',
   className = '',
+  stockFallback = true,
 }) {
   const [imgError, setImgError] = useState(false)
 
   const resolvedUsername = username || user?.username || ''
   const resolvedSrc = src || avatarUrl || user?.avatar_url || null
+  const stockSrc = useMemo(() => stockAvatarFor(resolvedUsername), [resolvedUsername])
+  const fallbackSrc = stockFallback ? stockSrc : null
+  const imgSrc = resolvedSrc || fallbackSrc
   const initial = (resolvedUsername || '?')[0].toUpperCase()
   const px = SIZE_MAP[size] || SIZE_MAP.md
   const fontSize = FONT_SIZE_MAP[size] || FONT_SIZE_MAP.md
 
-  const showImage = resolvedSrc && !imgError
+  // Якщо src змінився (напр. завантажили новий аватар) — даємо картинці ще шанс.
+  useEffect(() => {
+    setImgError(false)
+  }, [resolvedSrc, stockSrc])
+
+  const showImage = imgSrc && !imgError
 
   return (
     <div
@@ -44,7 +54,7 @@ export default function UserAvatar({
     >
       {showImage ? (
         <img
-          src={resolvedSrc}
+          src={imgSrc}
           alt={resolvedUsername}
           className={styles.img}
           onError={() => setImgError(true)}

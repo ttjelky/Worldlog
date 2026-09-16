@@ -89,13 +89,6 @@
   background: #4a7fa5;
 }
 
-.sectionEmpty {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(29, 26, 34, 0.55);
-}
-
 .resultsList {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

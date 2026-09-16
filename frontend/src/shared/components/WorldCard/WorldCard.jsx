@@ -1,6 +1,7 @@
 import { Button } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import UserAvatar from '../UserAvatar/UserAvatar'
+import { stockCoverFor } from '../../stockImages'
 import styles from './WorldCard.module.css'
 
 export function getCompletionPercent(world) {
@@ -18,6 +19,7 @@ export default function WorldCard({ world, index = 0, tone = 'auto' }) {
   const navigate = useNavigate()
   const percent = getCompletionPercent(world)
   const resolved = tone === 'auto' ? TONES[index % TONES.length] : tone
+  const coverSrc = world.cover_image_url || stockCoverFor(world.id)
 
   return (
     <Button
@@ -25,9 +27,9 @@ export default function WorldCard({ world, index = 0, tone = 'auto' }) {
       onClick={() => navigate(`/app/worlds/${world.id}`)}
       sx={{ '& .MuiTouchRipple-ripple': { color: 'rgba(0, 0, 0, 0.18)' } }}
     >
-      {world.cover_image_url && (
+      {coverSrc && (
         <div className={styles.cardCoverWrap} aria-hidden="true">
-          <img src={world.cover_image_url} alt="" className={styles.cardCover} loading="lazy" decoding="async" />
+          <img src={coverSrc} alt="" className={styles.cardCover} loading="lazy" decoding="async" />
         </div>
       )}
       <div className={styles.cardTop}>

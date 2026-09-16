@@ -32,6 +32,7 @@ import TravelExploreIcon from '@mui/icons-material/TravelExplore'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import SearchIcon from '@mui/icons-material/Search'
 import api from '../../../../api'
+import { STOCK_EVENT_IMAGES } from '../../../../shared/stockImages'
 import ExpandableCard, { useExpandableCard } from '../shared/ExpandableCard'
 import sharedStyles from '../shared/section.module.css'
 import RelationshipButton from '../shared/RelationshipButton'
@@ -754,7 +755,7 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                                 locations={locations}
                               />
                             </div>
-                            {h.image_url && (
+                            {h.image_url ? (
                               <ExpandableCard
                                 clickOpens
                                 showExpandBtn={false}
@@ -780,6 +781,14 @@ export default function HistorySection({ worldId, accent, userRole, world }) {
                                   />
                                 </button>
                               </ExpandableCard>
+                            ) : (
+                              <img
+                                src={STOCK_EVENT_IMAGES[h.event_type] || STOCK_EVENT_IMAGES.other}
+                                alt=""
+                                className={styles.heroPhoto}
+                                loading="lazy"
+                                decoding="async"
+                              />
                             )}
                             {h.description && (
                               <>
