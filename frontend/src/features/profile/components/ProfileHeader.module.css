@@ -280,6 +280,44 @@
   object-fit: contain;
 }
 
+/* Аватар-лайтбокс: мобільна адаптивність.
+   Десктоп — без змін (клас паперу має правила лише на вузьких екранах). */
+@media (max-width: 600px) {
+  .lightboxPaper {
+    margin: 12px !important;
+    max-height: calc(100vh - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+  }
+
+  .lightboxContent {
+    padding: 12px !important;
+    overflow-x: hidden;
+  }
+
+  .lightboxImg {
+    max-height: 75vh;
+    max-height: 75dvh;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .lightboxPaper {
+    margin: 8px !important;
+    max-height: calc(100vh - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+  }
+
+  .lightboxContent {
+    padding: 8px !important;
+  }
+
+  .lightboxImg {
+    max-height: 80vh;
+    max-height: 80dvh;
+  }
+}
+
 /* Action buttons */
 .editBtn {
   display: flex;

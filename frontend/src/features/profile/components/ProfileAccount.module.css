@@ -67,6 +67,70 @@
   color: #b3261e;
 }
 
+/* Діалоги безпеки: структурний папір (позиціонування/скрол),
+   візуал лишається дефолтним MUI. Десктоп — без змін вигляду. */
+.dialogPaper {
+  margin: 24px !important;
+  max-height: calc(100vh - 48px) !important;
+  max-height: calc(100dvh - 48px) !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dialogPaper form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.dialogPaper :global(.MuiDialogTitle-root) {
+  overflow-wrap: break-word;
+}
+
+.dialogPaper :global(.MuiDialogContent-root) {
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+.warning,
+.error {
+  overflow-wrap: break-word;
+}
+
+/* MUI fullScreen (≤480px через useMediaQuery): знімаємо наші
+   margin/max-height, інакше !important зламає full-screen. */
+.dialogPaper:global(.MuiDialog-paperFullScreen) {
+  margin: 0 !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}
+
+@media (max-width: 480px) {
+  .dialogPaper :global(.MuiDialogActions-root) {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .dialogPaper :global(.MuiDialogActions-root .MuiButton-root) {
+    min-height: 44px !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .dialogPaper :global(.MuiDialogActions-root) {
+    padding: 10px 12px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
 @media (max-width: 500px) {
   .card {
     padding: 24px 20px;

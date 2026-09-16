@@ -276,7 +276,13 @@ export default function ProfileHeader({
         )}
       </div>
 
-      <Dialog open={lightbox} onClose={() => setLightbox(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={lightbox}
+        onClose={() => setLightbox(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{ paper: { className: styles.lightboxPaper } }}
+      >
         <DialogContent className={styles.lightboxContent}>
           {avatarSrc && (
             <img

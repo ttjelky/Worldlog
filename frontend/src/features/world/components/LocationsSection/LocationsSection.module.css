@@ -700,3 +700,21 @@
     display: none;
   }
 }
+
+/* ---------- Діалог: ряди форми в стовпчик на вузьких екранах ---------- */
+@media (max-width: 600px) {
+  .coordRow {
+    flex-direction: column;
+  }
+
+  .titleRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .titleRow :global(.MuiButton-root) {
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+  }
+}

@@ -190,3 +190,11 @@
   line-height: 1.5;
   margin: 8px 0 0;
 }
+
+/* Вузькі екрани: довгі імена не розпирають папір діалогу */
+.searchName,
+.selectedName,
+.removeText {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}

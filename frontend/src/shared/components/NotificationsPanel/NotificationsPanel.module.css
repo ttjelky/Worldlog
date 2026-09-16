@@ -261,3 +261,24 @@
     animation: none;
   }
 }
+
+/* Мобільна адаптивність: майже fullscreen-панель. Десктоп — без змін. */
+@media (max-width: 480px) {
+  .panel {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100vw;
+    border-radius: 0;
+  }
+
+  .header {
+    padding: 16px 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  }
+
+  .list {
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+}

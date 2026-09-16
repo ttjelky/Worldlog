@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material'
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  useMediaQuery,
+} from '@mui/material'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined'
 import api from '../../../api'
@@ -25,6 +33,8 @@ export default function ProfileAccount({ username }) {
   const [delPassword, setDelPassword] = useState('')
   const [delConfirm, setDelConfirm] = useState('')
   const [delError, setDelError] = useState('')
+  // Мобільний: майже весь екран замість обрізаного вікна (як WorldForm).
+  const fullScreenXs = useMediaQuery('(max-width:480px)')
 
   const closePass = () => {
     setPassOpen(false)
@@ -99,7 +109,15 @@ export default function ProfileAccount({ username }) {
         </button>
       </div>
 
-      <Dialog open={passOpen} onClose={closePass} maxWidth="xs" fullWidth>
+      <Dialog
+        open={passOpen}
+        onClose={closePass}
+        maxWidth="xs"
+        fullWidth
+        fullScreen={fullScreenXs}
+        scroll="paper"
+        slotProps={{ paper: { className: styles.dialogPaper } }}
+      >
         <form onSubmit={submitPass}>
           <DialogTitle>Змінити пароль</DialogTitle>
           <DialogContent>
@@ -143,7 +161,15 @@ export default function ProfileAccount({ username }) {
         </form>
       </Dialog>
 
-      <Dialog open={delOpen} onClose={closeDel} maxWidth="xs" fullWidth>
+      <Dialog
+        open={delOpen}
+        onClose={closeDel}
+        maxWidth="xs"
+        fullWidth
+        fullScreen={fullScreenXs}
+        scroll="paper"
+        slotProps={{ paper: { className: styles.dialogPaper } }}
+      >
         <form onSubmit={submitDel}>
           <DialogTitle>Видалити акаунт?</DialogTitle>
           <DialogContent>

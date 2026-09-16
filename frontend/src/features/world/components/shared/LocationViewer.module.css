@@ -16,6 +16,7 @@
   width: 100%;
   max-width: 560px;
   max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
   overflow-y: auto;
   border-radius: 28px;
   box-shadow: 0 1px 3px rgba(13, 13, 15, 0.08), 0 24px 60px rgba(13, 13, 15, 0.4);
@@ -171,8 +172,30 @@
 }
 
 @media (max-width: 640px) {
+  .backdrop {
+    padding: 0;
+  }
+
   .modal {
-    padding: 22px 22px 20px;
-    border-radius: 20px;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding: 22px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .head {
+    padding-right: 56px;
+  }
+
+  .footerNote {
+    flex-wrap: wrap;
+  }
+
+  .coordsBig {
+    overflow-wrap: anywhere;
   }
 }

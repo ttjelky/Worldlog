@@ -10,6 +10,7 @@ import {
   LinearProgress,
   Switch,
   TextField,
+  useMediaQuery,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
@@ -39,8 +40,25 @@ function useWorldForm(initial) {
   return { form, set, setBool, setFile, setForm }
 }
 
-export function WorldForm({ open, onClose, initial, onSubmit, dark = false }) {
+export function WorldForm({ open, onClose, initial, onSubmit, dark = false, tone }) {
   const { form, set, setBool, setFile } = useWorldForm(initial)
+  // `tone` — явний варіант палітри: 'default' | 'dark' | 'myworlds'.
+  // `dark` залишено для зворотної сумісності (alias для tone="dark").
+  const effectiveTone = tone ?? (dark ? 'dark' : 'default')
+  const paperClassName =
+    effectiveTone === 'myworlds'
+      ? `${styles.dialogPaper} ${styles.dialogPaperMyWorlds}`
+      : effectiveTone === 'dark'
+        ? `${styles.dialogPaper} ${styles.dialogPaperDark}`
+        : styles.dialogPaper
+  const backdropClassName =
+    effectiveTone === 'myworlds'
+      ? `${styles.dialogBackdrop} ${styles.dialogBackdropMyWorlds}`
+      : effectiveTone === 'dark'
+        ? `${styles.dialogBackdrop} ${styles.dialogBackdropDark}`
+        : styles.dialogBackdrop
+  // Мобільний: майже весь екран замість обрізаного вікна.
+  const fullScreenXs = useMediaQuery('(max-width:480px)')
   const submit = (e) => {
     e.preventDefault()
     const data = new FormData()
@@ -55,14 +73,14 @@ export function WorldForm({ open, onClose, initial, onSubmit, dark = false }) {
       onClose={onClose}
       maxWidth="sm"
       fullWidth
+      fullScreen={fullScreenXs}
+      scroll="paper"
       slotProps={{
         paper: {
-          className: dark ? `${styles.dialogPaper} ${styles.dialogPaperDark}` : styles.dialogPaper,
+          className: paperClassName,
         },
         backdrop: {
-          className: dark
-            ? `${styles.dialogBackdrop} ${styles.dialogBackdropDark}`
-            : styles.dialogBackdrop,
+          className: backdropClassName,
         },
       }}
     >

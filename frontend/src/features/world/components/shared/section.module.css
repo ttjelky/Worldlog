@@ -213,6 +213,7 @@
   box-shadow: 0 1px 3px rgba(29, 26, 34, 0.15), 0 4px 24px rgba(29, 26, 34, 0.1) !important;
   overflow: hidden;
   max-height: calc(100vh - 48px) !important;
+  max-height: calc(100dvh - 48px) !important;
   margin: 24px !important;
   display: flex;
   flex-direction: column;
@@ -220,12 +221,13 @@
 
 .dialogPaper :global(.MuiDialogTitle-root) {
   font-family: inherit;
-  font-size: 50px !important;
+  font-size: clamp(28px, 6vw, 50px) !important;
   font-weight: 500 !important;
   letter-spacing: -0.02em !important;
   padding: 32px 32px 44px !important;
   line-height: 1.2 !important;
   color: var(--dialog-ink, #1d1a22) !important;
+  overflow-wrap: break-word;
   /* Хедер пливе над контентом: прозора зона + z-index, контент заходить
      під неї і гаситься маскою рівно там, де закінчується текст */
   position: relative;
@@ -239,8 +241,10 @@
   /* Підтягуємо контент під хедер і футер — до самих країв вікна */
   margin-top: -44px;
   overflow-y: auto !important;
+  overflow-x: hidden;
   flex: 1;
   min-height: 0;
+  overscroll-behavior: contain;
   scrollbar-width: none;
   /* Контент іде під хедер/футер через fade: маска не залежить від кольору
      теми, тому працює на всіх темах світу */
@@ -271,6 +275,8 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .dialogActions {
@@ -323,4 +329,116 @@
 
 .sectionHeader :global(.MuiButton-contained) {
   background: #ffffff !important;
+}
+
+/* ==================================================================
+   Dialog responsiveness: планшет і мобільний (дзеркало Dashboard).
+   Десктоп (861px+) — базовий вигляд вище, без змін.
+   Покриває всі діалоги на .dialogPaper: WorldEdit/Theme, Participants
+   (add/edit/remove), Planner/Todos/Bookmarks/Locations/History,
+   NewSection/CloseEpoch, RelationshipList/RelationshipButton.
+   Негативні margin-top хедера/футера зменшуються пропорційно паддінгам,
+   щоб fade-маска лишалась рівно під текстом заголовка.
+   ================================================================== */
+
+/* Запобіжник від горизонтального скролу: довгі назви, автокомпліт
+   і rich-редактори не розпирають вузький папір. */
+.formFields > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* 481–860px (планшет): компактніші відступи, без горизонтального скролу. */
+@media (max-width: 860px) {
+  .dialogPaper {
+    border-radius: 28px !important;
+  }
+  .dialogPaper :global(.MuiDialogTitle-root) {
+    padding: 28px 24px 36px !important;
+  }
+  .dialogPaper :global(.MuiDialogContent-root) {
+    padding: 24px 24px 36px !important;
+    margin-top: -36px;
+  }
+  .dialogActions {
+    padding: 48px 20px 20px !important;
+    margin-top: -36px;
+  }
+}
+
+/* ≤600px: ще компактніше перед мобільним. */
+@media (max-width: 600px) {
+  .dialogPaper {
+    border-radius: 24px !important;
+  }
+  .dialogPaper :global(.MuiDialogTitle-root) {
+    padding: 24px 20px 32px !important;
+  }
+  .dialogPaper :global(.MuiDialogContent-root) {
+    padding: 20px 20px 32px !important;
+    margin-top: -32px;
+  }
+  .dialogActions {
+    padding: 44px 16px 16px !important;
+    margin-top: -32px;
+  }
+}
+
+/* 320–480px (мобільний): майже весь екран, тач-зручні кнопки. */
+@media (max-width: 480px) {
+  .dialogPaper {
+    margin: 12px !important;
+    max-height: calc(100vh - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    border-radius: 24px !important;
+  }
+  .dialogPaper :global(.MuiDialogTitle-root) {
+    padding: 24px 20px 28px !important;
+  }
+  .dialogPaper :global(.MuiDialogContent-root) {
+    padding: 20px 20px 28px !important;
+    margin-top: -28px;
+  }
+  .dialogActions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    margin-top: -28px;
+  }
+  .dialogBtnCancel,
+  .dialogBtnSubmit {
+    min-height: 44px !important;
+    width: 100% !important;
+  }
+}
+
+/* Вузькі екрани ≤360px: мінімальні поля. */
+@media (max-width: 360px) {
+  .dialogPaper {
+    margin: 8px !important;
+    max-height: calc(100vh - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+    border-radius: 20px !important;
+  }
+  .dialogPaper :global(.MuiDialogTitle-root) {
+    padding: 20px 16px 24px !important;
+  }
+  .dialogPaper :global(.MuiDialogContent-root) {
+    padding: 16px 16px 24px !important;
+    margin-top: -24px;
+  }
+  .dialogActions {
+    padding: 10px 12px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    margin-top: -24px;
+  }
+}
+
+/* MUI fullScreen (якщо споживач додасть fullScreen через useMediaQuery):
+   знімаємо наші margin/border-radius, інакше !important зламає full-screen. */
+.dialogPaper:global(.MuiDialog-paperFullScreen) {
+  margin: 0 !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  height: 100% !important;
+  border-radius: 0 !important;
 }

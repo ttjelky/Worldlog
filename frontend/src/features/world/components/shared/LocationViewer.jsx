@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useState } from 'react'
+import { createContext, useContext, useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import CloseIcon from '@mui/icons-material/Close'
 import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined'
@@ -19,6 +19,21 @@ export default function LocationViewerProvider({ accent = '#A63C39', children })
 
   const openLocation = useCallback((loc) => setLocation(loc), [])
   const close = useCallback(() => setLocation(null), [])
+
+  // Esc закриває перегляд, фон сторінки не скролиться під модалкою.
+  useEffect(() => {
+    if (!location) return undefined
+    const onKey = (e) => {
+      if (e.key === 'Escape') close()
+    }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [location, close])
 
   return (
     <LocationViewerContext.Provider value={{ openLocation }}>

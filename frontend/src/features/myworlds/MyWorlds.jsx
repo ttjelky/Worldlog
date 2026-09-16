@@ -263,6 +263,7 @@ export default function MyWorlds() {
         onClose={() => setOpen(false)}
         initial={emptyWorld}
         onSubmit={(data) => createWorld.mutateAsync(data).then(() => setOpen(false))}
+        tone="myworlds"
       />
     </div>
   )
