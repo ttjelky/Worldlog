@@ -8,6 +8,7 @@ import styles from './HomeSections.module.css'
  * Статистика Головної: ті самі числа, що й плитки Огляду
  * (summarizeWorlds — спільний helper), плюс друзі.
  * Усі значення — з реальних ['worlds'] / ['friends'], без хардкоду.
+ * Оформлення — surfaces поточної lavender-сторінки, а не випадкові кольори.
  */
 export function HomeStats({ worlds }) {
   const { data } = useQuery({
@@ -23,19 +24,19 @@ export function HomeStats({ worlds }) {
   ).length
 
   const tiles = [
-    ['Світи', total, dashStyles.tileCoral],
-    ['Задач виконано', `${done}/${all}`, dashStyles.tileSeafoam],
-    ['Друзі', friendsCount, dashStyles.tilePeach],
-    ['Середній прогрес', `${avg}%`, dashStyles.tileSand],
+    ['Світи', total],
+    ['Задач виконано', `${done}/${all}`],
+    ['Друзі', friendsCount],
+    ['Середній прогрес', `${avg}%`],
   ]
 
   return (
     <section className={styles.section} aria-label="Статистика">
       <div className={`${dashStyles.overviewTiles} ${styles.tiles4}`}>
-        {tiles.map(([label, value, tone]) => (
-          <div key={label} className={`${dashStyles.overviewTile} ${tone}`}>
-            <span className={dashStyles.overviewValue}>{value}</span>
-            <span className={dashStyles.overviewLabel}>{label}</span>
+        {tiles.map(([label, value]) => (
+          <div key={label} className={styles.statTile}>
+            <span className={styles.statValue}>{value}</span>
+            <span className={styles.statLabel}>{label}</span>
           </div>
         ))}
       </div>

@@ -1,3 +1,5 @@
+/* Токени тієї ж Головної: lavender-фон, purple-ink, білі surfaces. */
+
 .section {
   margin: 0 0 34px;
   min-width: 0;
@@ -17,7 +19,7 @@
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #123a44;
+  color: #9166c8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -34,7 +36,7 @@
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-  color: #35608f;
+  color: #9166c8;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -45,25 +47,49 @@
   text-decoration: underline;
 }
 
-/* 4 плитки статистики (база — overviewTiles з Dashboard.module.css) */
+/* 4 плитки статистики: одна surface-система сторінки */
 .tiles4.tiles4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-bottom: 0;
 }
 
-/* Один світ на Головній */
+.statTile {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  box-shadow: 0 1px 6px rgba(145, 102, 200, 0.12);
+}
+
+.statValue {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #9166c8;
+  overflow-wrap: anywhere;
+}
+
+.statLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(145, 102, 200, 0.65);
+}
+
+/* Один світ на Головній — картка на всю ширину секції */
 .singleCard {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 560px;
   min-width: 0;
 }
 
 .emptyHint {
   margin: 0;
   font-size: 15px;
-  color: rgba(18, 58, 68, 0.7);
+  color: rgba(145, 102, 200, 0.75);
 }
 
 /* Запрошення */
@@ -71,12 +97,11 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  max-width: 560px;
   min-width: 0;
   background: #ffffff;
   border-radius: 20px;
   padding: 14px 16px;
-  box-shadow: 0 1px 6px rgba(18, 58, 68, 0.08);
+  box-shadow: 0 1px 6px rgba(145, 102, 200, 0.12);
 }
 
 .inviteCoverWrap {
@@ -85,7 +110,7 @@
   border-radius: 14px;
   overflow: hidden;
   flex-shrink: 0;
-  background: rgba(18, 58, 68, 0.08);
+  background: rgba(145, 102, 200, 0.1);
 }
 
 .inviteCover {
@@ -107,7 +132,7 @@
   font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #123a44;
+  color: #434343;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -115,7 +140,7 @@
 
 .inviteMeta {
   font-size: 13px;
-  color: rgba(18, 58, 68, 0.62);
+  color: rgba(67, 67, 67, 0.62);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -125,8 +150,8 @@
   flex-shrink: 0;
   font-size: 12px;
   font-weight: 700;
-  color: #8a6d1a;
-  background: #f3dfa9;
+  color: #9166c8;
+  background: rgba(145, 102, 200, 0.14);
   border-radius: 999px;
   padding: 6px 12px;
   white-space: nowrap;
@@ -147,7 +172,7 @@
   max-width: 220px;
   min-width: 0;
   min-height: 44px;
-  border: 1px solid rgba(18, 58, 68, 0.12);
+  border: 1px solid rgba(145, 102, 200, 0.25);
   background: #ffffff;
   border-radius: 999px;
   padding: 6px 14px 6px 6px;
@@ -156,13 +181,13 @@
 }
 
 .friendBtn:hover {
-  border-color: rgba(18, 58, 68, 0.3);
+  border-color: #9166c8;
 }
 
 .friendName {
   font-size: 14px;
   font-weight: 700;
-  color: #123a44;
+  color: #434343;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -172,5 +197,11 @@
 @media (max-width: 860px) {
   .tiles4.tiles4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .statValue {
+    font-size: 24px;
   }
 }

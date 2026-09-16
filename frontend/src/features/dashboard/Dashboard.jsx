@@ -391,9 +391,9 @@ export default function Dashboard() {
                   onOpenWorlds={() => navigate('/app/worlds')}
                   onCreate={openCreate}
                 />
+                <HomeStats worlds={worlds} />
                 <HomeInvitesSection />
                 <HomeFriendsSection />
-                <HomeStats worlds={worlds} />
               </>
             )}
           </>

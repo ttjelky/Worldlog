@@ -1,5 +1,6 @@
 import { Button } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import UserAvatar from '../UserAvatar/UserAvatar'
 import { stockCoverFor } from '../../stockImages'
 import styles from './WorldCard.module.css'
@@ -15,11 +16,19 @@ const TONES = ['coral', 'teal', 'violet', 'sand', 'cactus']
  * Картка світу для списків (дашборд, мої світи).
  * tone: 'coral' | 'teal' | 'violet' | 'sand' | 'cactus' | 'auto' (чергування).
  */
-export default function WorldCard({ world, index = 0, tone = 'auto' }) {
+export default function WorldCard({ world, index = 0, tone = 'auto', ctaLabel = null, onCta = null }) {
   const navigate = useNavigate()
   const percent = getCompletionPercent(world)
-  const resolved = tone === 'auto' ? TONES[index % TONES.length] : tone
+  const resolved = tone === 'auto' ? TONES[index % 5] : tone
   const coverSrc = world.cover_image_url || stockCoverFor(world.id)
+  // Опційний CTA всередині картки (span, а не вкладений button:
+  // корінь картки вже є кнопкою). Використовується тільки там,
+  // де передано ctaLabel + onCta; решта місць без змін.
+  const showCta = Boolean(ctaLabel && onCta)
+  const handleCta = (e) => {
+    e.stopPropagation()
+    onCta()
+  }
 
   return (
     <Button
@@ -51,6 +60,27 @@ export default function WorldCard({ world, index = 0, tone = 'auto' }) {
           <div className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
         </div>
       </div>
+      {showCta && (
+        <>
+          <div className={styles.cardDivider} aria-hidden="true" />
+          <span
+            className={styles.cardCta}
+            role="button"
+            tabIndex={0}
+            onClick={handleCta}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                e.stopPropagation()
+                onCta()
+              }
+            }}
+          >
+            {ctaLabel}
+            <ArrowForwardIcon fontSize="small" />
+          </span>
+        </>
+      )}
     </Button>
   )
 }
