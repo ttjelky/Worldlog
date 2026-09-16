@@ -24,17 +24,17 @@ export function HomeStats({ worlds }) {
   ).length
 
   const tiles = [
-    ['Світи', total],
-    ['Задач виконано', `${done}/${all}`],
-    ['Друзі', friendsCount],
-    ['Середній прогрес', `${avg}%`],
+    ['Світи', total, styles.statDark],
+    ['Задач виконано', `${done}/${all}`, styles.statMid],
+    ['Друзі', friendsCount, styles.statDark],
+    ['Середній прогрес', `${avg}%`, styles.statMid],
   ]
 
   return (
     <section className={styles.section} aria-label="Статистика">
       <div className={`${dashStyles.overviewTiles} ${styles.tiles4}`}>
-        {tiles.map(([label, value]) => (
-          <div key={label} className={styles.statTile}>
+        {tiles.map(([label, value, tone]) => (
+          <div key={label} className={`${styles.statTile} ${tone}`}>
             <span className={styles.statValue}>{value}</span>
             <span className={styles.statLabel}>{label}</span>
           </div>

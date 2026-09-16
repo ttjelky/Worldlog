@@ -4,6 +4,7 @@
   flex-direction: column !important;
   align-items: stretch !important;
   justify-content: flex-start !important;
+  width: 100% !important;
   padding: 28px !important;
   border-radius: 28px !important;
   border: none !important;
@@ -146,7 +147,7 @@
 }
 
 .cardCta {
-  align-self: center;
+  align-self: flex-end;
   display: inline-flex;
   align-items: center;
   justify-content: center;

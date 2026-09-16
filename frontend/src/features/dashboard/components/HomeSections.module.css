@@ -1,6 +1,7 @@
 /* Токени тієї ж Головної: lavender-фон, purple-ink, білі surfaces. */
 
 .section {
+  width: 100%;
   margin: 0 0 34px;
   min-width: 0;
 }
@@ -47,35 +48,56 @@
   text-decoration: underline;
 }
 
-/* 4 плитки статистики: одна surface-система сторінки */
+/* 4 плитки статистики (база — overviewTiles з Dashboard.module.css).
+   Тональність — реальні M3-ролі purple-сім'ї з .dialogPaper
+   (Dashboard.module.css): primary/on-primary + primary-container/
+   on-primary-container. Контраст білого на #6f42c6 — 6.4:1,
+   #26113f на #e9ddfb — 13:1. */
 .tiles4.tiles4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-bottom: 0;
 }
 
 .statTile {
-  background: #ffffff;
   border-radius: 20px;
   padding: 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
-  box-shadow: 0 1px 6px rgba(145, 102, 200, 0.12);
+}
+
+.statDark {
+  background: #6f42c6;
+}
+
+.statDark .statValue,
+.statDark .statLabel {
+  color: #ffffff;
+}
+
+.statMid {
+  background: #e9ddfb;
+}
+
+.statMid .statValue {
+  color: #26113f;
+}
+
+.statMid .statLabel {
+  color: rgba(38, 17, 63, 0.72);
 }
 
 .statValue {
   font-size: 30px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #9166c8;
   overflow-wrap: anywhere;
 }
 
 .statLabel {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(145, 102, 200, 0.65);
 }
 
 /* Один світ на Головній — картка на всю ширину секції */
@@ -83,6 +105,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
   min-width: 0;
 }
 
