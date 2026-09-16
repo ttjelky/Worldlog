@@ -858,12 +858,24 @@ class WorldAccessRequestSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(source='requester.profile.display_name', read_only=True, default='')
     avatar_url = serializers.SerializerMethodField()
     world_name = serializers.CharField(source='world.name', read_only=True)
+    world_cover_url = serializers.SerializerMethodField()
+    world_is_public = serializers.BooleanField(source='world.is_public', read_only=True)
+    world_owner_username = serializers.CharField(source='world.owner.username', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
 
     class Meta:
         model = WorldAccessRequest
-        fields = ('id', 'world', 'world_name', 'requester', 'username', 'display_name', 'avatar_url', 'status', 'status_display', 'created_at')
+        fields = ('id', 'world', 'world_name', 'world_cover_url', 'world_is_public', 'world_owner_username',
+                  'requester', 'username', 'display_name', 'avatar_url', 'status', 'status_display', 'created_at')
         read_only_fields = ('requester', 'status', 'world')
+
+    def get_world_cover_url(self, obj):
+        if obj.world.cover_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.world.cover_image.url)
+            return obj.world.cover_image.url
+        return None
 
     def get_avatar_url(self, obj):
         profile = getattr(obj.requester, 'profile', None)

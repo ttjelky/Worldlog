@@ -1333,6 +1333,26 @@ class WorldAccessRequestViewSet(viewsets.ModelViewSet):
         )
 
 
+class MyAccessRequestsView(APIView):
+    """Вихідні pending-запити поточного користувача (requester=user).
+
+    Єдиний спосіб для користувача побачити світи, доступу до яких він
+    очікує: список .../access-requests/ бачить лише власник світу.
+    Тільки PENDING — вирішені заявки видно через membership / notifications.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        qs = (
+            WorldAccessRequest.objects
+            .filter(requester=request.user, status=WorldAccessRequest.Status.PENDING)
+            .select_related('world', 'world__owner', 'requester', 'requester__profile')
+            .order_by('-created_at')
+        )
+        serializer = WorldAccessRequestSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
 class AcceptWorldAccessRequestView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

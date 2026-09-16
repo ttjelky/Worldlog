@@ -1,0 +1,176 @@
+.section {
+  margin: 0 0 34px;
+  min-width: 0;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+  min-width: 0;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #123a44;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.sectionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  padding: 4px 0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #35608f;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+.sectionLink:hover {
+  text-decoration: underline;
+}
+
+/* 4 плитки статистики (база — overviewTiles з Dashboard.module.css) */
+.tiles4.tiles4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 0;
+}
+
+/* Один світ на Головній */
+.singleCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 560px;
+  min-width: 0;
+}
+
+.emptyHint {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(18, 58, 68, 0.7);
+}
+
+/* Запрошення */
+.inviteCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 560px;
+  min-width: 0;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 6px rgba(18, 58, 68, 0.08);
+}
+
+.inviteCoverWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(18, 58, 68, 0.08);
+}
+
+.inviteCover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.inviteInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inviteName {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #123a44;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inviteMeta {
+  font-size: 13px;
+  color: rgba(18, 58, 68, 0.62);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inviteChip {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a6d1a;
+  background: #f3dfa9;
+  border-radius: 999px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+/* Друзі */
+.friendsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.friendBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid rgba(18, 58, 68, 0.12);
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 6px 14px 6px 6px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.friendBtn:hover {
+  border-color: rgba(18, 58, 68, 0.3);
+}
+
+.friendName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #123a44;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .tiles4.tiles4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

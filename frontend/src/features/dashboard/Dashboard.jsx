@@ -12,7 +12,6 @@ import {
   TextField,
   useMediaQuery,
 } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -21,6 +20,11 @@ import Navbar from '../../shared/components/Navbar/Navbar'
 import { goSection } from '../../shared/utils/navigation'
 import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import WorldCard, { getCompletionPercent } from '../../shared/components/WorldCard/WorldCard'
+import { summarizeWorlds } from './worldStats'
+import { HomeWorldSection } from './components/HomeWorldSection'
+import { HomeInvitesSection } from './components/HomeInvitesSection'
+import { HomeFriendsSection } from './components/HomeFriendsSection'
+import { HomeStats } from './components/HomeStats'
 import styles from './Dashboard.module.css'
 
 export const emptyWorld = {
@@ -183,32 +187,8 @@ export function WorldForm({ open, onClose, initial, onSubmit, dark = false, tone
   )
 }
 
-function AddCardButton({ onClick }) {
-  return (
-    <Button
-      className={`${styles.worldCard} ${styles.addCard}`}
-      onClick={onClick}
-      sx={{
-        '& .MuiTouchRipple-ripple': {
-          color: 'rgba(0, 0, 0, 0.18)',
-        },
-      }}
-    >
-      <AddIcon className={styles.addIcon} />
-      <span className={styles.addText}>Новий світ</span>
-    </Button>
-  )
-}
-
 function OverviewPanel({ worlds, isLoading, onOpenWorlds, onOpenWorld, onCreate }) {
-  const total = worlds.length
-  const locations = worlds.reduce((s, w) => s + (w.locations_count || 0), 0)
-  const pub = worlds.filter((w) => w.is_public).length
-  const done = worlds.reduce((s, w) => s + (w.todos_done || 0), 0)
-  const all = worlds.reduce((s, w) => s + (w.todos_count || 0), 0)
-  const avg = total
-    ? Math.round(worlds.reduce((s, w) => s + getCompletionPercent(w), 0) / total)
-    : 0
+  const { total, locations, pub, done, all, avg } = summarizeWorlds(worlds)
   const top = [...worlds]
     .sort((a, b) => getCompletionPercent(b) - getCompletionPercent(a))
     .slice(0, 4)
@@ -366,10 +346,6 @@ export default function Dashboard() {
     setActivePage(searchParams.get('tab') === 'overview' ? 'overview' : 'home')
   }, [searchParams])
 
-  const totalProgress = worlds.length
-    ? Math.round(worlds.reduce((sum, w) => sum + getCompletionPercent(w), 0) / worlds.length)
-    : 0
-
   return (
     <div className={`${styles.appShell} ${activePage === 'overview' ? styles.appShellOverview : ''}`}>
       <Navbar
@@ -397,19 +373,6 @@ export default function Dashboard() {
               <h1 className={styles.heroTitle}>Головна сторінка</h1>
             </section>
 
-            <div className={styles.statsBar}>
-              <span className={styles.statsText}>
-                {worlds.length}{' '}
-                {worlds.length === 1 ? 'світ' : worlds.length < 5 ? 'світи' : 'світів'}
-              </span>
-              <div className={styles.statsRight}>
-                <span className={styles.statsText}>{totalProgress}% задач виконано</span>
-                <div className={styles.progressTrack}>
-                  <div className={styles.progressFill} style={{ width: `${totalProgress}%` }} />
-                </div>
-              </div>
-            </div>
-
             {isLoading && <LinearProgress />}
 
             {isError && (
@@ -421,28 +384,18 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div className={styles.grid}>
-              {worlds.map((w, i) => (
-                <WorldCard key={w.id} world={w} index={i} tone="violet" />
-              ))}
-
-              {worlds.length >= 1 ? (
-                <Button
-                  className={`${styles.worldCard} ${styles.addCard}`}
-                  onClick={() => navigate('/app/worlds')}
-                  sx={{
-                    '& .MuiTouchRipple-ripple': {
-                      color: 'rgba(0, 0, 0, 0.18)',
-                    },
-                  }}
-                >
-                  <ArrowForwardIcon className={styles.addIcon} />
-                  <span className={styles.addText}>Перейти на сторінку "Мої світи"</span>
-                </Button>
-              ) : (
-                <AddCardButton onClick={openCreate} />
-              )}
-            </div>
+            {!isLoading && !isError && (
+              <>
+                <HomeWorldSection
+                  worlds={worlds}
+                  onOpenWorlds={() => navigate('/app/worlds')}
+                  onCreate={openCreate}
+                />
+                <HomeInvitesSection />
+                <HomeFriendsSection />
+                <HomeStats worlds={worlds} />
+              </>
+            )}
           </>
         )}
       </div>

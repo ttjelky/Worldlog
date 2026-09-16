@@ -1083,3 +1083,48 @@ class ProfileAccountTests(TestCase):
         }, format='multipart')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertIsNone(resp.data['cover_url'])
+
+
+class MyAccessRequestsTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username='mineowner', email='mineowner@test.com', password='Str0ng!Pass1'
+        )
+        self.requester = User.objects.create_user(
+            username='minereq', email='minereq@test.com', password='Str0ng!Pass1'
+        )
+        self.world = self.owner.worlds.create(name='Світ очікування')
+        self.client = APIClient()
+        self.client.force_authenticate(self.requester)
+
+    def test_mine_returns_own_pending_with_world_fields(self):
+        resp = self.client.post(f'/api/worlds/{self.world.pk}/access-requests/', {}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        resp = self.client.get('/api/world-access-requests/mine/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data), 1)
+        row = resp.data[0]
+        self.assertEqual(row['world'], self.world.pk)
+        self.assertEqual(row['world_name'], 'Світ очікування')
+        self.assertEqual(row['world_owner_username'], 'mineowner')
+        self.assertEqual(row['status'], 'pending')
+
+    def test_mine_excludes_decided_and_foreign(self):
+        self.client.post(f'/api/worlds/{self.world.pk}/access-requests/', {}, format='json')
+        other = User.objects.create_user(
+            username='mineother', email='mineother@test.com', password='Str0ng!Pass1'
+        )
+        w2 = self.owner.worlds.create(name='Чужий світ')
+        oc = APIClient()
+        oc.force_authenticate(other)
+        oc.post(f'/api/worlds/{w2.pk}/access-requests/', {}, format='json')
+        req = self.world.access_requests.get(requester=self.requester)
+        req.status = 'rejected'
+        req.save()
+        resp = self.client.get('/api/world-access-requests/mine/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data, [])
+
+    def test_mine_requires_auth(self):
+        resp = APIClient().get('/api/world-access-requests/mine/')
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
