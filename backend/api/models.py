@@ -417,6 +417,12 @@ def user_avatar_upload_path(instance, filename):
     return os.path.join('user_avatars', name)
 
 
+def user_cover_upload_path(instance, filename):
+    ext = os.path.splitext(filename)[1]
+    name = f'{instance.user_id}-cover-{uuid.uuid4().hex[:12]}{ext}'
+    return os.path.join('user_covers', name)
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile'
@@ -424,6 +430,7 @@ class UserProfile(models.Model):
     display_name = models.CharField(max_length=100, blank=True)
     bio = models.TextField(max_length=500, blank=True)
     avatar = models.ImageField(upload_to=user_avatar_upload_path, blank=True, null=True)
+    cover = models.ImageField(upload_to=user_cover_upload_path, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

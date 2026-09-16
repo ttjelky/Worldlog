@@ -9,6 +9,11 @@ import { goSection } from '../../shared/utils/navigation'
 import { useFeedback } from '../../shared/feedback/FeedbackProvider'
 import ProfileHeader from './components/ProfileHeader'
 import ProfileStats from './components/ProfileStats'
+import ProfileWorlds from './components/ProfileWorlds'
+import ProfileFriends from './components/ProfileFriends'
+import ProfileMutual from './components/ProfileMutual'
+import ProfileQuickActions from './components/ProfileQuickActions'
+import ProfileAccount from './components/ProfileAccount'
 import ProfileAbout from './components/ProfileAbout'
 import ProfileSkeleton from './components/ProfileSkeleton'
 import styles from './ProfilePage.module.css'
@@ -45,18 +50,22 @@ function useUnsavedChangesWarning(hasChanges) {
 
 export default function ProfilePage() {
   const { username } = useParams()
-  const { user: currentUser, updateUser } = useAuth()
+  const { user: currentUser, updateUser, hydrating } = useAuth()
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const [activePage, setActivePage] = useState('profile')
   const { notify } = useFeedback()
-  // Локальні виклики фідбеку йдуть у спільний тост
-  const setSnackbar = ({ message }) => notify(message)
   const [isEditing, setIsEditing] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [avatarFile, setAvatarFile] = useState(null)
+  const avatarUrlRef = useRef(null)
+  const [coverPreview, setCoverPreview] = useState(null)
+  const [coverFile, setCoverFile] = useState(null)
+  const [coverRemoved, setCoverRemoved] = useState(false)
+  const coverUrlRef = useRef(null)
 
-  const isOwnProfile = !username || username === currentUser?.username
+  // Поки сесія гідрується — не вирішуємо свій/чужий, щоб не миготіти.
+  const authReady = !username || !hydrating
+  const isOwnProfile = authReady && (!username || username === currentUser?.username)
 
   const { data: profileData, isLoading, error } = useQuery({
     queryKey: isOwnProfile ? ['me'] : ['userProfile', username],
@@ -64,13 +73,15 @@ export default function ProfilePage() {
       isOwnProfile
         ? api.get('/me/').then((r) => r.data)
         : api.get(`/users/${username}/`).then((r) => r.data),
-    enabled: isOwnProfile ? !!currentUser : !!username,
+    enabled: isOwnProfile ? !!currentUser : (!!username && authReady),
   })
 
-  const { data: worlds = [] } = useQuery({
-    queryKey: ['worlds'],
-    queryFn: () => api.get('/worlds/').then((r) => r.data),
-    enabled: isOwnProfile,
+  const profileName = isOwnProfile ? currentUser?.username : username
+  const { data: profileWorlds = [] } = useQuery({
+    queryKey: ['userWorlds', profileName || 'me'],
+    queryFn: () => api.get(`/users/${profileName}/worlds/`).then((r) => r.data),
+    enabled: !!profileName && (!!profileData || isOwnProfile),
+    staleTime: 30000,
   })
 
   const [editForm, setEditForm] = useState({
@@ -89,9 +100,11 @@ export default function ProfilePage() {
       editForm.username !== init.username ||
       editForm.display_name !== init.display_name ||
       editForm.bio !== init.bio ||
-      avatarFile !== null
+      avatarFile !== null ||
+      coverFile !== null ||
+      coverRemoved
     )
-  }, [editForm.username, editForm.display_name, editForm.bio, avatarFile, isEditing])
+  }, [editForm.username, editForm.display_name, editForm.bio, avatarFile, coverFile, coverRemoved, isEditing])
 
   const { showConfirm, warn, confirm: confirmDiscard, cancel: cancelDiscard } = useUnsavedChangesWarning(hasChanges)
 
@@ -118,14 +131,28 @@ export default function ProfilePage() {
     setEditForm(form)
     setAvatarPreview(null)
     setAvatarFile(null)
+    setCoverPreview(null)
+    setCoverFile(null)
+    setCoverRemoved(false)
     setIsEditing(true)
   }, [profileData])
 
   const exitEditMode = useCallback(() => {
     setIsEditing(false)
     setEditForm((f) => ({ ...f, errors: {} }))
+    if (avatarUrlRef.current) {
+      URL.revokeObjectURL(avatarUrlRef.current)
+      avatarUrlRef.current = null
+    }
+    if (coverUrlRef.current) {
+      URL.revokeObjectURL(coverUrlRef.current)
+      coverUrlRef.current = null
+    }
     setAvatarPreview(null)
     setAvatarFile(null)
+    setCoverPreview(null)
+    setCoverFile(null)
+    setCoverRemoved(false)
     initialFormRef.current = null
   }, [])
 
@@ -143,20 +170,78 @@ export default function ProfilePage() {
 
   const handleAvatarSelect = useCallback((e) => {
     const file = e.target.files?.[0]
+    // Скидаємо input, щоб можна було вибрати той самий файл повторно.
+    e.target.value = ''
     if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setEditForm((f) => ({ ...f, errors: { ...f.errors, avatar: 'Потрібен файл зображення (JPG, PNG, WEBP, GIF)' } }))
+      return
+    }
     if (file.size > 5 * 1024 * 1024) {
       setEditForm((f) => ({ ...f, errors: { ...f.errors, avatar: 'Файл занадто великий (макс. 5 МБ)' } }))
       return
     }
+    if (avatarUrlRef.current) URL.revokeObjectURL(avatarUrlRef.current)
+    avatarUrlRef.current = URL.createObjectURL(file)
     setAvatarFile(file)
-    const reader = new FileReader()
-    reader.onload = () => setAvatarPreview(reader.result)
-    reader.readAsDataURL(file)
+    setAvatarPreview(avatarUrlRef.current)
+    setEditForm((f) => ({ ...f, errors: { ...f.errors, avatar: undefined } }))
+  }, [])
+
+  const handleAvatarRemove = useCallback(() => {
+    if (avatarUrlRef.current) {
+      URL.revokeObjectURL(avatarUrlRef.current)
+      avatarUrlRef.current = null
+    }
+    setAvatarFile(null)
+    setAvatarPreview(null)
+    setEditForm((f) => ({ ...f, errors: { ...f.errors, avatar: undefined } }))
+  }, [])
+
+  // Чистимо object URL при розмонтуванні.
+  useEffect(
+    () => () => {
+      if (avatarUrlRef.current) URL.revokeObjectURL(avatarUrlRef.current)
+      if (coverUrlRef.current) URL.revokeObjectURL(coverUrlRef.current)
+    },
+    [],
+  )
+
+  const handleCoverSelect = useCallback((e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setEditForm((f) => ({ ...f, errors: { ...f.errors, cover: 'Потрібен файл зображення (JPG, PNG, WEBP, GIF)' } }))
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setEditForm((f) => ({ ...f, errors: { ...f.errors, cover: 'Файл занадто великий (макс. 5 МБ)' } }))
+      return
+    }
+    if (coverUrlRef.current) URL.revokeObjectURL(coverUrlRef.current)
+    coverUrlRef.current = URL.createObjectURL(file)
+    setCoverFile(file)
+    setCoverPreview(coverUrlRef.current)
+    setCoverRemoved(false)
+    setEditForm((f) => ({ ...f, errors: { ...f.errors, cover: undefined } }))
+  }, [])
+
+  const handleCoverRemove = useCallback(() => {
+    if (coverUrlRef.current) {
+      URL.revokeObjectURL(coverUrlRef.current)
+      coverUrlRef.current = null
+    }
+    setCoverFile(null)
+    setCoverPreview(null)
+    // Позначка: при збереженні видалити поточну обкладинку на сервері.
+    setCoverRemoved(true)
+    setEditForm((f) => ({ ...f, errors: { ...f.errors, cover: undefined } }))
   }, [])
 
   const saveProfile = useMutation({
     mutationFn: async () => {
-      // Один PATCH одним FormData: поля + аватар разом, щоб не було
+      // Один PATCH одним FormData: поля + аватар + обкладинка разом, щоб не було
       // розсинхрону "поля збереглись, аватар — ні".
       const fd = new FormData()
       const initial = initialFormRef.current
@@ -164,6 +249,8 @@ export default function ProfilePage() {
       if (editForm.display_name !== initial.display_name) fd.append('display_name', editForm.display_name)
       if (editForm.bio !== initial.bio) fd.append('bio', editForm.bio)
       if (avatarFile) fd.append('avatar', avatarFile)
+      if (coverFile) fd.append('cover', coverFile)
+      else if (coverRemoved) fd.append('cover_clear', 'true')
       // FormData порожнім не шлемо — нічого не змінилось.
       if ([...fd.keys()].length === 0) return { userData: null, noop: true }
       const res = await api.patch('/me/profile/', fd)
@@ -181,6 +268,7 @@ export default function ProfilePage() {
           display_name: userData.display_name || '',
           bio: userData.bio || '',
           avatar_url: userData.avatar_url || null,
+          cover_url: userData.cover_url || null,
         })
         // Після зміни username роут старіє — ведемо на новий.
         if (userData.username && userData.username !== prevUsername && !username) {
@@ -192,7 +280,7 @@ export default function ProfilePage() {
       qc.invalidateQueries(['me'])
       qc.invalidateQueries(['userProfile', username])
       exitEditMode()
-      setSnackbar({ open: true, message: 'Профіль оновлено' })
+      notify('Профіль оновлено')
     },
     onError: (err) => {
       if (err.response?.data) {
@@ -201,10 +289,12 @@ export default function ProfilePage() {
         if (data.username) fieldErrors.username = Array.isArray(data.username) ? data.username[0] : data.username
         if (data.display_name) fieldErrors.display_name = Array.isArray(data.display_name) ? data.display_name[0] : data.display_name
         if (data.bio) fieldErrors.bio = Array.isArray(data.bio) ? data.bio[0] : data.bio
+        if (data.avatar) fieldErrors.avatar = Array.isArray(data.avatar) ? data.avatar[0] : data.avatar
+        if (data.cover) fieldErrors.cover = Array.isArray(data.cover) ? data.cover[0] : data.cover
         if (data.detail) fieldErrors.general = data.detail
         setEditForm((f) => ({ ...f, errors: fieldErrors }))
       } else {
-        setSnackbar({ open: true, message: 'Не вдалося зберегти зміни' })
+        notify('Не вдалося зберегти зміни')
       }
     },
   })
@@ -213,10 +303,11 @@ export default function ProfilePage() {
     mutationFn: (userId) => api.post('/friends/send/', { user_id: userId }),
     onSuccess: () => {
       qc.invalidateQueries(['userProfile', username])
-      setSnackbar({ open: true, message: 'Запит надіслано' })
+      qc.invalidateQueries(['friends'])
+      notify('Запит надіслано')
     },
     onError: (err) => {
-      setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося надіслати запит' })
+      notify(err.response?.data?.detail || 'Не вдалося надіслати запит')
     },
   })
 
@@ -225,10 +316,10 @@ export default function ProfilePage() {
     onSuccess: () => {
       qc.invalidateQueries(['userProfile', username])
       qc.invalidateQueries(['friends'])
-      setSnackbar({ open: true, message: 'Запит прийнято' })
+      notify('Запит прийнято')
     },
     onError: (err) => {
-      setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося прийняти запит' })
+      notify(err.response?.data?.detail || 'Не вдалося прийняти запит')
     },
   })
 
@@ -237,10 +328,10 @@ export default function ProfilePage() {
     onSuccess: () => {
       qc.invalidateQueries(['userProfile', username])
       qc.invalidateQueries(['friends'])
-      setSnackbar({ open: true, message: 'Запит відхилено' })
+      notify('Запит відхилено')
     },
     onError: (err) => {
-      setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося відхилити запит' })
+      notify(err.response?.data?.detail || 'Не вдалося відхилити запит')
     },
   })
 
@@ -248,10 +339,11 @@ export default function ProfilePage() {
     mutationFn: (friendshipId) => api.post(`/friends/${friendshipId}/cancel/`),
     onSuccess: () => {
       qc.invalidateQueries(['userProfile', username])
-      setSnackbar({ open: true, message: 'Запит скасовано' })
+      qc.invalidateQueries(['friends'])
+      notify('Запит скасовано')
     },
     onError: (err) => {
-      setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося скасувати запит' })
+      notify(err.response?.data?.detail || 'Не вдалося скасувати запит')
     },
   })
 
@@ -260,14 +352,18 @@ export default function ProfilePage() {
     onSuccess: () => {
       qc.invalidateQueries(['userProfile', username])
       qc.invalidateQueries(['friends'])
-      setSnackbar({ open: true, message: 'Користувача видалено з друзів' })
+      notify('Користувача видалено з друзів')
     },
     onError: (err) => {
-      setSnackbar({ open: true, message: err.response?.data?.detail || 'Не вдалося видалити з друзів' })
+      notify(err.response?.data?.detail || 'Не вдалося видалити з друзів')
     },
   })
 
   const friendship = useMemo(() => profileData?.friendship || null, [profileData])
+
+  const scrollToSection = useCallback((id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
 
   const friendshipActions = useMemo(
     () => ({
@@ -277,15 +373,25 @@ export default function ProfilePage() {
       onCancel: () => friendship?.id && cancelRequest.mutate(friendship.id),
       onRemove: () => friendship?.id && removeFriend.mutate(friendship.id),
       onEdit: enterEditMode,
-      loading: sendRequest.isPending || acceptRequest.isPending || rejectRequest.isPending || cancelRequest.isPending || removeFriend.isPending,
+      pending: sendRequest.isPending
+        ? 'send'
+        : acceptRequest.isPending
+          ? 'accept'
+          : rejectRequest.isPending
+            ? 'reject'
+            : cancelRequest.isPending
+              ? 'cancel'
+              : removeFriend.isPending
+                ? 'remove'
+                : null,
     }),
     [profileData, friendship, sendRequest, acceptRequest, rejectRequest, cancelRequest, removeFriend, enterEditMode],
   )
 
-  if (isLoading) {
+  if (isLoading || (username && hydrating)) {
     return (
       <div className={styles.appShell}>
-        <Navbar activePage={activePage} logoSrc="/worldlog-logo-white.png" onNavigate={(id) => goSection(id, navigate)} />
+        <Navbar activePage="profile" logoSrc="/worldlog-logo.png" onNavigate={(id) => goSection(id, navigate)} />
         <div className={styles.page}>
           <ProfileSkeleton />
         </div>
@@ -294,14 +400,31 @@ export default function ProfilePage() {
   }
 
   if (error || !profileData) {
+    const status = error?.response?.status
+    const notFound = status === 404 || (!error && !profileData)
     return (
       <div className={styles.appShell}>
-        <Navbar activePage={activePage} logoSrc="/worldlog-logo-white.png" onNavigate={(id) => goSection(id, navigate)} />
+        <Navbar activePage="profile" logoSrc="/worldlog-logo.png" onNavigate={(id) => goSection(id, navigate)} />
         <div className={styles.page}>
           <div className={styles.errorState}>
-            <h2 className={styles.errorTitle}>Профіль не знайдено</h2>
-            <p className={styles.errorText}>Користувача з таким іменем не існує або сталася помилка.</p>
-            <Button className={styles.errorBackBtn} onClick={() => navigate('/app')}>
+            <h2 className={styles.errorTitle}>
+              {notFound ? 'Профіль не знайдено' : 'Не вдалося завантажити профіль'}
+            </h2>
+            <p className={styles.errorText}>
+              {notFound
+                ? 'Користувача з таким іменем не існує.'
+                : 'Сталася помилка мережі або сервера. Перевір зʼєднання і спробуй ще раз.'}
+            </p>
+            {!notFound && (
+              <Button className={styles.errorBackBtn} onClick={() => window.location.reload()}>
+                Спробувати ще
+              </Button>
+            )}
+            <Button
+              className={styles.errorBackBtn}
+              onClick={() => navigate('/app')}
+              variant={notFound ? undefined : 'text'}
+            >
               На головну
             </Button>
           </div>
@@ -312,7 +435,7 @@ export default function ProfilePage() {
 
   return (
     <div className={styles.appShell}>
-      <Navbar activePage={activePage} logoSrc="/worldlog-logo-white.png" onNavigate={(id) => goSection(id, navigate)} />
+      <Navbar activePage="profile" logoSrc="/worldlog-logo.png" onNavigate={(id) => goSection(id, navigate)} />
 
       <div className={styles.page}>
         <ProfileHeader
@@ -326,18 +449,51 @@ export default function ProfilePage() {
           onSave={() => saveProfile.mutate()}
           onCancel={handleCancel}
           savePending={saveProfile.isPending}
+          canSave={hasChanges}
           avatarPreview={avatarPreview}
           onAvatarSelect={handleAvatarSelect}
+          onAvatarRemove={handleAvatarRemove}
+          coverPreview={coverPreview}
+          coverRemoved={coverRemoved}
+          onCoverSelect={handleCoverSelect}
+          onCoverRemove={handleCoverRemove}
         />
 
+        {isOwnProfile && <ProfileQuickActions />}
+
         <ProfileStats
-          worldsCount={profileData.worlds_count ?? (isOwnProfile ? worlds.length : 0)}
-          friendsCount={profileData.friends_count}
+          worldsCount={profileData.worlds_count ?? 0}
+          friendsCount={profileData.friends_count ?? 0}
+          onWorldsClick={() => scrollToSection('profile-worlds')}
+          onFriendsClick={() => {
+            if (isOwnProfile) navigate('/app/friends')
+            else scrollToSection('profile-friends')
+          }}
+        />
+
+        {!isOwnProfile && (
+          <ProfileMutual username={profileData.username} theirWorlds={profileWorlds} />
+        )}
+
+        <ProfileFriends
+          username={profileData.username}
+          isOwnProfile={isOwnProfile}
+        />
+
+        <ProfileWorlds
+          worlds={profileWorlds}
+          isOwnProfile={isOwnProfile}
+          username={profileData.username}
         />
 
         <ProfileAbout profile={profileData} isOwnProfile={isOwnProfile} />
+
+        {isOwnProfile && <ProfileAccount username={profileData.username} />}
       </div>
 
+      {/* useBlocker тут не працює: застосунок на BrowserRouter, а не data-роутері.
+          Тому діалог підтвердження — лише для кнопки «Скасувати»;
+          закриття вкладки ловить beforeunload вище. */}
       <Dialog open={showConfirm} onClose={cancelDiscard} maxWidth="xs" fullWidth slotProps={{ paper: { className: styles.confirmPaper } }}>
         <DialogTitle className={styles.confirmTitle}>Є незбережені зміни</DialogTitle>
         <DialogContent>

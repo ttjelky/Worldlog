@@ -1,16 +1,26 @@
 import styles from './ProfileStats.module.css'
 
-export default function ProfileStats({ worldsCount = 0, friendsCount = 0 }) {
+export default function ProfileStats({ worldsCount = 0, friendsCount = 0, onWorldsClick, onFriendsClick }) {
   return (
     <div className={styles.statsRow}>
-      <div className={styles.statCard}>
+      <button
+        type="button"
+        className={`${styles.statCard} ${styles.statClickable}`}
+        onClick={onWorldsClick}
+        aria-label={`Перейти до світів: ${worldsCount}`}
+      >
         <span className={styles.statValue}>{worldsCount}</span>
         <span className={styles.statLabel}>Світів</span>
-      </div>
-      <div className={styles.statCard}>
+      </button>
+      <button
+        type="button"
+        className={`${styles.statCard} ${styles.statClickable}`}
+        onClick={onFriendsClick}
+        aria-label={`Перейти до друзів: ${friendsCount}`}
+      >
         <span className={styles.statValue}>{friendsCount}</span>
         <span className={styles.statLabel}>Друзів</span>
-      </div>
+      </button>
     </div>
   )
 }

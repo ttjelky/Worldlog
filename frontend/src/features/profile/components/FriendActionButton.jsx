@@ -3,63 +3,91 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
 import PeopleIcon from '@mui/icons-material/People'
+import BlockIcon from '@mui/icons-material/Block'
 import { useAuth } from '../../../auth'
 import styles from './FriendActionButton.module.css'
 
+function ActionButton({ busy, disabled, onClick, className, startIcon, children, label }) {
+  return (
+    <Button
+      className={`${styles.btn} ${className}`}
+      onClick={onClick}
+      disabled={disabled || busy}
+      startIcon={busy ? <CircularProgress size={16} /> : startIcon}
+      aria-label={label}
+    >
+      {children}
+    </Button>
+  )
+}
+
 export default function FriendActionButton({ friendship, actions }) {
   const { user: currentUser } = useAuth()
-
-  if (actions.loading) {
-    return (
-      <Button className={`${styles.btn} ${styles.btnLoading}`} disabled>
-        <CircularProgress size={18} className={styles.spinner} />
-      </Button>
-    )
-  }
+  const pending = actions.pending || null
+  const anyBusy = pending != null
 
   if (!friendship) {
-    return (
-      <Button
-        className={`${styles.btn} ${styles.btnPrimary}`}
-        onClick={actions.onSend}
-        startIcon={<PersonAddIcon />}
-      >
-        Додати в друзі
-      </Button>
-    )
-  }
-
-  const { status, user_a } = friendship
-  const isSender = user_a != null && user_a === currentUser?.id
-
-  if (status === 'pending') {
-    if (isSender) {
+    if (pending === 'send') {
       return (
-        <Button
-          className={`${styles.btn} ${styles.btnOutlined}`}
-          onClick={actions.onCancel}
-          startIcon={<CloseIcon />}
-        >
-          Скасувати запит
+        <Button className={`${styles.btn} ${styles.btnPrimary}`} disabled>
+          <CircularProgress size={18} className={styles.spinner} />
         </Button>
       )
     }
     return (
+      <ActionButton
+        className={styles.btnPrimary}
+        onClick={actions.onSend}
+        startIcon={<PersonAddIcon />}
+        label="Додати в друзі"
+      >
+        Додати в друзі
+      </ActionButton>
+    )
+  }
+
+  const { status } = friendship
+  // Напрямок заявки — поле sender; user_a — лише fallback для старих рядків.
+  const senderId = friendship.sender ?? friendship.user_a
+  const isSender = senderId != null && senderId === currentUser?.id
+
+  if (status === 'pending') {
+    if (isSender) {
+      return (
+        <ActionButton
+          className={styles.btnOutlined}
+          onClick={actions.onCancel}
+          busy={pending === 'cancel'}
+          disabled={anyBusy}
+          startIcon={<CloseIcon />}
+          label="Скасувати запит"
+        >
+          Скасувати запит
+        </ActionButton>
+      )
+    }
+    return (
       <div className={styles.pendingActions}>
-        <Button
-          className={`${styles.btn} ${styles.btnPrimary}`}
+        <ActionButton
+          className={styles.btnPrimary}
           onClick={actions.onAccept}
+          busy={pending === 'accept'}
+          disabled={anyBusy}
           startIcon={<CheckIcon />}
+          label="Прийняти запит"
         >
           Прийняти
-        </Button>
-        <Button
-          className={`${styles.btn} ${styles.btnOutlined}`}
+        </ActionButton>
+        <ActionButton
+          className={styles.btnOutlined}
           onClick={actions.onReject}
+          busy={pending === 'reject'}
+          disabled={anyBusy}
           startIcon={<CloseIcon />}
+          label="Відхилити запит"
         >
           Відхилити
-        </Button>
+        </ActionButton>
       </div>
     )
   }
@@ -67,19 +95,29 @@ export default function FriendActionButton({ friendship, actions }) {
   if (status === 'accepted') {
     return (
       <div className={styles.friendActions}>
-        <Button
-          className={`${styles.btn} ${styles.btnChip}`}
-          startIcon={<PeopleIcon />}
-        >
+        <span className={`${styles.btn} ${styles.btnChip}`} aria-label="Ви у друзях">
+          <PeopleIcon fontSize="small" />
           Ви друзі
-        </Button>
-        <Button
-          className={`${styles.btn} ${styles.btnRemove}`}
+        </span>
+        <ActionButton
+          className={styles.btnRemove}
           onClick={actions.onRemove}
+          busy={pending === 'remove'}
+          disabled={anyBusy}
+          label="Видалити з друзів"
         >
           Видалити з друзів
-        </Button>
+        </ActionButton>
       </div>
+    )
+  }
+
+  if (status === 'blocked') {
+    return (
+      <span className={`${styles.btn} ${styles.btnChip}`} aria-label="Доступ обмежено">
+        <BlockIcon fontSize="small" />
+        Доступ обмежено
+      </span>
     )
   }
 

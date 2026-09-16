@@ -262,6 +262,17 @@ class UserProfileTests(TestCase):
         self.assertEqual(resp.data['username'], 'testuser')
         self.assertEqual(resp.data['email'], 'test@example.com')
 
+    def test_patch_profile_without_existing_profile_row(self):
+        # Регресія: get_or_create всередині update() не має падати з 500,
+        # коли профільного рядка ще нема (свіжий користувач).
+        from api.models import UserProfile
+        UserProfile.objects.filter(user=self.user).delete()
+        resp = self.client.patch('/api/me/profile/', {
+            'display_name': 'Тест',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['display_name'], 'Тест')
+
     def test_update_profile_requires_current_password(self):
         resp = self.client.patch('/api/me/', {
             'username': 'newname',
@@ -950,3 +961,125 @@ class PlayerTests(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         import os
         self.assertFalse(os.path.exists(os.path.join(self._tmp_media, old_name)))
+
+
+@override_settings(ALLOWED_HOSTS=['testserver'])
+class UserWorldsTests(TestCase):
+    """Світи на сторінці профілю: свої — всі, чужі — лише публічні."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username='worldowner', email='o@test.com', password='Str0ng!Pass1'
+        )
+        self.stranger = User.objects.create_user(
+            username='worldstranger', email='s@test.com', password='Str0ng!Pass1'
+        )
+        self.public_world = self.owner.worlds.create(name='Публічний', is_public=True)
+        self.private_world = self.owner.worlds.create(name='Приватний', is_public=False)
+        self.client = APIClient()
+
+    def url(self, username):
+        return '/api/users/{}/worlds/'.format(username)
+
+    def test_owner_sees_own_private_worlds(self):
+        self.client.force_authenticate(self.owner)
+        resp = self.client.get(self.url('worldowner'))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        names = {w['name'] for w in resp.data}
+        self.assertEqual(names, {'Публічний', 'Приватний'})
+
+    def test_stranger_sees_only_public_worlds(self):
+        self.client.force_authenticate(self.stranger)
+        resp = self.client.get(self.url('worldowner'))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        names = [w['name'] for w in resp.data]
+        self.assertEqual(names, ['Публічний'])
+
+    def test_unknown_user_returns_404(self):
+        self.client.force_authenticate(self.stranger)
+        resp = self.client.get(self.url('nosuchuser'))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_anonymous_denied(self):
+        resp = self.client.get(self.url('worldowner'))
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+@override_settings(ALLOWED_HOSTS=['testserver'])
+class ProfileAccountTests(TestCase):
+    """Зміна пароля, видалення акаунта, друзі користувача, обкладинка."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='accuser', email='a@test.com', password='Str0ng!Pass1'
+        )
+        self.other = User.objects.create_user(
+            username='accother', email='o@test.com', password='Str0ng!Pass1'
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_change_password(self):
+        resp = self.client.post('/api/me/password/', {
+            'current_password': 'Str0ng!Pass1',
+            'new_password': 'An0ther!Pass2',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('An0ther!Pass2'))
+
+    def test_change_password_wrong_current(self):
+        resp = self.client.post('/api/me/password/', {
+            'current_password': 'nope',
+            'new_password': 'An0ther!Pass2',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('current_password', resp.data)
+
+    def test_delete_account(self):
+        resp = self.client.post('/api/me/delete/', {
+            'current_password': 'Str0ng!Pass1',
+            'confirm': 'accuser',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertFalse(User.objects.filter(username='accuser').exists())
+
+    def test_delete_account_requires_confirm(self):
+        resp = self.client.post('/api/me/delete/', {
+            'current_password': 'Str0ng!Pass1',
+            'confirm': 'wrong',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(User.objects.filter(username='accuser').exists())
+
+    def test_user_friends_list(self):
+        from api.models import Friendship
+        user_a_id, user_b_id = sorted([self.user.id, self.other.id])
+        Friendship.objects.create(
+            user_a_id=user_a_id, user_b_id=user_b_id,
+            sender=self.user, status=Friendship.Status.ACCEPTED,
+        )
+        resp = self.client.get('/api/users/accother/friends/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual([u['username'] for u in resp.data], ['accuser'])
+
+    def test_user_friends_unknown_user(self):
+        resp = self.client.get('/api/users/nosuchuser/friends/')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cover_upload_and_clear(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        gif = (
+            b'GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!'
+            b'\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+        )
+        resp = self.client.patch('/api/me/profile/', {
+            'cover': SimpleUploadedFile('c.gif', gif, content_type='image/gif'),
+        }, format='multipart')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp.data['cover_url'])
+        resp = self.client.patch('/api/me/profile/', {
+            'cover_clear': 'true',
+        }, format='multipart')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIsNone(resp.data['cover_url'])

@@ -731,10 +731,11 @@ class UserPublicSerializer(serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
     bio = serializers.SerializerMethodField()
     avatar_url = serializers.SerializerMethodField()
+    cover_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'display_name', 'bio', 'avatar_url', 'date_joined', 'worlds_count', 'friends_count')
+        fields = ('id', 'username', 'display_name', 'bio', 'avatar_url', 'cover_url', 'date_joined', 'worlds_count', 'friends_count')
 
     def get_worlds_count(self, obj):
         return obj.worlds.count()
@@ -769,6 +770,16 @@ class UserPublicSerializer(serializers.ModelSerializer):
             pass
         return None
 
+    def get_cover_url(self, obj):
+        try:
+            if obj.profile.cover:
+                url = obj.profile.cover.url
+                request = self.context.get('request')
+                return request.build_absolute_uri(url) if request else url
+        except UserProfile.DoesNotExist:
+            pass
+        return None
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
@@ -790,6 +801,8 @@ class ProfileUpdateSerializer(serializers.Serializer):
     bio = serializers.CharField(required=False, max_length=500, allow_blank=True)
     avatar = serializers.ImageField(required=False, validators=[validate_image_file])
     avatar_clear = serializers.BooleanField(required=False)
+    cover = serializers.ImageField(required=False, validators=[validate_image_file])
+    cover_clear = serializers.BooleanField(required=False)
 
     def validate_username(self, value):
         value = value.strip().lower()
@@ -827,6 +840,14 @@ class ProfileUpdateSerializer(serializers.Serializer):
             if profile.avatar:
                 profile.avatar.delete(save=False)
             profile.avatar = validated_data['avatar']
+        if validated_data.pop('cover_clear', False):
+            if profile.cover:
+                profile.cover.delete(save=False)
+            profile.cover = None
+        if 'cover' in validated_data:
+            if profile.cover:
+                profile.cover.delete(save=False)
+            profile.cover = validated_data['cover']
         profile.save()
 
         return instance

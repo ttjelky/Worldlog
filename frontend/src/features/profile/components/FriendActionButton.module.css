@@ -9,67 +9,71 @@
 }
 
 .btnPrimary {
-  background: #e8855a !important;
+  background: #2E2B27 !important;
   color: #ffffff !important;
   box-shadow: none !important;
 }
 
 .btnPrimary:hover {
-  background: #d6754c !important;
-  box-shadow: 0 2px 12px rgba(232, 133, 90, 0.3) !important;
+  background: #4A4540 !important;
+  box-shadow: 0 2px 12px rgba(46, 43, 39, 0.3) !important;
 }
 
 .btnPrimary:active {
-  background: #c4673f !important;
+  background: #1f1d1a !important;
 }
 
 .btnEdit {
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
+  background: rgba(46, 43, 39, 0.08) !important;
+  color: #2E2B27 !important;
 }
 
 .btnEdit:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(46, 43, 39, 0.14) !important;
 }
 
 .btnOutlined {
-  background: rgba(255, 255, 255, 0.12) !important;
-  color: #ffffff !important;
-  border: none !important;
+  background: transparent !important;
+  color: #2E2B27 !important;
+  border: 1.5px solid rgba(46, 43, 39, 0.3) !important;
 }
 
 .btnOutlined:hover {
-  background: rgba(255, 255, 255, 0.22) !important;
-  border-color: transparent !important;
-  color: #ffffff !important;
+  background: rgba(46, 43, 39, 0.06) !important;
+  border-color: rgba(46, 43, 39, 0.5) !important;
+  color: #2E2B27 !important;
 }
 
 .btnChip {
-  background: rgba(76, 175, 125, 0.15) !important;
-  color: #4caf7d !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(47, 125, 79, 0.12) !important;
+  color: #2f7d4f !important;
   pointer-events: none !important;
 }
 
 .btnRemove {
   background: transparent !important;
-  color: rgba(255, 255, 255, 0.45) !important;
+  color: rgba(46, 43, 39, 0.5) !important;
   font-size: 13px !important;
   padding: 6px 16px !important;
 }
 
 .btnRemove:hover {
-  color: #ef5350 !important;
-  background: rgba(239, 83, 80, 0.08) !important;
+  color: #b3261e !important;
+  background: rgba(179, 38, 30, 0.08) !important;
 }
 
 .btnLoading {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: transparent !important;
+  border: 1.5px solid rgba(46, 43, 39, 0.2) !important;
   min-width: 48px !important;
   padding: 10px 16px !important;
 }
 
 .spinner {
-  color: #e8855a !important;
+  color: #2E2B27 !important;
 }
 
 .pendingActions {

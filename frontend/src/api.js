@@ -25,6 +25,24 @@ function clearAuth() {
   localStorage.removeItem(REFRESH_KEY)
 }
 
+const FORCE_LOGOUT_EVENT = 'worldlog:force-logout'
+
+// Сесія мертва (refresh відхилено сервером): чистимо токени, гасимо стан
+// застосунку і ведемо на логін — замість нескінченних 401 у фоні.
+function forceLogout() {
+  clearAuth()
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(FORCE_LOGOUT_EVENT))
+    const path = window.location.pathname || '/'
+    const isPublic =
+      path === '/' ||
+      ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'].some(
+        (p) => path === p || path.startsWith(p + '/'),
+      )
+    if (!isPublic) window.location.href = '/login'
+  }
+}
+
 function getTokenPayload(token) {
   if (!token) return null
   try {
@@ -67,7 +85,7 @@ async function refreshTokens() {
       return res.data.access
     })
     .catch((err) => {
-      clearAuth()
+      forceLogout()
       throw err
     })
     .finally(() => {
@@ -115,6 +133,7 @@ api.interceptors.response.use(
       original.headers.Authorization = `Bearer ${newAccess}`
       return api(original)
     } catch {
+      forceLogout()
       return Promise.reject(error)
     }
   },

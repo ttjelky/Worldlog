@@ -9,6 +9,18 @@ export function AuthProvider({ children }) {
   const [hydrating, setHydrating] = useState(true)
   const qc = useQueryClient()
 
+  // Примусовий вихід з api.js (refresh відхилено сервером):
+  // гасимо юзера і кеш — редирект на /login робить сам forceLogout.
+  useEffect(() => {
+    const onForceLogout = () => {
+      auth.clearAuth()
+      setUser(null)
+      qc.clear()
+    }
+    window.addEventListener('worldlog:force-logout', onForceLogout)
+    return () => window.removeEventListener('worldlog:force-logout', onForceLogout)
+  }, [qc])
+
   useEffect(() => {
     if (!auth.isAuthenticated()) {
       auth.clearAuth()
@@ -25,6 +37,7 @@ export function AuthProvider({ children }) {
           display_name: res.data.display_name || '',
           bio: res.data.bio || '',
           avatar_url: res.data.avatar_url || null,
+          cover_url: res.data.cover_url || null,
           date_joined: res.data.date_joined,
           worlds_count: res.data.worlds_count || 0,
           friends_count: res.data.friends_count || 0,
@@ -47,6 +60,7 @@ export function AuthProvider({ children }) {
       display_name: me.data.display_name || '',
       bio: me.data.bio || '',
       avatar_url: me.data.avatar_url || null,
+      cover_url: me.data.cover_url || null,
       date_joined: me.data.date_joined,
       worlds_count: me.data.worlds_count || 0,
       friends_count: me.data.friends_count || 0,

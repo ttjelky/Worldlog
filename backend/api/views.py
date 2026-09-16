@@ -104,6 +104,57 @@ class UserDetailView(generics.RetrieveUpdateAPIView):
         return Response(data)
 
 
+class ChangePasswordView(APIView):
+    """Зміна пароля: потрібен поточний пароль."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from django.contrib.auth import password_validation
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        current = request.data.get('current_password', '')
+        new_password = request.data.get('new_password', '')
+        if not request.user.check_password(current):
+            return Response(
+                {'current_password': ['Невірний поточний пароль.']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            password_validation.validate_password(new_password, request.user)
+        except DjangoValidationError as e:
+            return Response(
+                {'new_password': list(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        request.user.set_password(new_password)
+        request.user.save()
+        return Response({'detail': 'Пароль змінено.'})
+
+
+class DeleteAccountView(APIView):
+    """Видалення акаунта: потрібен поточний пароль. Світи власника видаляються каскадом."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        current = request.data.get('current_password', '')
+        confirm = (request.data.get('confirm') or '').strip().lower()
+        if not request.user.check_password(current):
+            return Response(
+                {'current_password': ['Невірний поточний пароль.']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if confirm != request.user.username.lower():
+            return Response(
+                {'confirm': ['Введіть своє імʼя користувача для підтвердження.']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        username = request.user.username
+        request.user.delete()
+        return Response({'detail': f'Акаунт «{username}» видалено.'})
+
+
 class ProfileUpdateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
@@ -116,7 +167,10 @@ class ProfileUpdateView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.update(request.user, serializer.validated_data)
 
-        user = request.user
+        # Відповідь будуємо зі свіжого об'єкта: update() мутує профіль через
+        # окремий python-об'єкт, а request.user може тримати застарілий кеш
+        # reverse-зв'язку — інакше avatar_url/cover_url брешуть.
+        user = User.objects.filter(pk=request.user.pk).first() or request.user
         data = UserPublicSerializer(user, context={'request': request}).data
         data['email'] = user.email
         return Response(data)
@@ -1054,6 +1108,53 @@ class UserPublicProfileView(APIView):
             data['friendship'] = None
 
         return Response(data)
+
+
+class UserFriendsView(APIView):
+    """Прийняті друзі користувача (для сторінки профілю)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'User not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        friendships = Friendship.objects.filter(
+            Q(user_a=user) | Q(user_b=user),
+            status=Friendship.Status.ACCEPTED,
+        ).select_related('user_a', 'user_b', 'user_a__profile', 'user_b__profile')
+        results = []
+        for f in friendships:
+            try:
+                other = f.get_other_user(user)
+            except ValueError:
+                continue
+            results.append(UserPublicSerializer(other, context={'request': request}).data)
+        return Response(results)
+
+
+class UserWorldsView(APIView):
+    """Світи користувача для профілю: свої — всі створені, чужі — лише публічні."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'User not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        qs = world_list_queryset(request.user).filter(owner=user)
+        if user.id != request.user.id:
+            qs = qs.filter(is_public=True)
+        serializer = WorldSerializer(qs.distinct(), many=True, context={'request': request})
+        return Response(serializer.data)
 
 
 class NotificationListView(APIView):

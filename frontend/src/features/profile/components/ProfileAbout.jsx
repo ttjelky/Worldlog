@@ -34,10 +34,6 @@ export default function ProfileAbout({ profile, isOwnProfile }) {
             <span className={styles.aboutValue}>{joinDate}</span>
           </div>
         )}
-        <div className={styles.aboutItem}>
-          <span className={styles.aboutLabel}>Світів створено</span>
-          <span className={styles.aboutValue}>{profile.worlds_count ?? 0}</span>
-        </div>
       </div>
     </div>
   )
