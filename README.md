@@ -1,38 +1,85 @@
-# WorldLog
+<div align="center">
 
-**WorldLog** — паспорт Minecraft-світу від команди DiJital. Інструмент для документування світу: гравців, локацій, планів та історії у вигляді часової шкали. Open-source, MIT-ліцензія.
+<img src="frontend/public/worldlog-logo.png" width="260" alt="WorldLog" />
 
-## Функції (MVP)
+**A passport for your Minecraft world.**
 
-- Реєстрація / логін (JWT).
-- Світи: CRUD з назвою, описом, сідом, датою початку та обкладинкою.
-- Гравці: нікнейм, роль, аватар.
-- Локації: координати X/Y/Z, категорія та багатофайлова галерея скріншотів.
-- Todo-лист: пріоритети, дедлайни, стан виконання.
-- Історія світу: події автоматично сортуються за датою і рендеряться як дорожня карта (timeline) з кольоровими вузлами за категорією.
-- Закладка під майбутнє: сутність Membership (world/user/role/status) передбачена в моделі даних для запрошень та ролей.
+A shared journal for a game world: players, locations with coordinates, tasks and projects, a timeline split into eras, a linked wiki and a relationship graph — so your team remembers what happened, where and when.
 
-## Технології
+🚧 In active development · 🇺🇦 Ukrainian UI · Open source (MIT) · by team **DiJital**
 
-- **Backend**: Django + Django REST Framework, SimpleJWT, Pillow, django-cors-headers
-- **Frontend**: React, Vite, MUI (Material Design 3), React Router, React Query, Axios
-- **БД**: PostgreSQL (прод), SQLite (локально)
-- **Зображення**: Cloudinary або S3-сумісне сховище (опційно через `CLOUDINARY_URL`)
+[Case study](https://ttjelky.github.io/portfolio/en/work/worldlog/)
 
-## 🚀 Швидкий старт (локально)
+![Django](https://img.shields.io/badge/Django-6-092E20?style=flat&logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/Django_REST_Framework-3.18-a30000?style=flat)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)
+![MUI](https://img.shields.io/badge/MUI-6-007FFF?style=flat&logo=mui&logoColor=white)
+![D3](https://img.shields.io/badge/D3-graph-F9A03C?style=flat&logo=d3dotjs&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-black?style=flat)
 
-Передумови: Python 3.12+, Node 20+.
+<img src="screenshots/landing.jpg" width="100%" alt="WorldLog landing page" />
+
+</div>
+
+## Why
+
+Big servers live for months, and a world's history gets lost in chats and screenshots. WorldLog keeps everything in one place.
+
+## Features
+
+**Your world on one page** — cards you can rearrange and hide:
+
+- **Players** with roles and status (alive / dead / missing)
+- **Locations** with X/Y/Z coordinates, categories and screenshots
+- **To-dos and projects** with priorities, deadlines and progress
+- **Planner** for today / tomorrow
+- **History** — events with date, in-game day, coordinates and participants, grouped into **eras** and shown as a timeline
+- **Notes, bookmarks and ideas** with voting (open / accepted / rejected)
+- **Wiki** — pages for characters, factions, kingdoms, wars and items, with infoboxes and `[[links]]` between pages
+- **Relationship graph** — an interactive D3 graph of how everything in the world is connected
+- **Progress** — a summary of everything recorded so far
+
+**Look and feel**
+
+- 9 visual themes based on Minecraft biomes (Cherry Grove, Amethyst, Pale Garden, Warm Ocean…)
+
+**Community**
+
+- Public and private worlds, world search, access requests
+- Members with roles: owner, editor, viewer
+- Friends, public profiles and notifications
+
+## Screenshots
+
+| A world | Wiki, progress and graph |
+|:-:|:-:|
+| <img src="screenshots/world.jpg" alt="World page with section cards" /> | <img src="screenshots/wiki.jpg" alt="Wiki, progress and relationship graph" /> |
+
+<img src="screenshots/worlds.jpg" width="100%" alt="List of worlds" />
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.12, Django 6, Django REST Framework, SimpleJWT, django-filter, Pillow |
+| Frontend | React 19, React Router 7, MUI 6, TanStack Query, Axios, D3, Vite |
+| Database | PostgreSQL in production, SQLite locally |
+| Images | Cloudinary or any S3-compatible storage (optional, via `CLOUDINARY_URL`) |
+| Deploy | Render (API + Postgres), Vercel / Netlify (frontend), Docker |
+
+## Getting started
+
+Requirements: Python 3.12+, Node.js 20+.
 
 ### Backend
 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver
-# API: http://localhost:8000/api/
+python manage.py runserver       # API: http://localhost:8000/api/
 ```
 
 ### Frontend
@@ -40,61 +87,72 @@ python manage.py runserver
 ```bash
 cd frontend
 npm install
-npm run dev
-# Landing: http://localhost:5173
-# Vite проксіює /api -> localhost:8000
+npm run dev                      # http://localhost:5173 — Vite proxies /api to :8000
 ```
 
-### Docker (backend + Postgres однією командою)
+### Docker (backend + Postgres)
 
 ```bash
 docker compose up --build
 ```
 
-## Деплой
+### Tests
 
-- Backend + PostgreSQL: [Render.com](https://render.com) — використайте `render.yaml` або Dockerfile у `backend/`. Потрібні змінні: `DJANGO_SECRET_KEY`, `DATABASE_URL`, `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOW_ALL_ORIGINS` (або список у `CORS_ALLOWED_ORIGINS`).
-- Frontend: [Vercel](https://vercel.com) або [Netlify] — з кореня `frontend/` (`npm run build`). Задайте `VITE_API_URL` = https://your-api.onrender.com.
-- Зображення: зареєструйте Cloudinary та задайте `CLOUDINARY_URL`/`CLOUDINARY_CLOUD_NAME`/`CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` (файлові системи безкоштовних хостингів ефемерні).
+```bash
+cd backend && python manage.py test
+cd frontend && npm test
+```
 
-Приклади змінних середовища: `backend/.env.example` та `frontend/.env.example`.
+## Deployment
 
-## API
+- **Backend + PostgreSQL** — [Render](https://render.com) with `render.yaml` or the Dockerfile in `backend/`. Required variables: `DJANGO_SECRET_KEY`, `DATABASE_URL`, `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOW_ALL_ORIGINS` (or a list in `CORS_ALLOWED_ORIGINS`).
+- **Frontend** — [Vercel](https://vercel.com) or [Netlify](https://netlify.com) from `frontend/` (`npm run build`). Set `VITE_API_URL` to your API URL.
+- **Images** — free hosting file systems are ephemeral, so set `CLOUDINARY_URL` (or the separate Cloudinary variables).
 
-Основні ендпоінти (авторизація: `Authorization: Bearer <access>`):
+Examples: `backend/.env.example` and `frontend/.env.example`.
 
-| Метод | Шлях | Опис |
+## API overview
+
+Auth: `Authorization: Bearer <access>`.
+
+| Method | Path | Description |
 | --- | --- | --- |
-| POST | `/api/auth/register/` | Реєстрація |
-| POST | `/api/auth/token/` | Отримати JWT |
-| POST | `/api/auth/token/refresh/` | Оновити JWT |
-| GET/POST | `/api/worlds/` | Список / створення світів |
-| GET/PATCH/DELETE | `/api/worlds/:id/` | Деталі / оновлення / видалення світу |
-| GET/POST | `/api/worlds/:id/players/` | Гравці світу |
-| GET/POST | `/api/worlds/:id/locations/` | Локації світу |
-| POST | `/api/worlds/:id/locations/:loc/screenshots/` | Завантаження скріншотів |
-| GET/POST | `/api/worlds/:id/todos/` | Todo-лист |
-| GET/POST | `/api/worlds/:id/history/` | Події історії (сортуються за датою) |
-| GET/POST | `/api/worlds/:id/memberships/` | Запрошення та ролі (майбутнє) |
+| POST | `/api/auth/register/` | Register |
+| POST | `/api/auth/token/` · `/api/auth/token/refresh/` | Get / refresh a JWT |
+| GET/POST | `/api/worlds/` | List / create worlds |
+| GET/PATCH/DELETE | `/api/worlds/:id/` | World details |
+| GET | `/api/worlds/search/` | Search public worlds |
+| CRUD | `/api/worlds/:id/{players,locations,todos,history,epochs,notes,projects,bookmarks,ideas,wiki,relationships}/` | World sections |
+| POST | `/api/worlds/:id/locations/:loc/screenshots/` | Upload a location screenshot |
+| CRUD | `/api/worlds/:id/memberships/` · `/api/worlds/:id/access-requests/` | Members and access requests |
+| GET/POST | `/api/friends/` and `/api/friends/send/` | Friends |
+| GET | `/api/notifications/` | Notifications |
 
-## Структура проєкту
+## Project structure
 
 ```
 worldlog/
-├── backend/          # Django + DRF
-│   ├── api/          # моделі, серіалізатори, в'ю
-│   └── config/       # налаштування Django
-├── frontend/         # React + Vite + MUI
-│   └── src/          # landing, аутентифікація, дашборд, розділи світу
+├── backend/
+│   ├── api/          # models, serializers, views, permissions
+│   └── config/       # Django settings
+├── frontend/
+│   └── src/
+│       ├── features/ # landing, auth, dashboard, worlds, world sections, friends, search, profile
+│       └── shared/   # components, notifications, undo, styles
 ├── docker-compose.yml
 ├── render.yaml
 └── LICENSE
 ```
 
-## Ліцензія
+## Team
 
-MIT — див. [LICENSE](LICENSE).
+**DiJital**
 
-## Контакти
+- **[Oleksii Bezklynskyi](https://github.com/ttjelky)** — idea, ~90% of the code, design, logo and visual identity
+- **Serhii Deineha** ([@dergo0-0](https://github.com/dergo0-0))
 
-Команда DiJital — підтримка та запитання через GitHub Issues репозиторію.
+Questions and ideas — via GitHub Issues.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
